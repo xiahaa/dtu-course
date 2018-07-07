@@ -22,7 +22,7 @@ function varargout = simula(varargin)
 
 % Edit the above text to modify the response to help simula
 
-% Last Modified by GUIDE v2.5 03-Jul-2018 16:10:46
+% Last Modified by GUIDE v2.5 06-Jul-2018 18:44:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,14 +92,42 @@ function handles = pushbutton1_Callback(hObject, eventdata, handles)
 num = str2double(get(handles.pts,'String'));
 waypts = [];
 hold(handles.axes1,'on');
-for i = 1:num
-    [x, y] = ginput(1);
+global count m keyframe;
+count = 0;
+m = num;
+keyframe = [];
+
+set(gcf, 'WindowButtonMotionFcn', @mouseMove1);
+set(gcf, 'WindowButtonDownFcn', @mouseClick1);
+i = 0;
+while count < num
+%     C = get(gca, 'CurrentPoint');
+%     title(gca,['(X,Y) = (', num2str(C(1,1),2), ', ',num2str(C(1,2),2), ')']);
+%     [x, y] = ginput(1);
+    if i~= count
+        i = count;
+        x = keyframe(1,end);y = keyframe(2,end);
+        plot(x,y,'ro','Parent',handles.axes1);grid on;
+        text(x,y+1,int2str(i),'FontSize',14, ...
+            'Parent',handles.axes1);
+        hold(handles.axes1,'on');
+    end
+    drawnow
+%     waypts=[waypts;[x y]];
+%     count = count + 1;
+end
+% draw the end
+if i~= count
+    i = count;
+    x = keyframe(1,end);y = keyframe(2,end);
     plot(x,y,'ro','Parent',handles.axes1);grid on;
     text(x,y+1,int2str(i),'FontSize',14, ...
         'Parent',handles.axes1);
     hold(handles.axes1,'on');
-    waypts=[waypts;[x y]];
 end
+drawnow
+
+waypts = keyframe';
 set(hObject,'UserData',waypts);
 
 % --- Executes on button press in pushbutton2.
@@ -119,18 +147,36 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     enday = str2double(get(handles.enday,'String'));
     maxv = str2double(get(handles.maxv,'String'));
     maxa = str2double(get(handles.maxa,'String'));
+    
+    wayptsz = get(handles.pushbutton4,'UserData');
+    initvz = str2double(get(handles.initvz,'String'));
+    initaz = str2double(get(handles.initaz,'String'));
+    endvz = str2double(get(handles.endvz,'String'));
+    endaz = str2double(get(handles.endaz,'String'));
+    maxvz = str2double(get(handles.maxvz,'String'));
+    maxaz = str2double(get(handles.maxaz,'String'));
 
     initv = [initvx, initvy];
     endv = [endvx,endvy];
     inita = [initax,initay];
     enda = [endax,enday];
 
-    [polyCoeffs,realt] = cvx_project_traj_gen_solver_refine(waypts,initv,inita,endv,enda,maxv,maxa);
+    [polyCoeffs,realt] = cvx_project_traj_gen_solver_refine(waypts,initv,inita,endv,enda,maxv,maxa, ...
+        wayptsz,initvz,endvz,initaz,endaz,maxvz,maxaz);
     order = 5;
     [pts,vts,ats,tss]=sample_pva(polyCoeffs, realt, order);
 
     plot(pts(:,1),pts(:,2),'b-','Parent',handles.axes1);
-    set(get(handles.axes1,'title'),'string','Trajecory');
+    set(get(handles.axes1,'title'),'string','2D-Trajecory');
+
+    plot3(pts(:,1),pts(:,2),pts(:,3),'b-','Parent',handles.axes9);hold on;
+    plot3(waypts(:,1),waypts(:,2),wayptsz(:,1),'ro','MarkerSize',3,'Parent',handles.axes9);
+    set(handles.axes9,'View',[-30.4000 45.2000]);
+    set(handles.axes9,'Xlabel',text('String','X'));
+    set(handles.axes9,'Ylabel',text('String','Y'));
+    set(handles.axes9,'Zlabel',text('String','Z'));
+% view([-30.4000 45.2000]);
+    set(get(handles.axes9,'title'),'string','3D-Trajecory');
 %     title('Trajectory');
 
     pax11 = handles.axes2;
@@ -148,6 +194,13 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     plot(tss,ones(numel(vts(:,2)),1).*maxv,'r.-','Parent',pax12);
     plot(tss,ones(numel(vts(:,2)),1).*-maxv,'r.-','Parent',pax12);
     legend('Generated','Maximum');
+    %% z
+    plot(tss,vts(:,3),'b-','Parent',handles.axes7);
+    hold(handles.axes7,'on');
+    grid(handles.axes7,'on');
+    plot(tss,ones(numel(vts(:,3)),1).*maxvz,'r.-','Parent',handles.axes7);
+    plot(tss,ones(numel(vts(:,3)),1).*-maxvz,'r.-','Parent',handles.axes7);
+    legend('Generated','Maximum');
     
     pax13 = handles.axes4;
     pax14 = handles.axes5;
@@ -163,6 +216,14 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     grid(handles.axes5,'on');
     plot(tss,ones(numel(ats(:,2)),1).*maxa,'r.-','Parent',pax14);
     plot(tss,ones(numel(ats(:,2)),1).*-maxa,'r.-','Parent',pax14);
+    legend('Generated','Maximum');
+    
+    %%z
+    plot(tss,ats(:,3),'b-','Parent',handles.axes8);
+    hold(handles.axes8,'on');
+    grid(handles.axes8,'on');
+    plot(tss,ones(numel(ats(:,3)),1).*maxaz,'r.-','Parent',handles.axes8);
+    plot(tss,ones(numel(ats(:,3)),1).*-maxaz,'r.-','Parent',handles.axes8);
     legend('Generated','Maximum');
 
 function pts_Callback(hObject, eventdata, handles)
@@ -335,6 +396,12 @@ cla(handles.axes2);
 cla(handles.axes3);
 cla(handles.axes4);
 cla(handles.axes5);
+cla(handles.axes6);
+cla(handles.axes7);
+cla(handles.axes8);
+cla(handles.axes9);
+keyframe = [];
+count = 0;
 
 function endvy_Callback(hObject, eventdata, handles)
 % hObject    handle to endvy (see GCBO)
@@ -425,3 +492,188 @@ function initay_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
+function maxvz_Callback(hObject, eventdata, handles)
+% hObject    handle to maxvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of maxvz as text
+%        str2double(get(hObject,'String')) returns contents of maxvz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function maxvz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to maxvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function maxaz_Callback(hObject, eventdata, handles)
+% hObject    handle to maxaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of maxaz as text
+%        str2double(get(hObject,'String')) returns contents of maxaz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function maxaz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to maxaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function initvz_Callback(hObject, eventdata, handles)
+% hObject    handle to initvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of initvz as text
+%        str2double(get(hObject,'String')) returns contents of initvz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function initvz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to initvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function endvz_Callback(hObject, eventdata, handles)
+% hObject    handle to endvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of endvz as text
+%        str2double(get(hObject,'String')) returns contents of endvz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function endvz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to endvz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function endaz_Callback(hObject, eventdata, handles)
+% hObject    handle to endaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of endaz as text
+%        str2double(get(hObject,'String')) returns contents of endaz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function endaz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to endaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function initaz_Callback(hObject, eventdata, handles)
+% hObject    handle to initaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of initaz as text
+%        str2double(get(hObject,'String')) returns contents of initaz as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function initaz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to initaz (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+num = str2double(get(handles.pts,'String'));
+wayptsz = [];
+hold(handles.axes6,'on');
+global count m keyframez;
+count = 0;
+m = num;
+keyframez = [];
+
+set(gcf, 'WindowButtonMotionFcn', @mouseMove2);
+set(gcf, 'WindowButtonDownFcn', @mouseClick2);
+i = 0;
+
+while count < num
+    if i~= count
+        i = count;
+        z = keyframez(2,end);
+        x = keyframez(1,end);
+        plot([x-0.1 x+0.1],[z z],'r-','LineWidth',2,'Parent',handles.axes6);
+        grid on;
+        text(x, z+1, num2str(i), 'FontSize',14, ...
+            'Parent',handles.axes6);
+        hold(handles.axes6,'on');
+    end
+    drawnow
+end
+% draw the end
+if i~= count
+    i = count;
+    z = keyframez(2,end);
+    x = keyframez(1,end);
+    plot([x-0.1 x+0.1],[z z],'r-','LineWidth',2,'Parent',handles.axes6);
+    grid on;
+    text(x, z+1, num2str(i), 'FontSize',14, ...
+        'Parent',handles.axes6);
+    hold(handles.axes6,'on');
+end
+drawnow
+wayptsz = keyframez(2,:)';
+set(hObject,'UserData',wayptsz);

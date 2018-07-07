@@ -1,23 +1,34 @@
-function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,endv,enda,maxv,maxa)
-    dims = 2;
+function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,endv,enda,maxv,maxa,pz,initvz,endvz,initaz,endaz,maxvz,maxaz)
+    dims = 3;
     N = size(p,1);
-    pWpts = zeros(N,2);
-    vWpts = zeros(N,2);
-    aWpts = zeros(N,2);
+    pWpts = zeros(N,3);
+    vWpts = zeros(N,3);
+    aWpts = zeros(N,3);
      
-    pWpts = p;
+    pWpts(:,1:2) = p;
     vWpts(1,1) = initv(1);
     vWpts(1,2) = initv(2);
     vWpts(end,1) = endv(1);
     vWpts(end,2) = endv(2);
-    vWpts(2:end-1,:) = inf;
+    vWpts(2:end-1,1:2) = inf;
 
     aWpts(1,1) = inita(1);
     aWpts(1,2) = inita(2);
     aWpts(end,1) = enda(1);
     aWpts(end,2) = enda(2);
-    aWpts(2:end-1,:) = inf;
-
+    aWpts(2:end-1,1:2) = inf;
+    
+    pWpts(:,3) = pz;
+    vWpts(1,3) = initvz;
+    vWpts(end,3)=endvz;
+    aWpts(1,3) = initaz;
+    aWpts(end,3)=endaz;
+    vWpts(2:end-1,3) = inf;
+    aWpts(2:end-1,3) = inf;
+    
+    vzmax = maxvz;%
+    azmax = maxaz;%
+    
     %% test sample, Nx2
 %     pWpts = [[1 1]; ...
 %               [3 2]; ...
@@ -48,33 +59,46 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
         numCoeff = order + 1;
         replan = 0;
         %% 2. find extreme point
-        vxext = {};vyext = {};
-        axext = {};ayext = {};
+        vxext = {};vyext = {};vzext = {};
+        axext = {};ayext = {};azext = {};
+
         for i=1:segments
             scalar = 1./(realt(i+1)-realt(i));
             
             polyx = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,1);
             polyy = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,2);
-
+            polyz = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,3);
+            
             vxpoly = scalar.*[5*polyx(6) 4*polyx(5) 3*polyx(4) 2*polyx(3) polyx(2)];
             vypoly = scalar.*[5*polyy(6) 4*polyy(5) 3*polyy(4) 2*polyy(3) polyy(2)];
+            vzpoly = scalar.*[5*polyz(6) 4*polyz(5) 3*polyz(4) 2*polyz(3) polyz(2)];
+            
             axpoly = scalar^2.*[20*polyx(6) 12*polyx(5) 6*polyx(4) 2*polyx(3)];
             aypoly = scalar^2.*[20*polyy(6) 12*polyy(5) 6*polyy(4) 2*polyy(3)];
+            azpoly = scalar^2.*[20*polyz(6) 12*polyz(5) 6*polyz(4) 2*polyz(3)];
 
             vdxpoly = scalar^2.*[20*polyx(6) 12*polyx(5) 6*polyx(4) 2*polyx(3)];
             vdypoly = scalar^2.*[20*polyy(6) 12*polyy(5) 6*polyy(4) 2*polyy(3)];
+            vdzpoly = scalar^2.*[20*polyz(6) 12*polyz(5) 6*polyz(4) 2*polyz(3)];
 
             adxpoly = scalar^3.*[60*polyx(6) 24*polyx(5) 6*polyx(4)];
             adypoly = scalar^3.*[60*polyy(6) 24*polyy(5) 6*polyy(4)];
+            adzpoly = scalar^3.*[60*polyz(6) 24*polyz(5) 6*polyz(4)];
 
             xroots = roots(vdxpoly);
             yroots = roots(vdypoly);
+            zroots = roots(vdzpoly);
+
             idx = isreal(xroots) & real(xroots) > 0 & real(xroots) < 1;
             xroots = xroots(idx);
             idy = isreal(yroots) & real(yroots) > 0 & real(yroots) < 1;
             yroots = yroots(idy);
+            idz = isreal(zroots) & real(zroots) > 0 & real(zroots) < 1;
+            zroots = zroots(idz);
+            
             xroots = [xroots;0;1];
             yroots = [yroots;0;1];
+            zroots = [zroots;0;1];
 
             if ~isempty(xroots)
                 vxmaxmin = polyval(vxpoly,xroots);
@@ -82,30 +106,49 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
             if ~isempty(yroots)
                 vymaxmin = polyval(vypoly,yroots);
             end
+            if ~isempty(zroots)
+                vzmaxmin = polyval(vzpoly,zroots);
+            end
 
             xroots = roots(adxpoly);
             yroots = roots(adypoly);
+            zroots = roots(adzpoly);
+
             idx = isreal(xroots) & real(xroots) > 0 & real(xroots) < 1;
             xroots = xroots(idx);
             idy = isreal(yroots) & real(yroots) > 0 & real(yroots) < 1;
             yroots = yroots(idy);
+            idz = isreal(zroots) & real(zroots) > 0 & real(zroots) < 1;
+            zroots = zroots(idz);
+            
             xroots = [xroots;0;1];
             yroots = [yroots;0;1];
+            zroots = [zroots;0;1];
+
             if ~isempty(xroots)
                 axmaxmin = polyval(axpoly,xroots);
             end
             if ~isempty(yroots)
                 aymaxmin = polyval(aypoly,yroots);
             end
+            if ~isempty(zroots)
+                azmaxmin = polyval(azpoly,zroots);
+            end
+            
             vxext{i} = vxmaxmin;
             vyext{i} = vymaxmin;
+            vzext{i} = vzmaxmin;
+            
             axext{i} = axmaxmin;
             ayext{i} = aymaxmin;
+            azext{i} = azmaxmin;
             
             r1 = isempty(find(abs(vxmaxmin) > vmax)) && ...
                      isempty(find(abs(vymaxmin) > vmax)) && ...
                      isempty(find(abs(axmaxmin) > amax)) && ...
-                     isempty(find(abs(aymaxmin) > amax));
+                     isempty(find(abs(aymaxmin) > amax)) && ...
+                     isempty(find(abs(vzmaxmin) > vzmax)) && ...
+                     isempty(find(abs(azmaxmin) > azmax));
             replan = replan + r1;
         end
 
@@ -124,13 +167,15 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
             for j = 1:segments
                 polyx = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,1);
                 polyy = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,2);
+                polyz = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,3);
                 
                 p1 = costPoly(polyx, 1, 0);
                 p2 = costPoly(polyy, 1, 0);
-                
+                p3 = costPoly(polyz, 1, 0);
+
                 mpol s 1
                 %% firstly reformulate cost function
-                g0 = s(1)^5*(p1+p2)+(s(1)^2-2*1*s(1)+1)*lambda;
+                g0 = s(1)^5*(p1+p2+p3)+(s(1)^2-2*1*s(1)+1)*lambda;
                 %% then do the same for position, velocity, acceleration constaints
                 K = [];
                 %% vx
@@ -141,6 +186,10 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
                 for k = 1:size(vyext{j},1)
                     K = [K, vyext{j}(k)*s(1)<=vmax, vyext{j}(k)*s(1)>=-vmax];
                 end
+                %% vz
+                for k = 1:size(vzext{j},1)
+                    K = [K, vzext{j}(k)*s(1)<=vzmax, vzext{j}(k)*s(1)>=-vzmax];
+                end
                 %% ax
                 for k = 1:size(axext{j},1)
                     K = [K, axext{j}(k)*s(1)^2<=amax, axext{j}(k)*s(1)^2>=-amax];
@@ -148,6 +197,10 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
                 %% ay
                 for k = 1:size(ayext{j},1)
                     K = [K, ayext{j}(k)*s(1)^2<=amax, ayext{j}(k)*s(1)^2>=-amax];
+                end
+                %% ay
+                for k = 1:size(azext{j},1)
+                    K = [K, azext{j}(k)*s(1)^2<=azmax, azext{j}(k)*s(1)^2>=-azmax];
                 end
                 K = [K, s(1)>=0];
                 Prob = msdp(min(g0), K);
@@ -170,155 +223,22 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
             for j = 1:segments
                 polyx = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,1);
                 polyy = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,2);
-                
-                C = costC(polyx, polyy);
+                polyz = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,3);
+
+                C = costC(polyx, polyy, polyz);
                 C0 = C+[1 -2 1 0;0 0 0 0;0 0 0 0;0 0 0 0].*lambda;            
     %             C0 = [1 -2;0 1];
                 
                 kk = 1;
-                for k = 1:size(vxext{j},1)
-                    Aopt(:,:,kk) = [0 vxext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = vmax;
-                    Aopt(:,:,kk+1) = [0 -vxext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = vmax;
-                    kk = kk + 2;
-                    
-                    % augumented constraints
-                    Aopt(:,:,kk) = [0 -vmax vxext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 -vmax -vxext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 -vmax vxext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 -vmax -vxext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 -vmax; 0 0 0  vxext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 -vmax; 0 0 0  -vxext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0; 0 0 0 -vmax;0 0 0 vxext{j}(k);0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 -vmax;0 0 0 -vxext{j}(k);0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 vxext{j}(k)];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 -vxext{j}(k)];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                end
-                for k = 1:size(vyext{j},1)
-%                     Aopt(:,:,kk) = [0 vyext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-%                     bopt(kk) = vmax;
-%                     Aopt(:,:,kk+1) = [0 -vyext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-%                     bopt(kk+1) = vmax;
-%                     kk = kk + 2;
-                    Aopt(:,:,kk) = [0 vyext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = vmax;
-                    Aopt(:,:,kk+1) = [0 -vyext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = vmax;
-                    kk = kk + 2;
-                    
-                    % augumented constraints
-                    Aopt(:,:,kk) = [0 -vmax vyext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 -vmax -vyext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 -vmax vyext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 -vmax -vyext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 -vmax; 0 0 0  vyext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 -vmax; 0 0 0  -vyext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0; 0 0 0 -vmax;0 0 0 vyext{j}(k);0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 -vmax;0 0 0 -vyext{j}(k);0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 vyext{j}(k)];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 -vyext{j}(k)];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                end
-                for k = 1:size(axext{j},1)
-                    Aopt(:,:,kk) = [0 0 axext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 -axext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 -amax 0 axext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 -amax 0 -axext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 -amax 0;0 0 0 axext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 -amax 0;0 0 0 -axext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 -amax;0 0 0 0;0 0 0 axext{j}(k);0 0 0 0];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 0 -amax;0 0 0 0;0 0 0 -axext{j}(k);0 0 0 0];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0;0 0 0 -amax;0 0 0 0;0 0 0 axext{j}(k)];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 0 0;0 0 0 -amax;0 0 0 0;0 0 0 -axext{j}(k)];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                end
-                for k = 1:size(ayext{j},1)
-                    Aopt(:,:,kk) = [0 0 ayext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 -ayext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 -amax 0 ayext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 -amax 0 -ayext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 -amax 0;0 0 0 ayext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk) = 0;
-                    Aopt(:,:,kk+1) = [0 0 -amax 0;0 0 0 -ayext{j}(k);0 0 0 0;0 0 0 0];
-                    bopt(kk+1) = 0;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 -amax;0 0 0 0;0 0 0 ayext{j}(k);0 0 0 0];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 0 -amax;0 0 0 0;0 0 0 -ayext{j}(k);0 0 0 0];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                    
-                    Aopt(:,:,kk) = [0 0 0 0;0 0 0 -amax;0 0 0 0;0 0 0 ayext{j}(k)];
-                    bopt(kk) = amax;
-                    Aopt(:,:,kk+1) = [0 0 0 0;0 0 0 -amax;0 0 0 0;0 0 0 -ayext{j}(k)];
-                    bopt(kk+1) = amax;
-                    kk = kk + 2;
-                end
+                
+                [Aopt,bopt,kk] = addAugumentedConstraint(vxext,Aopt,bopt,kk,j,vmax,'v');
+                [Aopt,bopt,kk] = addAugumentedConstraint(vyext,Aopt,bopt,kk,j,vmax,'v');
+                [Aopt,bopt,kk] = addAugumentedConstraint(vzext,Aopt,bopt,kk,j,vzmax,'v');
+
+                [Aopt,bopt,kk] = addAugumentedConstraint(axext,Aopt,bopt,kk,j,amax,'a');
+                [Aopt,bopt,kk] = addAugumentedConstraint(ayext,Aopt,bopt,kk,j,amax,'a');
+                [Aopt,bopt,kk] = addAugumentedConstraint(azext,Aopt,bopt,kk,j,azmax,'a');
+                
                 %% cvx_routine
                 cvx_begin 
                     variable X(nopt, nopt) hankel
@@ -355,6 +275,81 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
         [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, realt, dims, order);
     end
 %     visulization(pWpts, polyCoeffs, realt, order, vmax, amax);
+end
+
+function [Aopt,bopt,kk] = addAugumentedConstraint(vext,Aopt,bopt,kk,j,vmax,derv)
+    if derv == 'v'
+        for k = 1:size(vext{j},1)
+            Aopt(:,:,kk) = [0 vext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk) = vmax;
+            Aopt(:,:,kk+1) = [0 -vext{j}(k) 0 0; 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk+1) = vmax;
+            kk = kk + 2;
+                    
+            % augumented constraints
+            Aopt(:,:,kk) = [0 -vmax vext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 -vmax -vext{j}(k) 0; 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+                    
+            Aopt(:,:,kk) = [0 0 -vmax vext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 -vmax -vext{j}(k); 0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+                    
+            Aopt(:,:,kk) = [0 0 0 -vmax; 0 0 0  vext{j}(k);0 0 0 0;0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 0 -vmax; 0 0 0  -vext{j}(k);0 0 0 0;0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+                    
+            Aopt(:,:,kk) = [0 0 0 0; 0 0 0 -vmax;0 0 0 vext{j}(k);0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 -vmax;0 0 0 -vext{j}(k);0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+                    
+            Aopt(:,:,kk) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 vext{j}(k)];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 0 0; 0 0 0 0;0 0 0 -vmax;0 0 0 -vext{j}(k)];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+        end
+    elseif derv == 'a'
+        for k = 1:size(vext{j},1)
+            Aopt(:,:,kk) = [0 0 vext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk) = vmax;
+            Aopt(:,:,kk+1) = [0 0 -vext{j}(k) 0;0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk+1) = vmax;
+            kk = kk + 2;
+
+            Aopt(:,:,kk) = [0 -vmax 0 vext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 -vmax 0 -vext{j}(k);0 0 0 0;0 0 0 0;0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+
+            Aopt(:,:,kk) = [0 0 -vmax 0;0 0 0 vext{j}(k);0 0 0 0;0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 -vmax 0;0 0 0 -vext{j}(k);0 0 0 0;0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+
+            Aopt(:,:,kk) = [0 0 0 -vmax;0 0 0 0;0 0 0 vext{j}(k);0 0 0 0];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 0 -vmax;0 0 0 0;0 0 0 -vext{j}(k);0 0 0 0];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+
+            Aopt(:,:,kk) = [0 0 0 0;0 0 0 -vmax;0 0 0 0;0 0 0 vext{j}(k)];
+            bopt(kk) = 0;
+            Aopt(:,:,kk+1) = [0 0 0 0;0 0 0 -vmax;0 0 0 0;0 0 0 -vext{j}(k)];
+            bopt(kk+1) = 0;
+            kk = kk + 2;
+        end
+    end
 end
 
 function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order)
@@ -471,6 +466,7 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order)
     KKT = [Q Aeq';Aeq zeros(size(Q,1)+size(Aeq,1)-size(Aeq,2))];
     xsol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,1)];
     ysol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,2)];
+    zsol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,3)];
     toc
 %     tic
 %     xsol = quadprog(Q,[],[],[],Aeq,beqs(:,1));
@@ -484,6 +480,7 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order)
 %     ysol = solveViaQR(Q,Aeq,beqs(:,2));
     polyCoeffs(:,1) = xsol(1:size(Q,1));
     polyCoeffs(:,2) = ysol(1:size(Q,1));
+    polyCoeffs(:,3) = zsol(1:size(Q,1));
 end
 
 function p = costPoly(poly, x, ts)
@@ -525,7 +522,7 @@ function Qs = constructQ(ts, te)
 end
 
 
-function C = costC(polyx, polyy)
+function C = costC(polyx, polyy, polyz)
     p3 = polyx(4);
     p4 = polyx(5);
     p5 = polyx(6);
@@ -557,7 +554,24 @@ function C = costC(polyx, polyy)
          0 0 0 0;...
          0 0 0 0;...
          0 0 ps 0];
-    C = Cx + Cy;
+     
+    p3 = polyz(4);
+    p4 = polyz(5);
+    p5 = polyz(6);
+
+    a1 = 36*p3^2;
+    a2 = 144*p3*p4;
+    a3 = (192*p4^2 + 240*p3*p5);
+    a4 = 720*p4*p5;
+    a5 = 720*p5^2;
+    ps = a1+a2+a3+a4+a5;
+    Cz = [0 0 0 0;...
+         0 0 0 0;...
+         0 0 0 0;...
+         0 0 ps 0];
+     
+     
+    C = Cx + Cy + Cz;
 end
 
 function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
@@ -624,5 +638,6 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     plot(tss,ones(numel(ats(:,2)),1).*-amax,'r.-');
     legend('Generated','Maximum');
 end
+
 
 
