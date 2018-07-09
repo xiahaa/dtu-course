@@ -1,34 +1,84 @@
 function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
-    clc;clear all;
+    clc;clear all;close all;
     
-    resolution = 0.25;%% 1 grid = 0.25m
+    %% call c++ interface
+    seed = 511;
+    sizeX = 10;
+    sizeY = 10;
+    sizeZ = 2;
+    resolution = 0.1;%% 1 grid = 0.25m
     scale = 1/resolution;
-    sizeX = 100;
-    sizeY = 100;
-    sizeZ = 5;
-    
-%     sizeX = sizeX * resolution;%from grid number to real size
-%     sizeY = sizeY * resolution;
-%     sizeZ = sizeZ * resolution;
+    type = 1;
     
     %% obstacles, w_l = minimium width of obstacles in real metrics
-    ObsNum = 30;
-    w_l = 1;
-    w_h = 2;
+    ObsNum = 10;
+    w_l = 0.6;
+    w_h = 1.5;
     
-    map3D = robotics.OccupancyMap3D(scale);
+    complexity = 0.05;
+    fill = 0.06;
+    fractal = 1;
+    attenuation = 0.1;
+    
+    if type == 1 %% perlin3d
+        [px,py,pz] = mexMapGen(seed, sizeX, sizeY, sizeZ, resolution, type, complexity, fill, fractal, attenuation);
+    elseif type == 2 %% random
+        [px,py,pz] = mexMapGen(seed, sizeX, sizeY, sizeZ, resolution, type,w_l, w_h, ObsNum);
+    end
+    
+%     pclXYZ = randomMapGen(sizeX, sizeY, sizeZ, scale, ObsNum, w_l, w_h);
+%     pclXYZ = perlin3D(sizeX, sizeY, sizeZ, resolution);
+    
+    map3D = robotics.OccupancyMap3D(9.9,'FreeThreshold',0.2,'OccupiedThreshold',0.65);
     pose = [ 0 0 0 1 0 0 0];
-    maxRange = sizeX * 0.6;
-    
-%     perlin3D();
-    pclXYZ = randomMapGen(sizeX, sizeY, sizeZ, scale, ObsNum, w_l, w_h);
-%     pclXYZ = perlin3D(sizeX, sizeY, sizeZ, scale);
-    
+    maxRange = sizeX * 0.8;
+    pclXYZ = [px py pz];
+%     pcshow(pclXYZ,'MarkerSize',1000);
     insertPointCloud(map3D,pose,pclXYZ,maxRange);
+    setOccupancy(map3D,pclXYZ,0.9);
     
-    show(map3D);
+    map3DInf = robotics.OccupancyMap3D(9.9,'FreeThreshold',0.2,'OccupiedThreshold',0.65);
+%     pcshow(pclXYZ,'MarkerSize',1000);
+    insertPointCloud(map3DInf,pose,pclXYZ,maxRange);
+    setOccupancy(map3DInf,pclXYZ,0.9);
+    inflate(map3DInf,0.3);
+    
+    show(map3D);hold on;
+    xlim([-sizeX sizeX]); ylim([-sizeY sizeY]); zlim([0 sizeZ]);
     grid on;
+    
+    sp = [-7 -7 0];
+%     while 1
+%         sp(1,1:2) = rand(1,2)*4 - 2;
+%         sp(1,3) = 0;
+%         isCollision = checkOccupancy(map3D,sp);
+%         if isCollision ~= 1
+%             break;
+%         end
+%     end
+%     ep = zeros(1,3);
+%     while 1
+%         ep(1,1:2) = rand(1,2)*4 + 5;
+%         ep(1,3) = 1;
+%         isCollision = checkOccupancy(map3D,ep);
+%         if isCollision ~= 1
+%             break;
+%         end
+%     end
+    ep = [8 8 1];
+    
+    plot3(sp(1),sp(2),sp(3),'ro','MarkerSize',5);
+    plot3(ep(1),ep(2),ep(3),'bo','MarkerSize',5);
+    maxIter = 5000;
+    path = rrt_star(map3DInf, sp, ep, maxIter, sizeX, sizeY, sizeZ, resolution);
+    
+    if ~isempty(path)
+        plot3(path(:,1),path(:,2),path(:,3),'g-');
+    end
+
+
 end
+
 
 function pclXYZ = randomMapGen(sizeX, sizeY, sizeZ, scale, ObsNum, w_l, w_h)
     resolution = 1 / scale;
@@ -78,10 +128,15 @@ function pclXYZ = randomMapGen(sizeX, sizeY, sizeZ, scale, ObsNum, w_l, w_h)
 end
 
 function points = perlin3D(sizeX, sizeY, sizeZ, scale)
-    complexity = 0.142857;
-    fill = 0.38;
+    scale = 1 / scale;
+	sizeX = sizeX * scale;
+	sizeY = sizeY * scale;
+	sizeZ = sizeZ * scale;
+
+    complexity = 0.05;
+    fill = 0.12;
     fractal = 1;
-    attenuation = 0.5;
+    attenuation = 0.2;
     
     width  = sizeX * sizeY * sizeZ;
     height = 1;
@@ -97,7 +152,7 @@ function points = perlin3D(sizeX, sizeY, sizeZ, scale)
                 for (it = 1:fractal)
                     dfv = 2^it;
                     ta  = attenuation / it;
-                    tnoise = tnoise + ta * calcNoise(dfv * i * complexity, dfv * j * complexity, dfv * k * complexity, noise);
+                    tnoise = tnoise + ta * perlin(noise, dfv * i * complexity, dfv * j * complexity, dfv * k * complexity);
                 end
                 v = [v;tnoise];
             end
@@ -113,7 +168,7 @@ function points = perlin3D(sizeX, sizeY, sizeZ, scale)
                 for (it = 1:fractal)
                     dfv = 2^it;
                     ta  = attenuation / it;
-                    tnoise = tnoise + ta * calcNoise(dfv * i * complexity, dfv * j * complexity, dfv * k * complexity, noise);
+                    tnoise = tnoise + ta * perlin(noise, dfv * i * complexity, dfv * j * complexity, dfv * k * complexity);
                 end
                 if (tnoise > tmp)
                     points = [points;[(i / scale - sizeX / (2 * scale)) (j / scale - sizeY / (2 * scale)) k/scale]];
@@ -122,8 +177,6 @@ function points = perlin3D(sizeX, sizeY, sizeZ, scale)
         end
     end
 end
-
-
 
 function PerlinNoise = genPerlinNoise(type)
     if type == 'f'
@@ -158,71 +211,4 @@ end
      v=v(randperm(length(v)));
  end
  
- function res = calcNoise(x,y,z,p)
-    X = bitand(floor(x),255,'uint8');
-    Y = bitand(floor(y),255,'uint8');
-    Z = bitand(floor(z),255,'uint8');
-    
-    x = x-floor(x);
-    y = y-floor(y);
-    z = z-floor(z);
 
-    % Compute fade curves for each of x, y, z
-    u = fade(x);
-    v = fade(y);
-    w = fade(z);
-    
-    % Hash coordinates of the 8 cube corners
-    A  = p(X+1) + Y;
-    AA = p(A+1) + Z;
-    AB = p(A + 2) + Z;
-    B  = p(X + 2) + Y;
-    BA = p(B) + Z;
-    BB = p(B + 1) + Z;
-    
-    % Add blended results from 8 corners of cube
-    res = lerp(w, lerp(v, lerp(u, grad(p(AA+1), x, y, z), grad(p(BA+1), x - 1, y, z)), ...
-              lerp(u, grad(p(AB+1), x, y - 1, z), grad(p(BB+1), x - 1, y - 1, z))), ...
-                lerp(v, lerp(u, grad(p(AA+2), x, y, z - 1), grad(p(BA + 2), x - 1, y, z - 1)), ...
-                    lerp(u, grad(p(AB + 2), x, y - 1, z - 1), grad(p(BB + 2), x - 1, y - 1, z - 1))));
-    res = (res + 1.0) / 2.0;
- end
-
-function n = fade(t)
-    n = t * t * t * (t * (t * 6 - 15) + 10);
-end
-
-function n = lerp(t,a,b)
-    n = a + t * (b - a);
-end
-
-function n = grad(hash,x,y,z)
-    h = bitand(hash,15,'int32');%    hash & 15;
-    if h < 8
-        u = x;
-    else
-        u = y;
-    end
-    if h < 4
-        v = y;
-    else
-        if h == 12 || h == 14
-            v = x;
-        else
-            v = z;
-        end
-    end
-    if bitand(h,1,'int32') == 0
-        if bitand(h,2,'int32') == 0
-            n = u + v;
-        else
-            n = u - v;
-        end
-    else
-        if bitand(h,2,'int32') == 0
-            n = -u + v;
-        else
-            n = -u - v;
-        end
-    end
-end
