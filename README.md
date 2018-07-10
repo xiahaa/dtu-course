@@ -19,7 +19,7 @@ Map generator using perlin noise.
 
 ## integrate RRT* with Semi-definite based minimum snap trajectory generation
 Demo:
-![demo](perlin.pdf)
+![demo](perlin.bmp)
 
 
 
