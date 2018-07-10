@@ -22,7 +22,7 @@ function varargout = simula(varargin)
 
 % Edit the above text to modify the response to help simula
 
-% Last Modified by GUIDE v2.5 06-Jul-2018 18:44:40
+% Last Modified by GUIDE v2.5 09-Jul-2018 19:52:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,6 +155,8 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     endaz = str2double(get(handles.endaz,'String'));
     maxvz = str2double(get(handles.maxvz,'String'));
     maxaz = str2double(get(handles.maxaz,'String'));
+    
+    l = str2double(get(handles.corridor,'String'));% corridor
 
     initv = [initvx, initvy];
     endv = [endvx,endvy];
@@ -162,7 +164,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     enda = [endax,enday];
 
     [polyCoeffs,realt] = cvx_project_traj_gen_solver_refine(waypts,initv,inita,endv,enda,maxv,maxa, ...
-        wayptsz,initvz,endvz,initaz,endaz,maxvz,maxaz);
+        wayptsz,initvz,endvz,initaz,endaz,maxvz,maxaz,l);
     order = 5;
     [pts,vts,ats,tss]=sample_pva(polyCoeffs, realt, order);
 
@@ -677,3 +679,54 @@ end
 drawnow
 wayptsz = keyframez(2,:)';
 set(hObject,'UserData',wayptsz);
+
+
+
+function corridor_Callback(hObject, eventdata, handles)
+% hObject    handle to corridor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of corridor as text
+%        str2double(get(hObject,'String')) returns contents of corridor as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function corridor_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to corridor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+waypts = get(handles.pushbutton1,'UserData');
+num = size(waypts,1);
+l = str2double(get(handles.corridor,'String'));
+hold(handles.axes1,'on');
+grid(handles.axes1,'on');
+for i = 1:(num-1)
+    x1 = waypts(i,:);
+    x2 = waypts(i+1,:);
+    [a,b,c] = compute2Dline(x1, x2);
+    [x1l,y1l,x1r,y1r] = computeCorridor(a,b,c,x1(1),x1(2),l);
+    [x2l,y2l,x2r,y2r] = computeCorridor(a,b,c,x2(1),x2(2),l);
+    
+    %% line 1
+    plot([x1(1) x2(1)], [x1(2) x2(2)], 'blue','LineStyle','-','Parent',handles.axes1);
+    
+    %% line 2
+    plot([x1l x2l], [y1l y2l], 'red','LineStyle','--','Parent',handles.axes1);
+    
+    %% line 3
+    plot([x1r x2r], [y1r y2r], 'red','LineStyle','--','Parent',handles.axes1);
+end

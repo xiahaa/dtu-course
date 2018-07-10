@@ -3,8 +3,8 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     
     %% call c++ interface
     seed = 511;
-    sizeX = 10;
-    sizeY = 10;
+    sizeX = 14;
+    sizeY = 14;
     sizeZ = 2;
     resolution = 0.1;%% 1 grid = 0.25m
     scale = 1/resolution;
@@ -41,7 +41,7 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
 %     pcshow(pclXYZ,'MarkerSize',1000);
     insertPointCloud(map3DInf,pose,pclXYZ,maxRange);
     setOccupancy(map3DInf,pclXYZ,0.9);
-    inflate(map3DInf,0.3);
+    inflate(map3DInf,0.4);
     
     show(map3D);hold on;
     xlim([-sizeX sizeX]); ylim([-sizeY sizeY]); zlim([0 sizeZ]);
@@ -67,13 +67,40 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
 %     end
     ep = [8 8 1];
     
-    plot3(sp(1),sp(2),sp(3),'ro','MarkerSize',5);
-    plot3(ep(1),ep(2),ep(3),'bo','MarkerSize',5);
+%     plot3(sp(1),sp(2),sp(3),'ro','MarkerSize',5);
+%     plot3(ep(1),ep(2),ep(3),'bo','MarkerSize',5);
     maxIter = 5000;
     path = rrt_star(map3DInf, sp, ep, maxIter, sizeX, sizeY, sizeZ, resolution);
     
     if ~isempty(path)
-        plot3(path(:,1),path(:,2),path(:,3),'g-');
+        plot3(path(:,1),path(:,2),path(:,3),'g-', 'LineWidth', 3);hold on;
+        plot3(path(1:end,1),path(1:end,2),path(1:end,3),'bo');
+        initv = [0 0];
+        inita = [0 0];
+        endv = [0 0];
+        enda = [0 0];
+        maxv = 10;
+        maxa = 6;
+        p = path(:,1:2);
+        pz = path(:,3);
+        initvz = 0;
+        endvz = 0;
+        initaz = 0;
+        endaz = 0;
+        maxvz = 3;
+        maxaz = 3;
+        l = 0.4;
+        
+        [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,endv,enda, ...
+            maxv,maxa,pz,initvz,endvz,initaz,endaz,maxvz,maxaz,l);
+        
+        order = 5;
+        [pts,vts,ats,tss]=sample_pva(polyCoeffs, realt, order);
+        
+        plot3(pts(:,1),pts(:,2),pts(:,3),'r-','LineWidth',5);hold on;
+        title('Perlin Map Test');
+        legend('Obstacles', 'RRT* Path','RRT* Way Point', 'Trajectory');
+        axis equal
     end
 
 
