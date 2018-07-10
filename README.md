@@ -15,3 +15,11 @@ Map generator using perlin noise.
 ## lessons learned
 1. free code doesn't mean free lunch!!!! Use you own judgement.
 2. KD tree offered by VLFeat even slower than vectorized bruth-force search in MatLab, which seems to be strange...... I intended to use KD tree for nn search. However, after benchmark test, I found vectorized brute-force was even faster....So I abandoned to use KD tree..
+3. if you add one varriable with a vector in MatLab, it equals to add this variable to every entries of that vector...
+
+## integrate RRT* with Semi-definite based minimum snap trajectory generation
+Demo:
+()[perlin.pdf]
+
+
+
