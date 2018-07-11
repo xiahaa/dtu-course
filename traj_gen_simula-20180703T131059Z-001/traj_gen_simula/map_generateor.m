@@ -8,10 +8,10 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     sizeZ = 2;
     resolution = 0.1;%% 1 grid = 0.25m
     scale = 1/resolution;
-    type = 1;
+    type = 2;
     
     %% obstacles, w_l = minimium width of obstacles in real metrics
-    ObsNum = 10;
+    ObsNum = 50;
     w_l = 0.6;
     w_h = 1.5;
     
@@ -41,7 +41,7 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
 %     pcshow(pclXYZ,'MarkerSize',1000);
     insertPointCloud(map3DInf,pose,pclXYZ,maxRange);
     setOccupancy(map3DInf,pclXYZ,0.9);
-    inflate(map3DInf,0.4);
+    inflate(map3DInf,0.5);
     
     show(map3D);hold on;
     xlim([-sizeX sizeX]); ylim([-sizeY sizeY]); zlim([0 sizeZ]);
