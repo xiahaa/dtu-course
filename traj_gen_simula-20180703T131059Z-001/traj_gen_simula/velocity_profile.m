@@ -54,7 +54,7 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
         tss = [tss;linspace(t(i),t(i+1),1000)'];
     end
     
-    plot(pts(:,1),pts(:,2),'b-');
+    plot(pts(:,1),pts(:,2),'b-','LineWidth', 3);
     xlabel('x: (m)','Interpreter','latex');
     ylabel('y: (m)','Interpreter','latex');
     title('Trajectory','Interpreter','latex');
@@ -69,7 +69,7 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     plot(tss,ones(numel(vts(:,1)),1).*-vmax,'r--','LineWidth', 3);
     legend([h1(1) h2],'Generated','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$V_x: (m/s)$','Interpreter','latex');
+    ylabel('$v_x: (m/s)$','Interpreter','latex');
     title('Velocity Profile','Interpreter','latex');
     subplot(2,1,2);
     c = sqrt(vts(:,2).^2);
@@ -80,11 +80,11 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     patch([0.45 0.85 0.85 0.45], [max(ylim)*2 max(ylim)*2 min(ylim)*2 min(ylim)*2], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
     legend([h3(1) h4],'Generated','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$V_y: (m/s)$','Interpreter','latex');
+    ylabel('$v_y: (m/s)$','Interpreter','latex');
     hp1 = get(subplot(2,1,1),'Position');
     hp2 = get(subplot(2,1,2),'Position');
     cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp2(2) 0.01 hp2(4)*2.4]);
-    cv.Label.String = '$V=\sqrt{(V_x^2+V_y^2)} (m/s)$';
+    cv.Label.String = '$velocity\ (m/s)$';
     cv.Label.Interpreter = 'latex';
     cv.FontSize = 12;
     caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2))]);
@@ -103,7 +103,7 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     
     legend([h5(1) h6],'Generated','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$A_x: (m/s)$','Interpreter','latex');
+    ylabel('$a_x: (m/s^2)$','Interpreter','latex');
     title('Acceleration Profile','Interpreter','latex');
     subplot(2,1,2);
     ca = sqrt(ats(:,2).^2);
@@ -117,11 +117,11 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     
     legend([h7(1) h8],'Generated','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$A_y: (m/s)$','Interpreter','latex');
+    ylabel('$a_y: (m/s^2)$','Interpreter','latex');
     hp3 = get(subplot(2,1,1),'Position');
     hp4 = get(subplot(2,1,2),'Position');
     cv1 = colorbar('Position', [hp3(1)+hp3(3)+0.01 hp4(2) 0.01 hp4(4)*2.4]);
-    cv1.Label.String = '$A=\sqrt{(A_x^2+A_y^2)} (m/s^2)$';
+    cv1.Label.String = '$acceleration\ (m/s^2)$';
     cv1.Label.Interpreter = 'latex';
     cv1.FontSize = 12;
     caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2))]);

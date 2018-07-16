@@ -34,7 +34,7 @@ function h = ccplot(x,y,c,map)
         ii = logical(ii .* jj);
         X = x; X(indices(ii)) = NaN;
         Y = y; Y(indices(ii)) = NaN;
-        h(k) = plot(X,Y,'Color',map(k,:)); 
+        h(k) = plot(X,Y,'Color',map(k,:),'LineWidth',3); 
         hold on;
     end
     if status == 0, hold off; end   % reset hold status

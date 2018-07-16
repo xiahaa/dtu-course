@@ -71,7 +71,8 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
     %% 1. pre-allocated timestamp, may not be reasonable
     [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order, [], l, []);
 %     visulization(pWpts, polyCoeffs, t, order, vmax, amax);    
-    
+    corridorExtremes = cell(size(pWpts,1)-1,1);
+
     origS = [1;1];
     realt = t;
     while 1
@@ -82,7 +83,6 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
         vxext = {};vyext = {};vzext = {};
         axext = {};ayext = {};azext = {};
         p1maxmin = [];p2maxmin = [];
-        corridorExtremes = cell(size(pWpts,1)-1,1);
         for i=1:segments
             scalar = 1./(realt(i+1)-realt(i));
             
@@ -552,13 +552,13 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order,
                 Az(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(3).*[1 ts ts^2 ts^3 ts^4 ts^5];
                 %% 1st
                 Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
-                bineq = [bineq;l-hyperplane(4);l+hyperplane(4)];
+                bineq = [bineq;0.5*l-hyperplane(4);0.5*l+hyperplane(4)];
                 
                 Ax(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(5).*[1 ts ts^2 ts^3 ts^4 ts^5];
                 Ay(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(6).*[1 ts ts^2 ts^3 ts^4 ts^5];
                 Az(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(7).*[1 ts ts^2 ts^3 ts^4 ts^5];
                 Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
-                bineq = [bineq;l-hyperplane(8);l+hyperplane(8)];
+                bineq = [bineq;0.5*l-hyperplane(8);0.5*l+hyperplane(8)];
             end
             
             

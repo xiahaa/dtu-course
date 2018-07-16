@@ -8,15 +8,15 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     sizeZ = 2;
     resolution = 0.1;%% 1 grid = 0.25m
     scale = 1/resolution;
-    type = 2;
+    type = 1;
     
     %% obstacles, w_l = minimium width of obstacles in real metrics
-    ObsNum = 50;
+    ObsNum = 70;
     w_l = 0.6;
     w_h = 1.5;
     
     complexity = 0.05;
-    fill = 0.06;
+    fill = 0.05;
     fractal = 1;
     attenuation = 0.1;
     
@@ -43,7 +43,7 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     setOccupancy(map3DInf,pclXYZ,0.9);
     inflate(map3DInf,0.5);
     
-    show(map3D);hold on;
+    h1 = show(map3D);hold on;
     xlim([-sizeX sizeX]); ylim([-sizeY sizeY]); zlim([0 sizeZ]);
     grid on;
     
@@ -69,12 +69,15 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     
 %     plot3(sp(1),sp(2),sp(3),'ro','MarkerSize',5);
 %     plot3(ep(1),ep(2),ep(3),'bo','MarkerSize',5);
-    maxIter = 5000;
+    maxIter = 390000;
     path = rrt_star(map3DInf, sp, ep, maxIter, sizeX, sizeY, sizeZ, resolution);
     
     if ~isempty(path)
-        plot3(path(:,1),path(:,2),path(:,3),'g-', 'LineWidth', 3);hold on;
-        plot3(path(1:end,1),path(1:end,2),path(1:end,3),'bo');
+        h2 = plot3(path(:,1),path(:,2),path(:,3),'g-', 'LineWidth', 2);hold on;
+        h3 = plot3(path(2:(end-1),1),path(2:(end-1),2),path(2:(end-1),3),'bo');
+        h4 = plot3(path(1,1),path(1,2),path(1,3),'o','MarkerFaceColor','m','MarkerEdgeColor','m');
+        h5 = plot3(path(end,1),path(end,2),path(end,3),'o','MarkerFaceColor','c','MarkerEdgeColor','c');
+
         initv = [0 0];
         inita = [0 0];
         endv = [0 0];
@@ -97,10 +100,96 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
         order = 5;
         [pts,vts,ats,tss]=sample_pva(polyCoeffs, realt, order);
         
-        plot3(pts(:,1),pts(:,2),pts(:,3),'r-','LineWidth',5);hold on;
-        title('Perlin Map Test');
-        legend('Obstacles', 'RRT* Path','RRT* Way Point', 'Trajectory');
+        h6 = plot3(pts(:,1),pts(:,2),pts(:,3),'r-','LineWidth',3);hold on;
+%         title('Perlin Map Test');
+        legend([h2,h3,h4,h5,h6],'Path via RRT*','Waypoints via RRT*', 'Start Point', 'End Point', 'Trajectory','Interpreter','latex');
+        xlabel('x: (m)','Interpreter','latex');
+        ylabel('y: (m)','Interpreter','latex');
+        zlabel('z: (m)','Interpreter','latex');
+        title('Motion Planning Result: Random','Interpreter','latex');
         axis equal
+       
+    figure
+    vx1 = subplot(3,1,1);
+    c = sqrt(vts(:,1).^2);
+    map = colormap(jet);
+    h11 = ccplot(tss,vts(:,1),c,map);grid on;hold on;
+    h12 = plot(tss,ones(numel(vts(:,1)),1).*maxv,'r--','LineWidth', 3);
+    plot(tss,ones(numel(vts(:,1)),1).*-maxv,'r--','LineWidth', 3);
+    legend([h11(1) h12],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$v_x: (m/s)$','Interpreter','latex');
+    title('Velocity Profile','Interpreter','latex');
+    subplot(3,1,2);
+    c = sqrt(vts(:,2).^2);
+    map = colormap(jet);
+    h13 = ccplot(tss,vts(:,2),c,map);grid on;hold on;
+    h14 = plot(tss,ones(numel(vts(:,2)),1).*maxv,'r--','LineWidth', 3);
+    plot(tss,ones(numel(vts(:,2)),1).*-maxv,'r--','LineWidth', 3);
+    legend([h13(1) h14],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$v_y: (m/s)$','Interpreter','latex');
+    subplot(3,1,3);
+    c = sqrt(vts(:,3).^2);
+    map = colormap(jet);
+    h15 = ccplot(tss,vts(:,3),c,map);grid on;hold on;
+    h16 = plot(tss,ones(numel(vts(:,3)),1).*maxvz,'r--','LineWidth', 3);
+    plot(tss,ones(numel(vts(:,3)),1).*-maxvz,'r--','LineWidth', 3);
+    legend([h15(1) h16],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$v_z: (m/s)$','Interpreter','latex');
+    
+    hp1 = get(subplot(3,1,1),'Position');
+    hp2 = get(subplot(3,1,2),'Position');
+    hp3 = get(subplot(3,1,3),'Position');
+    
+    cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp3(2) 0.01 hp3(4)*4]);
+    cv.Label.String = '$velocity\ (m/s)$';
+    cv.Label.Interpreter = 'latex';
+    cv.FontSize = 12;
+    caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2 + vts(:,3).^2))]);
+    
+    figure    
+    vx2 = subplot(3,1,1);
+    ca = sqrt(ats(:,1).^2);
+    map1 = colormap(jet);
+    h25 = ccplot(tss,ats(:,1),ca,map1);grid on;hold on;
+    plot(tss,ones(numel(ats(:,1)),1).*maxa,'r--', 'LineWidth', 3);
+    h26 = plot(tss,ones(numel(ats(:,1)),1).*-maxa,'r--','LineWidth', 3);
+    legend([h25(1) h26],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$a_x: (m/s^2)$','Interpreter','latex');
+    title('Acceleration Profile','Interpreter','latex');
+    subplot(3,1,2);
+    ca = sqrt(ats(:,2).^2);
+    h27 = ccplot(tss,ats(:,2),ca,map1);grid on;hold on;
+    h28 = plot(tss,ones(numel(ats(:,2)),1).*maxa,'r--','LineWidth', 3);
+    plot(tss,ones(numel(ats(:,2)),1).*-maxa,'r--','LineWidth', 3);
+    legend([h27(1) h28],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$a_y: (m/s^2)$','Interpreter','latex');
+    subplot(3,1,3);
+    ca = sqrt(ats(:,3).^2);
+    h29 = ccplot(tss,ats(:,3),ca,map1);grid on;hold on;
+    h210 = plot(tss,ones(numel(ats(:,3)),1).*maxaz,'r--','LineWidth', 3);
+    plot(tss,ones(numel(ats(:,3)),1).*-maxaz,'r--','LineWidth', 3);
+    legend([h29(1) h210],'Generated','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$a_z: (m/s^2)$','Interpreter','latex');
+    
+    hp33 = get(subplot(3,1,1),'Position');
+    hp34 = get(subplot(3,1,2),'Position');
+    hp35 = get(subplot(3,1,3),'Position');
+    
+    cv1 = colorbar('Position', [hp33(1)+hp33(3)+0.01 hp35(2) 0.01 hp35(4)*4]);
+    cv1.Label.String = '$acceleration\ (m/s^2)$';
+    cv1.Label.Interpreter = 'latex';
+    cv1.FontSize = 12;
+    caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2 + ats(:,3).^2 ))]);
+        
+        
+        
+        
     end
 
 

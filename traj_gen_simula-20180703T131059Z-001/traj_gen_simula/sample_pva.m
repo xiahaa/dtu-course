@@ -35,6 +35,6 @@ function [pts,vts,ats,tss]=sample_pva(polyCoeffs, t, order)
         vts = [vts;[vxsamples vysamples vzsamples]];
         ats = [ats;[axsamples aysamples azsamples]];
         
-        tss = [tss;ts+(i-1)];
+        tss = [tss;linspace(t(i),t(i+1),1000)'];
     end
 end
