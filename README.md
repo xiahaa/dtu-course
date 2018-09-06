@@ -12,6 +12,9 @@ Most RRT* algorithms you will find in github by searching RRT star contain sever
 ## add perlin noise
 Map generator using perlin noise.
 
+## add control simulation
+control simulation using simple pid trajectory tracker.
+
 ## lessons learned
 1. free code doesn't mean free lunch!!!! Use you own judgement.
 2. KD tree offered by VLFeat even slower than vectorized bruth-force search in MatLab, which seems to be strange...... I intended to use KD tree for nn search. However, after benchmark test, I found vectorized brute-force was even faster....So I abandoned to use KD tree..
@@ -22,5 +25,6 @@ Demo:
 ![demo](./traj_gen_simula-20180703T131059Z-001/traj_gen_simula/perlin.bmp)
 ![demo](./traj_gen_simula-20180703T131059Z-001/traj_gen_simula/random.bmp)
 
+![demo](./perlin.gif)
 
 
