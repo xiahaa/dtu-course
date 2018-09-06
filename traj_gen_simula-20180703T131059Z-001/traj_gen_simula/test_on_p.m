@@ -17,9 +17,9 @@ cvx_begin sdp
     variable P(6,6) symmetric
     minimize 0
     subject to
-        (Ac'*P+P*Ac)<0
+        -(Ac'*P+P*Ac)>0
         P > 0
-        P(1,1)>1
+        P(1,1)>0.1
 cvx_end
 
 

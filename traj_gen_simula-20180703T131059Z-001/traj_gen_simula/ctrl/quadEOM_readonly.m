@@ -54,19 +54,19 @@ wRb = bRw';
 % if numel(windYaw) == 0
 %     windYaw = 2*pi*rand()-pi;
 % end
-persistent windYaw
-if abs(xdot) > 1e-3 && abs(ydot) > 1e-3
-    windYaw = atan2(ydot, xdot);
-else
-    if numel(windYaw) == 0
-        windYaw = 2*pi*rand()-pi;
-    end
-end
-hRw = RPYtoRot_ZXY(0,0,windYaw);
-wRh = hRw';
-Fwind = wRh * [-params.windForceNorm;0;0];
+% persistent windYaw
+% if abs(xdot) > 1e-3 && abs(ydot) > 1e-3
+%     windYaw = atan2(ydot, xdot);
+% else
+%     if numel(windYaw) == 0
+%         windYaw = 2*pi*rand()-pi;
+%     end
+% end
+% hRw = RPYtoRot_ZXY(0,0,windYaw);
+% wRh = hRw';
+% Fwind = wRh * [-params.windForceNorm;0;0];
 
-accel = 1 / params.mass * (wRb * [0; 0; F] + Fwind - [0; 0; params.mass * params.grav]);
+accel = 1 / params.mass * (wRb * [0; 0; F] + 0 - [0; 0; params.mass * params.grav]);
 
 % Angular velocity
 K_quat = 2; %this enforces the magnitude 1 constraint for the quaternion

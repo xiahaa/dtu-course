@@ -25,7 +25,8 @@ function ctrl_entry(h_fig, trajCoeff, trajTime)
     % parameters for simulation
     params = crazyflie();% todo, assign maximum thrust and angle
 
-    trajectory_sampler([], [], [], trajCoeff, trajTime, params.sampleType);
+    trajectory_sampler([], [], trajCoeff, trajTime);
+    findVirtualTime([],[], trajCoeff, trajTime, params.sampleType);
     
 %% **************************** FIGURES *****************************
 % fprintf('Initializing figures...\n')
@@ -81,14 +82,16 @@ set(gcf,'Renderer','OpenGL')
             % Initialize quad plot
             if iter == 1
                 QP{qn} = QuadPlot(qn, x0{qn}, 0.1, 0.04, quadcolors(qn,:), max_iter, h_3d);
-                desired_state = trajhandle(time, qn, x{qn}(1:6));
+                desired_state = trajhandle(time, qn);
                 QP{qn}.UpdateQuadPlot(x{qn}, [desired_state.pos; desired_state.vel], time);
                 h_title = title(sprintf('iteration: %d, time: %4.2f', iter, time));
             end
 
             % Run simulation
+            tic
             [tsave, xsave] = ode45(@(t,s) quadEOM(t, s, qn, controlhandle, trajhandle, params), timeint, x{qn});
-
+            toc
+            disp('ode ending!');
             F = calcF(timeint(end), x{qn}, qn, controlhandle, trajhandle, params);
             xsave(end,14) = F;
 
@@ -101,15 +104,24 @@ set(gcf,'Renderer','OpenGL')
             ttraj{qn}((iter-1)*nstep+1:iter*nstep) = tsave(1:end-1);
 
             % Update quad plot
-            desired_state = trajhandle(time + cstep, qn, x{qn}(1:6));
+            desired_state = trajhandle(time + cstep, qn);
             QP{qn}.UpdateQuadPlot(x{qn}, [desired_state.pos; desired_state.vel], time + cstep);
             set(h_title, 'String', sprintf('iteration: %d, time: %4.2f', iter, time + cstep))
             if OUTPUT_TO_VIDEO == 1
                 im = frame2im(getframe(gcf));
                 writeVideo(v,im);
             end
+            
+            if params.sampleType == 1 
+                time = time + cstep; % Update simulation time
+            elseif params.sampleType == 2
+                time = findVirtualTime([], x{qn}(1:6)) + cstep;
+            else
+                desired_state1 = trajhandle(time, qn);
+                time = findVirtualTime([], x{qn}(1:6));
+            end
+            
         end
-        time = time + cstep; % Update simulation time
         t = toc;
         % Check to make sure ode45 is not timing out
         if(t> cstep*500)

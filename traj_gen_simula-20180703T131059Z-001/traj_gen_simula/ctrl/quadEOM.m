@@ -19,17 +19,12 @@ function sdot = quadEOM(t, s, qn, controlhandle, trajhandle, params)
 % See Also: quadEOM_readonly, crazyflie
 
 % convert state to quad stuct for control
+% tic
 qd{qn} = stateToQd(s);
 
 % Get desired_state
-if params.sampleType == 1
-    desired_state = trajhandle(t, qn);
-elseif params.sampleType == 2
-    css = [qd{qn}.pos;qd{qn}.vel];
-    desired_state = trajhandle(t, qn, css);
-elseif params.sampleType == 3
-    desired_state = trajhandle(t, qn, qd{qn}(1:6));
-end
+desired_state = trajhandle(t, qn);
+
 % The desired_state is set in the trajectory generator
 qd{qn}.pos_des      = desired_state.pos;
 qd{qn}.vel_des      = desired_state.vel;
@@ -42,5 +37,6 @@ qd{qn}.yawdot_des   = desired_state.yawdot;
 
 % compute derivative
 sdot = quadEOM_readonly(t, s, F, M, params);
-
+% toc
+% sdot
 end

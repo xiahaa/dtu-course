@@ -32,7 +32,7 @@ params.invI = inv(I);
 params.grav = g;
 params.arm_length = L;
 
-params.maxangle = 40*pi/180; % you can specify the maximum commanded angle here
+params.maxangle = 10*pi/180; % you can specify the maximum commanded angle here
 params.maxF     = 2.5*m*g;   % left these untouched from the nano plus
 params.minF     = 0.05*m*g;  % left these untouched from the nano plus
 
@@ -45,6 +45,6 @@ params.windForceNorm = m*g*0;
 % % only horizontal wind
 % phi = 2*pi*rand()-pi;
 % params.windForce = [cos(phi);sin(phi);0].*windForceNorm;
-params.sampleType = 2;
+params.sampleType = 1;
 
 end

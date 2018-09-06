@@ -21,6 +21,14 @@ phi_des = 1/params.grav * (acc_des(1)*sin(qd{qn}.yaw_des) - acc_des(2)*cos(qd{qn
 theta_des = 1/params.grav * (acc_des(1)*cos(qd{qn}.yaw_des) + acc_des(2)*sin(qd{qn}.yaw_des));
 psi_des = qd{qn}.yaw_des;
 
+if abs(phi_des) > params.maxangle
+    phi_des = sign(phi_des) * params.maxangle;
+end
+
+if abs(theta_des) > params.maxangle
+    theta_des = sign(theta_des) * params.maxangle;
+end
+
 euler_des = [phi_des;theta_des;psi_des];
 pqr_des = [0;0; qd{qn}.yawdot_des];
 % Thurst

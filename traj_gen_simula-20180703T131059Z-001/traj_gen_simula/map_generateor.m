@@ -1,6 +1,6 @@
 function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     clc;clear all;close all;
-    debug = 0;
+    debug = 1;
     if debug == 0
         %% call c++ interface
         seed = 511;
