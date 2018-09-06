@@ -25,6 +25,6 @@ Demo:
 ![demo](./traj_gen_simula-20180703T131059Z-001/traj_gen_simula/perlin.bmp)
 ![demo](./traj_gen_simula-20180703T131059Z-001/traj_gen_simula/random.bmp)
 
-![demo](./traj_gen_simula-20180703T131059Z-001/traj_gen_simula/perlin.gif)
+![demo](./perlin.gif)
 
 
