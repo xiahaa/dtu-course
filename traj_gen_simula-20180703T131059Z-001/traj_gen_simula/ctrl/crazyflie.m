@@ -32,7 +32,7 @@ params.invI = inv(I);
 params.grav = g;
 params.arm_length = L;
 
-params.maxangle = 10*pi/180; % you can specify the maximum commanded angle here
+params.maxangle = 30*pi/180; % you can specify the maximum commanded angle here
 params.maxF     = 2.5*m*g;   % left these untouched from the nano plus
 params.minF     = 0.05*m*g;  % left these untouched from the nano plus
 

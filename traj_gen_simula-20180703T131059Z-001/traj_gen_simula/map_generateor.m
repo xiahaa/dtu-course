@@ -1,6 +1,6 @@
 function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
     clc;clear all;close all;
-    debug = 1;
+    debug = 0;
     if debug == 0
         %% call c++ interface
         seed = 511;
@@ -9,7 +9,7 @@ function [output, pcl] = map_generateor(sizeX, sizeY, sizeZ, seed, scale)
         sizeZ = 2;
         resolution = 0.1;%% 1 grid = 0.25m
         scale = 1/resolution;
-        type = 1;
+        type = 2;
 
         %% obstacles, w_l = minimium width of obstacles in real metrics
         ObsNum = 70;

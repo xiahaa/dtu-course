@@ -66,6 +66,9 @@ set(gcf,'Renderer','OpenGL')
 
     %% ************************* RUN SIMULATION *************************
     OUTPUT_TO_VIDEO = 0;
+    drawGif = 1;
+    axis tight manual % this ensures that getframe() returns a consistent size
+    giffilename = 'perlin.gif';
     if OUTPUT_TO_VIDEO == 1
         v = VideoWriter('perlin.avi');
         open(v)
@@ -110,6 +113,17 @@ set(gcf,'Renderer','OpenGL')
             if OUTPUT_TO_VIDEO == 1
                 im = frame2im(getframe(gcf));
                 writeVideo(v,im);
+            end
+            
+            if drawGif == 1
+                frame = getframe(gcf); 
+                im = frame2im(frame); 
+                [imind,cm] = rgb2ind(im,256); 
+                if iter == 1
+                    imwrite(imind,cm,giffilename,'gif', 'Loopcount',inf); 
+                else
+                    imwrite(imind,cm,giffilename,'gif','WriteMode','append'); 
+                end
             end
             
             if params.sampleType == 1 
