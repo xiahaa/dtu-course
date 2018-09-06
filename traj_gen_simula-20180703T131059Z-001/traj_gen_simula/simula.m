@@ -22,7 +22,7 @@ function varargout = simula(varargin)
 
 % Edit the above text to modify the response to help simula
 
-% Last Modified by GUIDE v2.5 09-Jul-2018 19:52:58
+% Last Modified by GUIDE v2.5 06-Sep-2018 14:47:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -167,6 +167,9 @@ function pushbutton2_Callback(hObject, eventdata, handles)
         wayptsz,initvz,endvz,initaz,endaz,maxvz,maxaz,l);
     order = 5;
     [pts,vts,ats,tss]=sample_pva(polyCoeffs, realt, order);
+    
+    trajgenRes.coeff = polyCoeffs;    trajgenRes.time = realt;
+    set(hObject,'UserData',trajgenRes);
     
     plot(pts(:,1),pts(:,2),'b-','Parent',handles.axes1);
     set(get(handles.axes1,'title'),'string','2D-Trajecory');
@@ -848,3 +851,23 @@ for i = 1:(num-1)
     %% line 3
     plot([x1r x2r], [y1r y2r], 'red','LineStyle','--','Parent',handles.axes1);
 end
+
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    addpath('ctrl') % todo
+    h1 = figure;
+    res = get(handles.pushbutton2,'UserData');
+    
+    order = 5;
+    [pts,vts,ats,tss]=sample_pva(res.coeff, res.time, order);
+    
+    plot3(pts(:,1),pts(:,2),pts(:,3),'m-', 'LineWidth', 3);hold on;
+    set(gca,'Xlabel',text('String','X'));
+    set(gca,'Ylabel',text('String','Y'));
+    set(gca,'Zlabel',text('String','Z'));
+    set(get(gca,'title'),'string','3D-Trajecory');
+    ctrl_entry(h1, res.coeff, res.time);
