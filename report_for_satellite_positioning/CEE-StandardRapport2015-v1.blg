@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: CEE-StandardRapport2015-v1.aux
+The style file: unsrtnat.bst
+A level-1 auxiliary file: files/frontpage.aux
+A level-1 auxiliary file: files/abstract.aux
+A level-1 auxiliary file: files/assign_a.aux
+A level-1 auxiliary file: files/assign_b.aux
+A level-1 auxiliary file: files/assign_c.aux
+A level-1 auxiliary file: files/backpage.aux
+Database file #1: bibtex/litteratur.bib
+Warning--empty journal in misra2006global
+Warning--empty year in misra2006global
+Warning--empty year in misra2006global
+You've used 1 entry,
+            2481 wiz_defined-function locations,
+            560 strings with 4703 characters,
+and the built_in function-call counts, 331 in all, are:
+= -- 22
+> -- 15
+< -- 1
++ -- 6
+- -- 4
+* -- 23
+:= -- 57
+add.period$ -- 2
+call.type$ -- 1
+change.case$ -- 2
+chr.to.int$ -- 1
+cite$ -- 4
+duplicate$ -- 18
+empty$ -- 29
+format.name$ -- 7
+if$ -- 62
+int.to.chr$ -- 1
+int.to.str$ -- 2
+missing$ -- 1
+newline$ -- 12
+num.names$ -- 3
+pop$ -- 14
+preamble$ -- 1
+purify$ -- 1
+quote$ -- 0
+skip$ -- 11
+stack$ -- 0
+substring$ -- 2
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 7
+warning$ -- 3
+while$ -- 2
+width$ -- 0
+write$ -- 16
+(There were 3 warnings)
