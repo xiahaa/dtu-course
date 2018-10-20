@@ -1,5 +1,14 @@
-function d_trop = tropo_deley_via_saastamoinen_model(lati, h, el, type)
-    
+function d_trop = tropo_deley_via_saastamoinen_model(lati, h, el, type)    
+%calc_ps_T_via_earth_atmosphere_model calculate pressure using  earth 
+%atmosphere model given by NASA.
+%model and constants from:
+%   https://www.grc.nasa.gov/www/k-12/airplane/atmosmet.html
+% inputs:      
+%   h: altitude
+% outputs:
+%   Ps: pressure in HPa.
+%    T: temperature in kelvin.
+%Author: xiahaa@space.dtu.dk
     % compute p and t
     [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h);
     % compute e
