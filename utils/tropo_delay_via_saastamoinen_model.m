@@ -1,16 +1,16 @@
 function d_trop = tropo_deley_via_saastamoinen_model(lati, h, el, type)    
-%calc_ps_T_via_earth_atmosphere_model calculate pressure using  earth 
-%atmosphere model given by NASA.
-%model and constants from:
-%   https://www.grc.nasa.gov/www/k-12/airplane/atmosmet.html
-% inputs:      
-%   h: altitude
+%tropo_deley_via_saastamoinen_model estimate troposhere using the saastamoinen_model 
+% inputs:
+%   lati: latitude.
+%   h: altitude.
+%   el: elevation angle.
+%   type: modeling option.
 % outputs:
 %   Ps: pressure in HPa.
 %    T: temperature in kelvin.
 %Author: xiahaa@space.dtu.dk
     % compute p and t
-    [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h);
+    [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h,type);
     % compute e
     e = calc_partial_pressure(T);
     
@@ -35,7 +35,7 @@ function d_trop = tropo_deley_via_saastamoinen_model(lati, h, el, type)
     end
 end
 
-function [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h)
+function [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h,type)
 %calc_ps_T_via_earth_atmosphere_model calculate pressure using  earth 
 %atmosphere model given by NASA.
 %model and constants from:
@@ -46,10 +46,18 @@ function [Ps, T] = calc_ps_T_via_earth_atmosphere_model(h)
 %   Ps: pressure in HPa.
 %    T: temperature in kelvin.
 %Author: xiahaa@space.dtu.dk
-    T = 15.04 - 0.00649*h;% temperature in Celsius degrees
-    T = T + 273.1;
-    Ps = 101.29*((T)/288.08)^(5.256);% pressure in KPa
-    Ps = Ps * 10;% KPa to HPa
+    if type == '2' || type == '3'
+        %% use nasa parameters
+        T = 15.04 - 0.00649*h;% temperature in Celsius degrees
+        T = T + 273.1;
+        Ps = 101.29*((T)/288.08)^(5.256);% pressure in KPa
+        Ps = Ps * 10;% KPa to HPa
+    elseif type == '1'
+        %% use parameters given in the slides.
+        T = 18;
+        T = T + 273.1;
+        Ps = 1013;%hpa to kpa
+    end
 end
 
 function e = calc_partial_pressure(T)

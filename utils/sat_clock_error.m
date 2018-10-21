@@ -1,12 +1,9 @@
-function d_satclk = sat_clock_error(sp3t, sp3cr, PRN, ts)
+function d_satclk = sat_clock_error(sp3SatInfo, id, ts)
     c = 299792458;% m / s;
-    
     %% find the corresponding sp3 indices
-    id = sp3(:,1) == PRN;
-    tsp3 = sp3(id,3);
-    clkrec = sp3(id,5);
-    
-    
-    
-    d_satclk = c * clk_rec*1e-6;
+    tsp3 = sp3SatInfo{id}(:,1);
+    clkrec = sp3SatInfo{id}(:,5);
+    %% interpolation the clkrec
+    clkerr = interp1(tsp3,clkrec,ts,'linear');
+    d_satclk = c * clkerr*1e-6;
 end
