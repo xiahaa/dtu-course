@@ -80,9 +80,9 @@ function content = sp3fileParser(path)
                 section.Second = str2num(Second);
             else
                 satPos = parseSatPos(tline);
-                satPos.x = str2num(satPos.x);
-                satPos.y = str2num(satPos.y);
-                satPos.z = str2num(satPos.z);
+                satPos.x = str2num(satPos.x).*1000;
+                satPos.y = str2num(satPos.y).*1000;
+                satPos.z = str2num(satPos.z).*1000;
                 satPos.clock = str2num(satPos.clock);
                 section.satPos(linenum - (shiftbase),1) = satPos;
             end

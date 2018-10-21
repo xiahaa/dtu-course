@@ -186,7 +186,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     for i = 1:sp3.satNum
         data(i,:) = [section.satPos(i).x,section.satPos(i).y,section.satPos(i).z];
     end
-    data = data.*1000;
+%     data = data.*1000;
     consParams = struct('a',6378137.0,'f',1/298.257223563);
     [xo,yo,zo] = llhtoCartesian(lati, longi, alti, consParams);
     

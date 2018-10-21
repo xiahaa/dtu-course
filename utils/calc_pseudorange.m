@@ -20,6 +20,6 @@ function pr = calc_pseudorange(at_pos, sp3SatInfo, id, ts, TECU, recerr)
     %% compute receiver clock delay
     d_recclk = rec_clock_error(recerr);
     
-    pr = R + d_satclk - d_recclk + d_iono + d_trop;
+    pr = R - d_satclk + d_recclk + d_iono + d_trop;
     
 end
