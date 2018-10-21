@@ -19,6 +19,9 @@ function ex5_modeling_error_sources
         disp(list);
     end
 
+    % local position llh
+    testCase(1,:) = [55.78575300466123,12.525384183973078,40];% DTU 101
+    
     % given epoch
     epoch.year = 2018;
     epoch.Month = 9;
@@ -28,23 +31,17 @@ function ex5_modeling_error_sources
     epoch.Second = 5;
     
     %% read tpday's information
-    dataOfToday = {};
-    j = 1;
-    for i = 1:size(content.sections,1)
-        timediff = abs(content.sections{i}.year - epoch.year) * 365 + ...
-                   abs(content.sections{i}.Month - epoch.Month) * 30 + ...
-                   abs(content.sections{i}.Day - epoch.Day);
-        % not today, continue
-        if timediff >= 1
-            continue;
-        end
-        % today's data
-        da.Hour = content.sections{i}.Hour;
-        da.Minute = content.sections{i}.Minute;
-        da.Second = content.sections{i}.Second;
-        da.satPos = content.sections{i}.satPos;
-        dataOfToday{j,1} = da;
-        j = j + 1;
+    dataOfToday = find_data(content, epoch);   
+    
+    %% satellite position prediction
+    satPosPred = zeros(content.satNum,3);
+    t_interp = epoch.Hour*3600+epoch.Minute*60+ epoch.Second;
+    cnt = 2;
+    neighbor_ids = find_neighbor_ids(dataOfToday, epoch, cnt);
+    for i = 1:content.satNum
+        satId = i;
+        [sx,sy,sz] = interp_sat_pos(satId, neighbor_ids, dataOfToday, t_interp, '1');
+        satPosPred(i,:) = [sx,sy,sz];
     end
     
     %% parse content
@@ -59,8 +56,18 @@ function ex5_modeling_error_sources
     end 
     
     %%
-    ts = epoch.Hour * 3600 + epoch.Minute * 60 + epoch.Second;
-    id = 2;
-    d_satclk = sat_clock_error(satInfo, id, ts);
+    ts = t_interp;
+    TECU = 10;%TECU
+    recerr = 0.1;%ms
+    prs = [];
+    for i = 1:content.satNum
+        [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk] = calc_pseudorange(testCase(1,1), testCase(1,2), testCase(1,3), ...
+                                      satPosPred(i,:), satInfo, i, ts, TECU, recerr);
+        if visibility == 1
+            prs = [prs;[pr R, d_iono, d_trop, d_satclk, d_recclk]];
+        end
+    end
+    
+    disp(prs);
     
 end

@@ -185,105 +185,16 @@ function ex4_interpolation_sat_position
     xlabel('x: satellite id', 'Interpreter','latex');
     ylabel('y: movement (m)', 'Interpreter','latex');
     title('Movements in 5 minutes','Interpreter','latex');
-end
-
-function y = interpolation1D(sx,sy,x,method)
-    y = interp1(sx,sy,x,method);
-end
-
-function dataOfToday = find_data(content, epoch)
-% find today's data
-    dataOfToday = {};
-    j = 1;
-    for i = 1:size(content.sections,1)
-        timediff = abs(content.sections{i}.year - epoch.year) * 365 + ...
-                   abs(content.sections{i}.Month - epoch.Month) * 30 + ...
-                   abs(content.sections{i}.Day - epoch.Day);
-        % not today, continue
-        if timediff >= 1
-            continue;
-        end
-        % today's data
-        da.Hour = content.sections{i}.Hour;
-        da.Minute = content.sections{i}.Minute;
-        da.Second = content.sections{i}.Second;
-        da.satPos = content.sections{i}.satPos;
-        dataOfToday{j,1} = da;
-        j = j + 1;
-    end
-end
-
-function closet_id = find_closet_id(dataOfToday, epoch)
-    clockErr = [];
-    for i = 1:size(dataOfToday,1)
-        clockErr(i) = (dataOfToday{i}.Hour - epoch.Hour)*3600 + ...
-                      (dataOfToday{i}.Minute - epoch.Minute)*60 + ...
-                      (dataOfToday{i}.Second - epoch.Second);
-    end    
-    [minval, minid] = min(abs(clockErr));
-    closet_id = minid;
-end
-
-function neighbor_ids = find_neighbor_ids(dataOfToday, epoch, cnt)
-    clockErr = [];
-    for i = 1:size(dataOfToday,1)
-        clockErr(i) = (dataOfToday{i}.Hour - epoch.Hour)*3600 + ...
-                      (dataOfToday{i}.Minute - epoch.Minute)*60 + ...
-                      (dataOfToday{i}.Second - epoch.Second);
-    end    
-    [minval, minid] = min(abs(clockErr));
-    neighbor_ids = [];
-    if (minid - cnt) >= 1 && (minid + cnt) <= numel(clockErr)
-        neighbor_ids = (minid - cnt):1:(minid + cnt);
-    else
-        if (minid - cnt) >= 1
-            neighbor_ids = (minid - cnt):1:minid;
-        else
-            neighbor_ids = minid:1:(minid+cnt);
-        end
-    end
-end
-
-function neighbor_ids = find_neighbor_ids_with_ts(dataOfToday, ts, cnt)
-    clockErr = [];
-    for i = 1:size(dataOfToday,1)
-        clockErr(i) = (dataOfToday{i}.Hour*3600 + dataOfToday{i}.Minute*60 + dataOfToday{i}.Second) - ts;
-    end    
-    [minval, minid] = min(abs(clockErr));
-    neighbor_ids = [];
-    if (minid - cnt) >= 1 && (minid + cnt) <= numel(clockErr)
-        neighbor_ids = (minid - cnt):1:(minid + cnt);
-    else
-        if (minid - cnt) >= 1
-            neighbor_ids = (minid - cnt):1:minid;
-        else
-            neighbor_ids = minid:1:(minid+cnt);
-        end
-    end
-end
-
-function [sx,sy,sz] = interp_sat_pos(satId, neighbor_ids, dataOfToday, t_interp, interp_opt)
-    % neighboring data
-    format long;
-    satpos = zeros(numel(neighbor_ids),4);
-    for i = 1:1:numel(neighbor_ids)
-        t = dataOfToday{neighbor_ids(i)}.Hour*3600+dataOfToday{neighbor_ids(i)}.Minute*60+ ...
-            dataOfToday{neighbor_ids(i)}.Second;
-        p = [dataOfToday{neighbor_ids(i)}.satPos(satId).x, ...
-             dataOfToday{neighbor_ids(i)}.satPos(satId).y, ...
-             dataOfToday{neighbor_ids(i)}.satPos(satId).z];
-        satpos(i,:) = [t, p];
-    end
     
-    if interp_opt == '1'
-        % interpolation
-        sx = interpolation1D(satpos(:,1),satpos(:,2),t_interp,'spline');
-        sy = interpolation1D(satpos(:,1),satpos(:,3),t_interp,'spline');
-        sz = interpolation1D(satpos(:,1),satpos(:,4),t_interp,'spline');
-    elseif interp_opt == '2'
-        % interpolation
-        sx = lagrange_interpolation(satpos(:,1),satpos(:,2),t_interp);
-        sy = lagrange_interpolation(satpos(:,1),satpos(:,3),t_interp);
-        sz = lagrange_interpolation(satpos(:,1),satpos(:,4),t_interp);
-    end
+    slotID = strcat('A',num2str(1));
+    t0 = 12*3600;
+    t = 12*3600+60*5;
+    s = move_estimation_via_RK(slotID, t0, t);
+    disp(s);
 end
+
+
+
+
+
+
