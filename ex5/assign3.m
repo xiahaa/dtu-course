@@ -77,7 +77,9 @@ set(handles.edit7,'String',num2str(value));
 set(handles.edit1,'String',num2str(55.78575300466123));
 set(handles.edit2,'String',num2str(12.525384183973078));
 set(handles.edit3,'String',num2str(40));
-
+set(handles.slider1,'Value',(55.78575300466123));
+set(handles.slider2,'Value',(12.525384183973078));
+set(handles.slider3,'Value',(40));
 
 cla(handles.axes1);
 axis(handles.axes1, 'equal');

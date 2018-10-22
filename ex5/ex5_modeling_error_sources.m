@@ -25,7 +25,7 @@ function ex5_modeling_error_sources
     % given epoch
     epoch.year = 2018;
     epoch.Month = 9;
-    epoch.Day = 17;
+    epoch.Day = 16;
     epoch.Hour = 12;
     epoch.Minute = 0;
     epoch.Second = 5;
@@ -60,11 +60,23 @@ function ex5_modeling_error_sources
     TECU = 10;%TECU
     recerr = 0.1;%ms
     prs = [];
+    consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
+    [xo,yo,zo] = llhtoCartesian(testCase(1,1), testCase(1,2), testCase(1,3), consParams);% to ECEF
+    elevations = [];
     for i = 1:content.satNum
-        [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk] = calc_pseudorange(testCase(1,1), testCase(1,2), testCase(1,3), ...
+        dx = satPosPred(i,1) - xo;
+        dy = satPosPred(i,2) - yo;
+        dz = satPosPred(i,3) - zo;
+        %% conversion
+        [e,n,u] = WGS842ENU(testCase(1,1), testCase(1,2), dx, dy, dz);
+        %% compute azimuth and zenith
+        [azimuth, zenith, elevation] = calcAzimuthZenithElevation(e,n,u);
+        
+        [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk, clkerr] = calc_pseudorange(testCase(1,1), testCase(1,2), testCase(1,3), ...
                                       satPosPred(i,:), satInfo, i, ts, TECU, recerr);
         if visibility == 1
-            prs = [prs;[pr R, d_iono, d_trop, d_satclk, d_recclk]];
+            prs = [prs;[pr R, d_iono, d_trop, d_satclk, d_recclk, clkerr]];
+            elevations = [elevations;elevation];
         end
     end
     

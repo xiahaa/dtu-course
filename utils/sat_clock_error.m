@@ -1,4 +1,4 @@
-function d_satclk = sat_clock_error(sp3SatInfo, id, ts)
+function [d_satclk,clkerr] = sat_clock_error(sp3SatInfo, id, ts)
     c = 299792458;% m / s;
     %% find the corresponding sp3 indices
     tsp3 = sp3SatInfo{id}(:,1);

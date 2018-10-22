@@ -1,4 +1,4 @@
-function [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk] = calc_pseudorange(lat, lon, h, sat_pos, sp3SatInfo, id, ts, TECU, recerr)    
+function [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk, clkerr] = calc_pseudorange(lat, lon, h, sat_pos, sp3SatInfo, id, ts, TECU, recerr)    
     
     consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
     [xo,yo,zo] = llhtoCartesian(lat, lon, h, consParams);% to ECEF
@@ -19,6 +19,7 @@ function [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk] = calc_pseudora
         d_trop = inf;
         d_satclk = inf;
         d_recclk = inf;
+        clkerr = inf;
         return;
     else
         visibility = 1;
@@ -34,10 +35,10 @@ function [visibility, pr, R, d_iono, d_trop, d_satclk, d_recclk] = calc_pseudora
     d_iono = iono_delay_first_order_group(el, TECU);
     
     %% compute estimated troposhere delay 
-    d_trop = tropo_deley_via_saastamoinen_model(lat, h, el, '1');
+    d_trop = tropo_delay_via_saastamoinen_model(lat, h, el, '1');
     
     %% compute satellite clokc delay
-    d_satclk = sat_clock_error(sp3SatInfo, id, ts);
+    [d_satclk,clkerr] = sat_clock_error(sp3SatInfo, id, ts);
     
     %% compute receiver clock delay
     d_recclk = rec_clock_error(recerr);
