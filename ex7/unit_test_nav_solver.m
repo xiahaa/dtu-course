@@ -1,7 +1,8 @@
 function unit_test_nav_solver
 %% source data from Allan Aasbjerg Nielsen
     close all;
-    addpath('../utils')
+    addpath('../utils/');
+    addpath('../utils/3rdparty');
     % true position (Landmaalervej, Hjortekaer)
     xtrue = [3507884.948 780492.718 5251780.403 0]';
     % positions of satellites 1, 4, 7, 13, 20, 24 and 25 in ECEF coordinate system, [m]
@@ -17,9 +18,9 @@ function unit_test_nav_solver
                
     sprior2 = 10^2; %5?2; %prior variance [m?2]
     
-    options.usePrior = 0;options.useSOCP = 1;options.useDLT = 0;
-    options.useWLS = 1;
-    options.verbose = 0;
+    options.usePrior = 0;options.useSOCP = 0;options.useDLT = 1;
+    options.useWLS = 1;options.useGN = 0;options.useSD = 0;options.useLM = 0;
+    options.verbose = 1;
     options.x0_prior = [0 0 0 0]';
     options.maxiter = 100;
     options.threshold1 = 1e-6;

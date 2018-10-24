@@ -20,14 +20,21 @@ function varargout = navSolver(prs, sat_pos, options)
     end
     
     if options.useWLS == 1
-        res = solveWLS(prs, sat_pos, x0, options);
-        x = res{1};
-        x(4) = x(4)./cspd;
-        res{1} = x;
-        varargout = res;
-    else
-        
+        [x,std_x,QDOP,Qenu,llh] = solveWLS(prs, sat_pos, x0, options);
+    elseif options.useGN == 1
+        [x,std_x,QDOP,Qenu,llh] = solveGaussNewton(prs, sat_pos, x0, options);
+    elseif options.useSD == 1
+        [x,std_x,QDOP,Qenu,llh] = solveBySteepestDescentMethod(prs, sat_pos, x0, options);
+    elseif options.useLM == 1
+        [x,std_x,QDOP,Qenu,llh] = solveByLevenbergMarquardt(prs, sat_pos, x0, options);
     end
+    
+    x(4) = x(4)./cspd;
+    varargout{1} = x;
+    varargout{2} = std_x;
+    varargout{3} = QDOP;
+    varargout{4} = Qenu;
+    varargout{5} = llh;
 end
 
 

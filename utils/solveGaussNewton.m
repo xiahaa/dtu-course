@@ -1,18 +1,13 @@
-function varargout = solveWLS(prs, sat_pos, x0, options)        
-    %% prior std dev of pseudorange
-    P = eye(size(prs,1))./diag(options.prs_var);
-    
+function varargout = solveGaussNewton(prs, sat_pos, x0, options)        
     %% weight
     x = x0;
     n = size(prs,1);
     p = size(x0,1);
-    free = n - p;%% freedom
-    
+    free = n - p;
     if options.verbose == 1
         %% save some intermediate results
         iters = [];%% iterations cnt
         X = [];%% solution of each iteration
-        ctNinvc = [];%%
         vtPv = [];%% residual cost
     end
     
@@ -24,46 +19,40 @@ function varargout = solveWLS(prs, sat_pos, x0, options)
         %% jacobian
         J = calcJacobian(x, sat_pos);
         %% A and b
-        A = J'*P*J;
-        b = J'*P*y;
+        A = J'*J;
+        b = J'*y;
         dxhat = lssolver(A,b);
         %% update
-        x = x + dxhat;
+        x = x - dxhat;
         %% verbose
         if options.verbose == 1
             %% intermediate results for residual analysis
-            c = J'*P*y;
-            N = A;
             Ninv = inv(A);
-            khat = J*dxhat;
-            vhat = y - khat;%% new residual;
-            vtPv = [vtPv vhat'*P*vhat];%% cost
-            ctNinvc = [ctNinvc c'*dxhat];
+            vhat = y;%%residual;
+            vtPv = [vtPv vhat'*vhat];%% cost
             X = [X x];
             iters = [iters iter];
         else
-            N = A;
             Ninv = inv(A);
-            khat = J*dxhat;
-            vhat = y - khat;%% new residual;
+            vhat = y;%% new residual;
         end
         
         %% iteration stop criteria
-        cond1 = (y'*P*y)/(vhat'*P*vhat);
+        cond1 = (vhat'*vhat);
         cond2 = norm(dxhat);
         if cond1 < options.threshold1 || cond2 < options.threshold2
             break;
         end
     end
     %% RSS
-    RSS = vhat'*P*vhat;
+    RSS = vhat'*vhat;
     MSE = RSS / free;%% s02
     RMSE = sqrt(MSE); %% s0
     
     Dx = MSE * Ninv;
     std_x = sqrt(diag(Dx));
     
-    QDOP = computeDOP(J,P,options.prs_var);
+    QDOP = computeDOP(J,[],options.prs_var);
     PDOP = sqrt(trace(QDOP(1:3,1:3)));
     TDOP = sqrt(QDOP(4,4));
     GDOP = sqrt(trace(QDOP));
@@ -96,7 +85,7 @@ function varargout = solveWLS(prs, sat_pos, x0, options)
     if options.verbose == 1
         %% residual analysis    
         %% variance 
-        D0 = MSE * inv(P);
+        D0 = MSE;
         std_y = sqrt(diag(D0));
         
         Dyhat = MSE * J*Ninv*J';
@@ -110,8 +99,6 @@ function varargout = solveWLS(prs, sat_pos, x0, options)
         corr_xhat = aux * Dx * aux;
         
         hvpv = display_customized(iters,vtPv,'$v^TPv$',2);
-        hcnc = display_customized(iters,ctNinvc,'$c^TN^{-1}c$',2);
-        h1 = display_customized(iters,ctNinvc./vtPv,'$\frac{c^TN^{-1}c}{v^TPv}$',2);
         for i = 1:p
             h(i) = display_customized(iters,X(i,:),strcat('x(', num2str(i),') v.s. iteration'),2);
         end
@@ -158,4 +145,5 @@ function J = calcJacobian(x0, xi)
     j14 = j1dt(x0,xi);
 
     J = [j11 j12 j13 j14];
+    J = -J;
 end
