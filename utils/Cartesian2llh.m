@@ -22,7 +22,7 @@ function [lat, lon, height] = Cartesian2llh(x,y,z,consParams)
     maxIter = 1e6;
     
     while iter < maxIter
-        disp(strcat('iter:',num2str(iter)));
+%         disp(strcat('iter:',num2str(iter)));
         N = a / sqrt(1-e2*sin(vold(1))*sin(vold(1)));
         % update
         vnew(1) = atan2(z, x2y2sqr*(1-e2*N/(N+vold(3)+1e-6)));

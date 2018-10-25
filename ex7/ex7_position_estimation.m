@@ -4,7 +4,7 @@ function ex7_position_estimation
     addpath('../utils/3rdparty');
     
     [prs, sat_pos, xreal] = generate_test_case1();
-    pseudorange_raw = prs(:,1);
+    pseudorange_raw = correct_error_excep_recever(prs(:,1), [], [], prs(:,5));
     pseudorange_cor = correct_error_excep_recever(prs(:,1), prs(:,3), prs(:,4), prs(:,5));
     
     x0 = xreal + -100000*rand(3,1)+200000*2;
@@ -20,8 +20,8 @@ function ex7_position_estimation
     options.prs_var = sprior2;
     
     options.x0_prior = x0;
-
-    [x_raw,std_x_raw,QDOP_raw,Qenu_raw,llh_raw] = navSolver(pseudorange_raw, sat_pos, options);
+%     [x_raw,std_x_raw,QDOP_raw,Qenu_raw,llh_raw] = navSolver(pseudorange_raw, sat_pos, options);
+    [x_raw,std_x_raw,QDOP_raw,Qenu_raw,llh_raw] = navSolverAug(pseudorange_raw, sat_pos, options);
     
     [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh_cor] = navSolver(pseudorange_cor, sat_pos, options);
     
@@ -68,7 +68,16 @@ function ex7_position_estimation
 end
 
 function prs = correct_error_excep_recever(prs_raw, d_iono, d_trop, d_satclk)
-    prs = prs_raw - d_iono - d_trop + d_satclk;
+    prs = prs_raw;
+    if ~isempty(d_iono)
+        prs = prs - d_iono;
+    end
+    if ~isempty(d_trop)
+        prs = prs - d_trop;
+    end
+    if ~isempty(d_satclk)
+        prs = prs + d_satclk;
+    end
 end
 
 function [prs, sat_pos, x0] = generate_test_case1()
@@ -93,7 +102,7 @@ function [prs, sat_pos, x0] = generate_test_case1()
             content.sections{i}.Month, content.sections{i}.Day, ...
             content.sections{i}.Hour, content.sections{i}.Minute, ...
             content.sections{i}.Second);
-        disp(list);
+%         disp(list);
     end
     
     % given epoch
@@ -144,7 +153,7 @@ function [prs, sat_pos, x0] = generate_test_case1()
         end
     end
     
-    disp(prs);
+%     disp(prs);
     
     %% assign output
     x0 = [xo, yo, zo]';
