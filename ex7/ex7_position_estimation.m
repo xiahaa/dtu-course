@@ -11,7 +11,7 @@ function ex7_position_estimation
     x0 = [x0;0];
     
     sprior2 = 10^2; %5^2; %prior variance [m^2]
-    options.usePrior = 1;options.useSOCP = 0;options.useDLT = 0;
+    options.usePrior = 0;options.useSOCP = 0;options.useDLT = 1;
     options.useWLS = 0;options.useGN = 1;options.useSD = 0;options.useLM = 0;
     options.verbose = 0;
     options.maxiter = 100;
@@ -20,17 +20,24 @@ function ex7_position_estimation
     options.prs_var = sprior2;
     
     options.x0_prior = x0;
-%     [x_raw,std_x_raw,QDOP_raw,Qenu_raw,llh_raw] = navSolver(pseudorange_raw, sat_pos, options);
-    [x_raw,std_x_raw,QDOP_raw,Qenu_raw,llh_raw] = navSolverAug(pseudorange_raw, sat_pos, options);
+    [x_raw1,std_x_raw1,QDOP_raw1,Qenu_raw1,llh_raw1] = navSolver(pseudorange_raw, sat_pos, options);
+    [x_raw2,std_x_raw2,QDOP_raw2,Qenu_raw2,llh_raw2] = navSolverAug(pseudorange_raw, sat_pos, options);
     
     [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh_cor] = navSolver(pseudorange_cor, sat_pos, options);
     
-    err_raw = x_raw(1:3) - xreal;
-    err_recerr_raw = x_raw(4) - 0.1*1e-3;
-    PDOP_raw = sqrt(trace(QDOP_raw(1:3,1:3)));
-    TDOP_raw = sqrt(QDOP_raw(4,4));
-    HDOP_raw = sqrt(trace(Qenu_raw(1:2,1:2)));
-    VDOP_raw = sqrt(Qenu_raw(3,3));
+    err_raw1 = x_raw1(1:3) - xreal;
+    err_recerr_raw1 = x_raw1(4) - 0.1*1e-3;
+    PDOP_raw1 = sqrt(trace(QDOP_raw1(1:3,1:3)));
+    TDOP_raw1 = sqrt(QDOP_raw1(4,4));
+    HDOP_raw1 = sqrt(trace(Qenu_raw1(1:2,1:2)));
+    VDOP_raw1 = sqrt(Qenu_raw1(3,3));
+    
+    err_raw2 = x_raw2(1:3) - xreal;
+    err_recerr_raw2 = x_raw2(4) - 0.1*1e-3;
+    PDOP_raw2 = sqrt(trace(QDOP_raw2(1:3,1:3)));
+    TDOP_raw2 = sqrt(QDOP_raw2(4,4));
+    HDOP_raw2 = sqrt(trace(Qenu_raw2(1:2,1:2)));
+    VDOP_raw2 = sqrt(Qenu_raw2(3,3));
     
     err_cor = x_cor(1:3) - xreal;
     err_recerr_cor = x_cor(4) - 0.1*1e-3;
@@ -39,18 +46,31 @@ function ex7_position_estimation
     HDOP_cor = sqrt(trace(Qenu_cor(1:2,1:2)));
     VDOP_cor = sqrt(Qenu_cor(3,3));
     
-    disp('--------------------RAW---------------------------');
+    disp('--------------------RAW1---------------------------');
     disp(strcat("truth: ", num2str(xreal')));
-    disp(strcat("estimation:", num2str(x_raw')));
+    disp(strcat("estimation:", num2str(x_raw1')));
 
-    disp(strcat("error xyz with raw pr:", num2str(err_raw)));
-    disp(strcat("error norm with raw pr:", num2str(norm(err_raw))));    
-    disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_raw)));
-    disp(strcat('std_x_raw: ',num2str(std_x_raw)));
-    disp(strcat('PDOP_raw: ',num2str(PDOP_raw)));
-    disp(strcat('TDOP_raw: ',num2str(TDOP_raw)));
-    disp(strcat('HDOP_raw: ',num2str(HDOP_raw)));
-    disp(strcat('VDOP_raw: ',num2str(VDOP_raw)));
+    disp(strcat("error xyz with raw pr:", num2str(err_raw1)));
+    disp(strcat("error norm with raw pr:", num2str(norm(err_raw1))));    
+    disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_raw1)));
+    disp(strcat('std_x_raw: ',num2str(std_x_raw1)));
+    disp(strcat('PDOP_raw: ',num2str(PDOP_raw1)));
+    disp(strcat('TDOP_raw: ',num2str(TDOP_raw1)));
+    disp(strcat('HDOP_raw: ',num2str(HDOP_raw1)));
+    disp(strcat('VDOP_raw: ',num2str(VDOP_raw1)));
+    
+    disp('--------------------RAW2---------------------------');
+    disp(strcat("truth: ", num2str(xreal')));
+    disp(strcat("estimation:", num2str(x_raw2')));
+
+    disp(strcat("error xyz with raw pr:", num2str(err_raw2)));
+    disp(strcat("error norm with raw pr:", num2str(norm(err_raw2))));    
+    disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_raw2)));
+    disp(strcat('std_x_raw: ',num2str(std_x_raw2)));
+    disp(strcat('PDOP_raw: ',num2str(PDOP_raw2)));
+    disp(strcat('TDOP_raw: ',num2str(TDOP_raw2)));
+    disp(strcat('HDOP_raw: ',num2str(HDOP_raw2)));
+    disp(strcat('VDOP_raw: ',num2str(VDOP_raw2)));
 
     disp('--------------------COR---------------------------');
     disp(strcat("truth: ", num2str(xreal')));
@@ -64,6 +84,29 @@ function ex7_position_estimation
     disp(strcat('TDOP_raw: ',num2str(TDOP_cor)));
     disp(strcat('HDOP_raw: ',num2str(HDOP_cor)));
     disp(strcat('VDOP_raw: ',num2str(VDOP_cor)));
+    
+    dx = sat_pos(:,1) - x_raw2(1);
+    dy = sat_pos(:,2) - x_raw2(2);
+    dz = sat_pos(:,3) - x_raw2(3);
+    consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
+    s1 = [];
+    s2 = [];
+    RE = 6371e3;
+    hI = 350e3;
+    [lat, lon, height] = Cartesian2llh(x0(1),x0(2),x0(3),consParams);   
+    for i = 1:size(sat_pos,1)
+        %% conversion
+        [e,n,u] = WGS842ENU(lat, lon, dx(i), dy(i), dz(i));
+        %% compute azimuth and zenith
+        [azimuth, zenith, elevation] = calcAzimuthZenithElevation(e,n,u);
+        zenith = pi/2 - deg2rad(elevation);
+        OF = (1-((RE*sin(zenith))/(RE+hI))^2)^(-1/2);
+        s1 = [s1;OF];
+        s2 = [s2;1/sin(deg2rad(elevation))];
+    end
+    A = [s1 s2];
+    baug = A * [x_raw2(5);x_raw2(6)];
+    
     
 end
 
