@@ -105,7 +105,7 @@ function ex7_position_estimation
         s2 = [s2;1/sin(deg2rad(elevation))];
     end
     A = [s1 s2];
-    baug = A * [x_raw2(5);x_raw2(6)];
+    baug = A * [x_raw2(5);ecc ];
     
     
 end
