@@ -12,6 +12,8 @@ function varargout = navSolver(prs, sat_pos, options)
         x0 = SOCP(prs,sat_pos);
     elseif options.useDLT == 1
         x0 = DLT(prs,sat_pos);
+    elseif options.useBancroft == 1
+        x0 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
     elseif options.usePrior == 1
         x0 = [options.x0_prior(1:3);options.x0_prior(4)] ;%% plus 1km as requested
     else
@@ -46,7 +48,7 @@ function x0 = DLT(prs, sat_pos)
     n = size(prs,1);
     v = 1:n;
     C = nchoosek(v,2);
-    
+    cspd = 299792458;% m / s;
     sat_pos_r = sat_pos(:,1).^2+sat_pos(:,2).^2+sat_pos(:,3).^2;
     
     dprs = prs(C(:,1)).^2 - prs(C(:,2)).^2 - sat_pos_r(C(:,1),1) + sat_pos_r(C(:,2),1);
@@ -54,7 +56,11 @@ function x0 = DLT(prs, sat_pos)
             sat_pos(C(:,2),2)-sat_pos(C(:,1),2), ...
             sat_pos(C(:,2),3)-sat_pos(C(:,1),3)];
     x0 = lssolver(A,dprs);
-    x0 = [x0;0];
+%     x0 = [x0;0];
+    rho = sqrt((sat_pos(:,1)-x0(1)).^2+(sat_pos(:,2)-x0(2)).^2+(sat_pos(:,3)-x0(3)).^2);
+    dt = mean(prs-rho) / cspd;
+    x0 = [x0;dt];
+    
 end
 
 function x0 = SOCP(prs,sat_pos)

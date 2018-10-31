@@ -16,6 +16,10 @@ function varargout = navSolverAug(prs, sat_pos, options)
         x01 = DLT(prs,sat_pos);
         [x5,x6] = estimateAugState(x01, sat_pos, prs);
         x0 = [x01;x5;x6];
+    elseif options.useBancroft == 1
+        x01 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
+        [x5,x6] = estimateAugState(x01, sat_pos, prs);
+        x0 = [x01;x5;x6];
     elseif options.usePrior == 1
         x01 = [options.x0_prior(1:3);options.x0_prior(4)];
         [x5,x6] = estimateAugState(x01, sat_pos, prs);

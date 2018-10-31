@@ -11,7 +11,7 @@ function ex7_position_estimation
     x0 = [x0;0];
     
     sprior2 = 10^2; %5^2; %prior variance [m^2]
-    options.usePrior = 0;options.useSOCP = 0;options.useDLT = 1;
+    options.usePrior = 0;options.useSOCP = 0;options.useDLT = 1;options.useBancroft = 0;
     options.useWLS = 0;options.useGN = 1;options.useSD = 0;options.useLM = 0;
     options.verbose = 0;
     options.maxiter = 100;
@@ -105,7 +105,7 @@ function ex7_position_estimation
         s2 = [s2;1/sin(deg2rad(elevation))];
     end
     A = [s1 s2];
-    baug = A * [x_raw2(5);ecc ];
+    baug = A * [x_raw2(5);x_raw2(6)];
     
     
 end
