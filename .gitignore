@@ -44,3 +44,5 @@ test/confxyr.eps
 test/test.m
 test/test_ls.m
 *.asv
+test/svm_rank_windows.zip
+test/svm_rank_windows/LICENSE.txt
