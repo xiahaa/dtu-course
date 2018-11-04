@@ -1,7 +1,7 @@
 function test_on_dop_svm_validation
     n = 20;
     dim = 3;
-    m = 8;
+    m = 10;
     bins = 4;
     runcnt = 100;
     k = 1;
@@ -25,7 +25,7 @@ function test_on_dop_svm_validation
     clsy2 = read_model('./svm_rank_windows/model_f2.dat',bins2); 
     clsy3 = read_model('./svm_rank_windows/model_f3.dat',bins3); 
     
-    for k = 1:runcnt
+    parfor k = 1:runcnt
         random_vecs = gen_ran_vecs(n, dim);
         p = v_normalize(random_vecs);
         fea_vec1 = extrac_feature_vecs(p, bins1);
