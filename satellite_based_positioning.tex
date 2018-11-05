@@ -1,0 +1,284 @@
+\documentclass[a4paper]{report}
+\usepackage{lipsum}
+\usepackage{tikzpagenodes}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix}
+\pgfplotsset{compat=1.8}
+\usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{epsfig} % for postscript graphics files
+\usepackage[colorlinks=true,citecolor=green]{hyperref}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{bm}
+\usepackage{pbox}
+\usepackage{siunitx,booktabs,etoolbox}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\section{DLT initialization}
+Assume the state to estimate is $\mathbf{x} = [x,\ y,\ z,\ dT]^T$. To use DLT for initial estimation, we have to assume $dT = 0$, then we will have the following relationship between the pseudorange and the geometric distance:
+\begin{align}
+\rho &= \sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2},\ i=1,2,\cdots,n \\
+{\rho}^2 &= {(x-x_i)^2+(y-y_i)^2+(z-z_i)^2},\ i=1,2,\cdots,n \\
+d\rho_{ij}^2 &= {\rho}^2_i - {\rho}^2_j \\
+d\rho_{ij}^2 &={(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}-{(x-x_j)^2-(y-y_j)^2-(z-z_j)^2}
+\end{align}
+Do some simple extensions, we will have:
+\begin{align}
+d\rho_{ij}^2 - (x_i^2+y_i^2+z_i^2) + (x_j^2+y_j^2+z_j^2) &= 2(x_j-x_i)x \nonumber \\
+& + 2(y_j-y_i)y + 2(z_j-z_i)z \nonumber \\
+&=\left[ 
+\begin{matrix}
+2(x_j-x_i) & 2(y_j-y_i) & 2(z_j-z_i) \\
+\end{matrix}
+\right]
+\left[ 
+\begin{matrix}
+x \\ y \\ z \\
+\end{matrix}
+\right]
+\end{align}
+By stacking all measurements together, we will have a linear equation $\mathbf{A}[x,\ y,\ z]^T=\mathbf{b}$. By solving this linear system, we will have an estimation of $\mathbf{x} = [x,\ y,\ z,\ dT]^T = [x_0,\ y_0,\ z_0,\ 0]^T$. This simple DLT initialization will make the non-linear optimization procedure converge more quickly. Moreover, since it can work will any prior guess of $\mathbf{x}$ and given a better guess, it will not influence the final result, i.e. the local minimum for initial guess and that of the DLT guess are the same.
+
+\section{SOCP initialization}
+The initialization can also be obtained with the Second-Order-Cone Programming (SOCP). Revisit the objective function:
+\begin{equation}
+\text{minimize}:\ \sum\limits_{i=0}^{n}{\left(\rho_i - (\sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}+cdT)\right)^2} 
+\end{equation}
+Now, use some slack variables $l_i=\sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}$ and the epigraph $t \geq \sum\limits_{i=0}^{n}{\rho_i - l_i - cdT)^2}$, we will have:
+\begin{align}
+\text{minimize}&:\ t \nonumber \\
+\text{subject to}&: t \geq \sum\limits_{i=0}^{n}{\rho_i - l_i - cdT)^2} \\
+& l_i=\sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}, \ i=1,2,\cdots,n \nonumber 
+\end{align}
+Relax  $l_i=\sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}$  to  $l_i\geq\sqrt{(x-x_i)^2+(y-y_i)^2+(z-z_i)^2}$, we will have the standard SOCP problem:
+\begin{align}
+\text{minimize}&:\ t \nonumber \\
+\text{subject to}&: 
+(t,\frac{1}{1},\rho_0 - l_0 - cdT,\cdots,\rho_n - l_n - cdT) \in \mathcal{Q}_r^{n+3} \\
+& (l_i,(x-x_i),(y-y_i),(z-z_i)) \in \mathcal{Q}^{4}, \ i=1,2,\cdots,n \nonumber 
+\end{align}
+By solving this convex SOCP problem, we will have an good estimation as $\mathbf{x} = [x,\ y,\ z,\ dT]^T = [x_0,\ y_0,\ z_0,\ cdT_0]^T$. The relaxation can be controlled by adding regularizations as:
+\begin{align}
+\text{minimize}&:\ t+\lambda\sum\limits_{i=0}^{n}{l_i} \nonumber \\
+\text{subject to}&: 
+(t,\frac{1}{1},\rho_0 - l_0 - cdT,\cdots,\rho_n - l_n - cdT) \in \mathcal{Q}_r^{n+3} \\
+& (l_i,(x-x_i),(y-y_i),(z-z_i)) \in \mathcal{Q}^{4}, \ i=1,2,\cdots,n \nonumber 
+\end{align}
+where $\lambda$ can be seen as a trade-off weight.
+\section{Augmented State}
+Revisit the composition of the pseudorange (omitting the satellite orbit error):
+\begin{align}
+\rho &= R + \underbrace{cdT}_{receiver} - \underbrace{cdt}_{satellite} + \underbrace{d_{iono}}_{satellite, receiver} + \underbrace{d_{trop}}_{satellite, receiver} \\
+R &= \sqrt{(x-x_{sv})^2+(y-y_{sv})^2+(z-z_{sv})^2}
+\end{align}
+Among those errors, 
+\begin{itemize}
+\item $cdT$ is receiver-dependent, identical for pseudorange measurements;
+\item $cdt$ is satellite-dependent, unique for each pseudorange measurement;
+\item $d_{iono}$ and $d_{trop}$,are satellite and receiver dependent implicitly;
+\end{itemize}
+A further analysis can be concluded as follows:
+\begin{itemize}
+\item Since $cdt$ is hard to model (in fact we need to add one unknown parameter for each pseudorange which means the number of unknown parameters are more than the number of measurements), it should be definitely eliminated before carrying out further computation.
+\item $cdT$ can be modelled as one parameter to resolve. This is what we do normally.
+\item According to the common used model for modelling the ionospheric and tropospheric errors, $d_{iono}$ and $d_{trop}$ are related to their corresponding errors in polar direction (which is receiver and satellite independent) and the corresponding elevation angles. Consequently, we can add two more parameters $x_5$, $x_6$ and model the ionospheric error and tropospheric error as:
+\begin{align}
+d_{iono}&= x_5 * OF,\ OF = \left(1-\left(\frac{RE*sin(zenith)}{RE+hI}\right)^2\right)^{-1/2} \\
+d_{trop}&= \frac{x_6}{sin(elv)}
+\label{eq:ionotrop}
+\end{align}
+With known satellite positions, Eq~\ref{eq:ionotrop} can be written implicitly as the function of $\mathbf{x}={x,\ y,\ z,\ cdT}$ as
+\begin{align}
+d_{iono}&= x_5 * f_1(\mathbf{x}, x_{sv}) \\
+d_{trop}&= \frac{x_6}{ f_2(\mathbf{x}, x_{sv})} \\
+\Leftrightarrow \nonumber \\
+d_{iono}&= f_1^*(\mathbf{x}_{aug}) \\
+d_{trop}&= f_2^*(\mathbf{x}_{aug}) \\
+\mathbf{x}_{aug} &= [x,\ y,\ z,\ cdT,\ x_5,\ x_6]^T \nonumber
+\end{align}
+In this way, there is no need to eliminate the ionospheric delay and the tropospheric delay from the pseudoranges. Instead, we estimate $x_5,\ x_6$ together with $x,\ y,\ z,\ cdT$ through least-square optimization. The benefit of doing this is that we don't need to estimate the ionospheric delay and the tropospheric delay which depend on various factors and therefore hard to model. The cost we need to pay for this state augmentation is that the minimum number of visible satellites increases to 6 since there are 6 unknown parameters. Since now there the GPS, GLONASS, Galileo, Beidou system operated, observing at least 6 satellites are not so hard in open sky environment.
+\end{itemize}
+\textbf{navSolverAug.m}: do position estimation using the augmented state vector.
+
+%\pbox[c][20pt][b]{\textwidth}{Estimation\footnote{Pseudoranges are corrected with satellite clock error.}\\ \vphantom{g}}
+
+\subsection{Result}
+\begin{table}[h]
+\centering
+\begin{tabular}{c|c|c|c|c}
+\hline
+\textbf{} & \textbf{x}: (m) & \textbf{y}: (m)  & \textbf{z}: (m)  & \textbf{dT}: (s) \\ \hline 
+truth & 3509042.2969  &    779567.15431  & 5251066.1743 & 0.0001 \\ \hline
+Estimation 0 & 3380435.0196    &  721266.27907 &     5082767.4168 & -0.00028038122 \\ \hline  
+Estimation 1 & 3509053.135     & 779569.77236  &    5251078.7139 & 0.00010006084 \\ \hline 
+Estimation 2 & 3509042.2969     & 779567.15431  &    5251066.1743 & 0.0001 \\ \hline 
+Estimation 3 & 3509042.2969     & 779567.15431  &    5251066.1743 & 0.0001  \\ \hline
+\end{tabular}
+\end{table}
+\begin{itemize}
+\item Estimation 0: Raw pseudoranges with no corrections;
+\item Estimation 1: Pseudoranges are corrected with satellite clock error, normal state vector $\mathbf{x}_{aug} = [x,\ y,\ z,\ cdT]^T$;
+\item Estimation 2: Pseudoranges are corrected with satellite clock error, augmented state vector $\mathbf{x}_{aug} = [x,\ y,\ z,\ cdT,\ x_5,\ x_6]^T$;
+\item Estimation 3: Pseudoranges are corrected with satellite clock error, the ionosperic delay and the tropospheric delay, normal state vector $\mathbf{x}_{aug} = [x,\ y,\ z,\ cdT]^T$;
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{
+  l|
+  c<{}@{  }|
+  c<{}@{  }|
+}
+\toprule
+ & $d_{iono}$: (m) & $d_{trop}$: (m) \\
+\midrule
+Truth & $2.009719031271335$ &   $3.072991650267203$ \\ 
+Estimation & $2.060316692498627$  &  $3.165240666428296$  \\ \hline
+Truth & $4.099930073823621$ &   $9.693598483115005$ \\ 
+   Estimation &    $4.189709480973081$  &  $10.333536458801328$  \\ \hline
+   Truth & $2.116069134646013$ &   $3.268438024695639$ \\ 
+   Estimation &    $2.096887113400555$  &  $ 3.232743676464965 $ \\ \hline
+   Truth & $2.839297088726820$ &   $4.803878722772577$ \\ 
+   Estimation &    $2.766711098092753$  &  $ 4.628835520059784 $ \\ \hline
+   Truth & $1.771088164677799$ &   $2.654116559350425$ \\ 
+   Estimation &    $1.796907826493772$  &  $ 2.698253195570821 $ \\ \hline
+   Truth & $2.501404314462073$ &   $4.034040635214109$ \\ 
+   Estimation &    $2.412980142617273$  &  $ 3.849286796828415 $ \\ \hline
+   Truth & $1.644024499990154$ &   $2.440639842034833$ \\ 
+   Estimation &    $1.652890921255600$  &  $ 2.455344001554867 $ \\ \hline
+   Truth & $2.480817599439596$ &   $3.990483231007696$ \\ 
+   Estimation &    $2.518604983197980$  &  $ 4.070696026094213 $ \\ \hline
+   Truth & $4.683754370548995$ &   $16.666993910233707$ \\ 
+   Estimation &    $4.697532505190646$  &  $ 16.989111027376644$  \\ \hline
+   Truth & $3.621709536037996$ &   $7.231334175028028$ \\ 
+   Estimation &    $3.498462352983300$  &  $ 6.758697779975225 $ \\ \hline
+   Truth & $3.025565441330769$ &   $5.282493672102815$ \\ 
+   Estimation &    $3.173145222014883$  &  $ 5.697095454240499 $ \\ \hline
+   Truth & $2.218178445425964$ &   $3.461948842712789$ \\ 
+   Estimation &    $2.155787874337332$  &  $ 3.342995980093863 $ \\ \hline
+\bottomrule
+\end{tabular}
+\caption{Comparison of true and estimated ionospheric and tropospheric delay. }
+\label{tab:TAB-TAB}
+\end{table}
+As can be seen, the estimations of the ionospheric delay and the tropospheric delay are fairly good with the mean errors being $-6.982093895557447e-04$ m and $-0.051739902912841$ m and the standard deviation being $0.078216111070952$ m and $0.297526445119276$ m.
+
+\section{DOP}
+revisit the definition of GDOP:
+\begin{equation}
+GDOP = \sqrt{trace(\mathbf{M}^{-1})}=\sqrt{\frac{1}{\lambda_1}+\frac{1}{\lambda_2}+\frac{1}{\lambda_3}+\frac{1}{\lambda_4}}
+\label{eq_raw_dop1}
+\end{equation}
+where $\lambda_1,\ \lambda_2,\ \lambda_3,\ \lambda_4$ are the eigenvalue of $\mathbf{M}$. Since $\mathbf{M}$ is symmetric and positive definite, all its eigenvalues are greater than $0$. 
+
+\subsection{Closed-form solution}
+In order to solve the GDOP in closed-form, the following set of features are used:
+\begin{align}
+h_1(\mathbf{\lambda})&=\lambda_1+\lambda_2+\lambda_3+\lambda_4=trace(\mathbf{M}) \\
+h_2(\mathbf{\lambda})&=\lambda_1^2+\lambda_2^2+\lambda_3^2+\lambda_4^2=trace(\mathbf{M^2}) \\
+h_3(\mathbf{\lambda})&=\lambda_1^3+\lambda_2^3+\lambda_3^3+\lambda_4^3=trace(\mathbf{M^3}) \\
+h_4(\mathbf{\lambda})&=\lambda_1*\lambda_2*\lambda_3*\lambda_4=det(\mathbf{M})
+\end{align}
+These equalities hold because $\mathbf{M}$ and its powers are symmetric matrices (hoffman and kunze 1961). These features are firstly used by researchers for approximating the GDOP using learning based approaches, e.g. the Artificial Neural Network (ANN) and Support-Vector Regression (SVR). The recent work proposed a closed-form solution with the aforementioned features by using the property of symmetric polynomials.
+
+A symmetric polynomial is a polynomial $p(x_1,\ x_2,\ \cdots,\ x_n)$
+in $n$ variables such that when any two variables are interchanged,
+the polynomial remains the same. This can be
+more precisely defined as follows:
+\begin{equation}
+p(x_{\sigma_1},\ x_{\sigma_2},\ \cdots,\ x_{\sigma_n})=p(x_1,\ x_2,\ \cdots,\ x_n)
+\end{equation}
+where $x_{\sigma_1},\ x_{\sigma_2},\ \cdots,\ x_{\sigma_n}$ is any permuted sequence of $x_1,\ x_2,\ \cdots,\ x_n$. Two typical symmetric polynomials are:
+\begin{itemize}
+	\item Power sum symmetric polynomials: 
+	\begin{equation}
+		p_k(x_1,\ x_2,\ \cdots,\ x_n)=x_1^2+x_2^2+\cdots+x_n^2
+	\end{equation}
+	\item Elementary symmetric polynomials:
+	\begin{equation}
+		e_k(x_1,\ x_2,\ \cdots,\ x_n)=\underset{1 \leq j_1<j_2<\cdots<j_k\leq n}{\sum}{x_{j_1}x_{j_2}\cdots x_{j_k}}
+	\end{equation}
+	The 0th degree elementary symmetric polynomial is defined by $e_0(x_1,\ x_2,\ \cdots,\ x_n) = 1$.
+\end{itemize}
+The close relationship between these two types of symmetric polynomials is further
+explained by the Newton–Girard formulae.
+\begin{align}
+k(-1)^{k}&e_k(x_1,\ x_2,\ \cdots,\ x_n)+ \nonumber \\
+&\sum_{i=1}^{k}{(-1)^{i+k}e_i(x_1,\ x_2,\ \cdots,\ x_n)p_{k-i}(x_1,\ x_2,\ \cdots,\ x_n)} = 0
+\end{align}
+
+Now, revisit~\eqref{eq_raw_dop1}:
+\begin{equation}
+GDOP = \sqrt{\frac{\lambda_1\lambda_2\lambda_3+\lambda_1\lambda_2\lambda_4+\lambda_1\lambda_3\lambda_4+\lambda_2\lambda_3\lambda_4}{\lambda_1\lambda_2\lambda_3\lambda_4}}
+\end{equation}
+The numerator $\lambda_1\lambda_2\lambda_3+\lambda_1\lambda_2\lambda_4+\lambda_1\lambda_3\lambda_4+\lambda_2\lambda_3\lambda_4$ can be written as $e_4(\lambda_1,\ \lambda_2,\ \lambda_3,\ \lambda_4)$. Consequently, by applying the Newton–Girard formulae, the numerator can be computed with
+\begin{align}
+e_4(\mathbf{\lambda})&=\frac{1}{3}\left[ 
+\frac{1}{2}\left(p_1(\mathbf{\lambda})^2-p_2(\mathbf{\lambda})\right)p_1(\mathbf{\lambda})-p_1(\mathbf{\lambda})p_2(\mathbf{\lambda})+p_3(\mathbf{\lambda})
+\right] \\
+p_1(\mathbf{\lambda})&=h_1(\mathbf{\lambda}) \\
+p_2(\mathbf{\lambda})&=h_2(\mathbf{\lambda}) \\
+p_3(\mathbf{\lambda})&=h_3(\mathbf{\lambda}) \\
+&\Leftrightarrow \nonumber \\
+e_4(\mathbf{\lambda})&=\frac{0.5h_1(\mathbf{\lambda})^3-1.5h_1(\mathbf{\lambda})h_2(\mathbf{\lambda})+h_3(\mathbf{\lambda})}{3}
+\end{align}
+Overall, the GDOP can be written as
+\begin{equation}
+GDOP = \sqrt{\frac{0.5h_1(\mathbf{\lambda})^3-1.5h_1(\mathbf{\lambda})h_2(\mathbf{\lambda})+h_3(\mathbf{\lambda})}{3h_4}}
+\end{equation}
+This proposed closed-form solution needs 144 floating operations for computing the GDOP, not including the operations for computing $\mathbf{M}=\mathbf{H}^T\mathbf{H}$, dividing and the square-root.
+\subsection{Eigen Decomposition}
+Another way of computing the GDOP is to use the eigen decomposition to obtain $\mathbf{\lambda}$ and then apply~\ref{eq_raw_dop1}. Since the complexity of applying eigen decomposition is $\mathcal{O}(n^3)$ and there are only $4$ divisions, $3$ additions and $1$ square-root left for computing the GDOP, the overall complexity may be less than the previous closed-form solution (depending on the constant associated with the $\mathcal{O}(n^3)$).
+\subsection{Another closed form solution}
+Suppose the eigenvalues $\lambda_1,\ \lambda_2,\ \lambda_3,\ \lambda_4$ are known, the characteristic polynomial as
+\begin{align}
+|\mathbf{A-\lambda I}|=&(\lambda-\lambda_1)(\lambda-\lambda_2)(\lambda-\lambda_3)(\lambda-\lambda_4) \nonumber \\
+=&\lambda^4-\left(\lambda_1+\lambda_2+\lambda_3+\lambda_4\right)\lambda^3 \nonumber \\
+&+(\lambda_1\lambda_2+\lambda_1\lambda_3+\lambda_1\lambda_4+\lambda_2\lambda_3+\lambda_2\lambda_4+\lambda_3\lambda_4)\lambda^2 \nonumber \\
+&-(\lambda_1\lambda_2\lambda_3+\lambda_1\lambda_2\lambda_4+\lambda_1\lambda_3\lambda_4+\lambda_2\lambda_3\lambda_4)\lambda \nonumber \\
+& + \lambda_1\lambda_2\lambda_3\lambda_4
+\end{align}
+It is well known that $|\mathbf{A-\lambda I}|$ is a $4^{th}$ order polynomial which can be represented as 
+\begin{align}
+|\mathbf{A-\lambda I}|=p_4\lambda^4+p_3\lambda^3+p_2\lambda^2+p_1\lambda+p_0
+\end{align}
+It is easy to see that 
+\begin{equation}
+GDOP=\sqrt{\frac{-p_1}{p_0}}
+\end{equation}
+Through some symbolic computations and fully use the symmetric property, it can be concluded that it only needs around 110 floating operations to compute $p_0,\ p_1$. Theoretically speaking, this method will be the faster than the two aforementioned approaches, which can be shown in the experiment.
+
+\subsection{Experiment}
+An experiment has been done to compare the aforementioned three methods with the most traditional method $GDOP = \sqrt{trace(\mathbf{M}^{-1})}$. In this experiment, $100000$ geometric matrices $\mathbf{H}$ have been generated randomly, the mean time for each GDOP computation and the total time for $100000$ runs are shown in Table~\ref{tb:com}.
+\begin{table}[h]
+\centering
+\caption{Speed Comparison of four GDOP computation methods.}
+\label{tb:com}
+\begin{tabular}{c|c|c}
+\hline 
+\textbf{Method} & \textbf{Mean Time: (s)} & \textbf{Total Time: (s)} \\ \hline 
+Baseline & 1.1903e-05 & 1.1903 \\ \hline 
+Closed Form & 8.6366e-06 & 0.8637 \\ \hline 
+Eigen Decomposition & 6.3824e-06 & 0.6382 \\ \hline 
+Proposed & 3.3042e-06 & 0.3304 \\ \hline 
+\end{tabular}
+\end{table}
+
+\subsection{Geometric Meaning}
+Phillips (1984) proposed to select the four satellites with a
+maximum volume of tetrahedron formed by the tips of the
+unit vectors from the receiver to the satellites, i.e., vertices
+with the direction cosines $(e_{i1}, e_{i2}, e_{i3}, e_{i4}), i = 1, 2, 3, 4$. This
+is because GDOP is approximately proportional to the inverse of this volume. However, this maximum volume method may not select desired satellites with the minimum GDOP. 
+
+\end{document}
