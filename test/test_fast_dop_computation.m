@@ -66,50 +66,47 @@ function test_fast_dop_computation
 end
 
 function dop = eig_decomp2(H)
-    S = svd(H);
-    E = S.^2;
-    dop = sqrt(1/E(1) + 1/E(2) + 1/E(3) + 1/E(4));
-%     M = H'*H;
+%     S = svd(H);
+%     E = S.^2;
+%     dop = sqrt(1/E(1) + 1/E(2) + 1/E(3) + 1/E(4));
+    M = H'*H;
 %     tic
-%     a = M(1,1);b = M(1,2);c = M(1,3);d = M(1,4);
-%     e = M(2,2);f = M(2,3);g = M(2,4);
-%     h = M(3,3);i = M(3,4);
-%     j = M(4,4);
-% 
-%     bb = b*b;
-%     cc = c*c;
-%     dd = d*d;
-%     ff = f*f;
-%     gg = g*g;
-%     ii = i*i;
-%     ae = a*e;
-%     eh = e*h;
-%     ah = a*h;
-%     aj = a*j;
-%     ej = e*j;
-%     hj = h*j;
-% 
-%     fgi = f*g*i;
-%     bcf = b*c*f;
-%     bdg = b*d*g;
-%     ehj = e*h*j;
-%     
+    a = M(1,1);b = M(1,2);c = M(1,3);d = M(1,4);
+    e = M(2,2);f = M(2,3);g = M(2,4);
+    h = M(3,3);i = M(3,4);
+    j = M(4,4);
+
+    bb = b*b;
+    cc = c*c;
+    dd = d*d;
+    ff = f*f;
+    gg = g*g;
+    ii = i*i;
+    ae = a*e;
+    eh = e*h;
+    ah = a*h;
+    aj = a*j;
+    ej = e*j;
+    hj = h*j;
+
+    fgi = f*g*i;
+    bcf = b*c*f;
+    bdg = b*d*g;
+    ehj = e*h*j;
+    
 %     p1 = 1;%%lambda^4 
 %     p2 = -e - h - j - a;%%- e*lambda^3 - h*lambda^3 - j*lambda^3 - a*lambda^3 
 %     p3 = -bb - cc - dd - ff - gg - ii + ae + ah + aj + eh + ej + hj;
-%     p4 = a*ff+ a*gg+ cc*e + dd*e+ a*ii+ bb*h + bb*j+ dd*h + cc*j+ e*ii + ...
-%         gg*h+ ff*j - 2*fgi- ehj- 2*bcf- 2*bdg- ae*h- ae*j- 2*c*d*i- ah*j;
-% 
-%     p5 = cc*gg + dd*ff + bb*ii - ae*ii - ah*gg - aj*ff - dd*eh - cc*ej - ...
-%         2*c*d*f*g + 2*bcf*j - 2*b*c*g*i - 2*b*d*f*i + 2*bdg*h + 2*c*d*e*i ...
-%         + 2*a*fgi - bb*hj + a*ehj;
-%   
-%     P = [p1 p2 p3 p4 p5];
+    p4 = a*ff+ a*gg+ cc*e + dd*e+ a*ii+ bb*h + bb*j+ dd*h + cc*j+ e*ii + ...
+        gg*h+ ff*j - 2*fgi- ehj- 2*bcf- 2*bdg- ae*h- ae*j- 2*c*d*i- ah*j;
+
+    p5 = cc*gg + dd*ff + bb*ii - ae*ii - ah*gg - aj*ff - dd*eh - cc*ej - ...
+        2*c*d*f*g + 2*bcf*j - 2*b*c*g*i - 2*b*d*f*i + 2*bdg*h + 2*c*d*e*i ...
+        + 2*a*fgi - bb*hj + a*ehj;
+  
+    dop = sqrt(-p4/p5);
 %     toc
-%     tic
-%     E = roots(P);
-%     toc
-%     dop = sqrt(1/E(1) + 1/E(2) + 1/E(3) + 1/E(4));
+    
 
 end
 
