@@ -49,3 +49,9 @@ test/svm_rank_windows/LICENSE.txt
 *.dat
 *.exe
 test/trainingdata.mat
+
+satellite_based_positioning.log
+
+satellite_based_positioning.out
+
+satellite_based_positioning.synctex.gz
