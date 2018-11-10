@@ -182,6 +182,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     set(handles.axes9,'Zlabel',text('String','Z'));
 % view([-30.4000 45.2000]);
     set(get(handles.axes9,'title'),'string','3D-Trajecory');
+    
 %     title('Trajectory');
 
     pax11 = handles.axes2;
@@ -232,12 +233,12 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     legend('Generated','Maximum');
     
     figure(1)
+    cdata = sqrt(vts(:,1).^2+vts(:,2).^2+vts(:,3).^2);
     %% plot 3D trajectory and generate necessary 3D corridor
-    h1 = plot3(pts(:,1),pts(:,2), pts(:,3), 'b-', 'LineWidth', 3);hold on; grid on;
+    h1 = cline(pts(:,1),pts(:,2), pts(:,3),cdata);hold on; grid on;
+    set(h1, 'LineWidth', 3);
 %     h2 = plot_3D_corridor_and_compute_distance_to_hyperplane(waypts, wayptsz, l, polyCoeffs);
     [h2, ts, ds1, ds2] = plot_3D_corridor_and_compute_distance_to_hyperplane(waypts, wayptsz, l, polyCoeffs, realt);
-
-
 %     h1 = plot(pts(:,1),pts(:,2),'b-');hold on; grid on;
 %     for i = 1:(num-1)
 %         x1 = waypts(i,:);
@@ -261,91 +262,103 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     zlabel('z: (m)','Interpreter','latex');
 % %     title('Trajectory','Interpreter','latex');
     legend([h1 h2],'Trajectory', 'Corridor', 'Interpreter', 'latex');
+    cv=colorbar;
+    cv.Label.String = '$velocity\ (m/s)$';
+    cv.Label.Interpreter = 'latex';
+    cv.FontSize = 12;
     
     figure(4)
     ds = [ds1 ds2];
     cd = max(ds,[],2);
     mapd = colormap(jet);
-    hd1 = ccplot(ts,ds1,cd,mapd);grid on;hold on;
-    hd2 = ccplot(ts,ds2,cd,mapd);grid on;hold on;
+%     hd1 = ccplot(ts,ds1,cd,mapd);grid on;hold on;
+%     hd2 = ccplot(ts,ds2,cd,mapd);grid on;hold on;
+    hd1 = plot(ts,ds1, 'm-','LineWidth',3);grid on;hold on;
+    hd2 = plot(ts,ds2, 'b-','LineWidth',3);grid on;hold on;
     hdc = plot(ts,ones(numel(ds2),1).*l,'r--','LineWidth', 3);
-    legend([hd1(1) hd2(2) hdc], 'Distance to Plane 1', 'Distance to Plane 2', 'Maximum Tolerant Distance');
+    legend([hd1 hd2 hdc], 'Distance to Plane 1', 'Distance to Plane 2', 'Maximum Tolerant Distance');
     xlabel('Time: (s)','Interpreter','latex');
     ylabel('$distance:\ (m)$','Interpreter','latex');
     title('Corridor constraint','Interpreter','latex');
     
+    figure
+    
+    h = cline(pts(:,1),pts(:,2),pts(:,3), cdata);
+    
     figure(2)
-    vx1 = subplot(3,1,1);
-    c = sqrt(vts(:,1).^2);
-    map = colormap(jet);
-    h11 = ccplot(tss,vts(:,1),c,map);grid on;hold on;
-    h12 = plot(tss,ones(numel(vts(:,1)),1).*maxv,'r--','LineWidth', 3);
+    vx1 = subplot(2,1,1);
+%     c = sqrt(vts(:,1).^2);
+%     map = colormap(jet);
+    h11 = plot(tss,vts(:,1),'g-','LineWidth',3);grid on;hold on;
+    h12 = plot(tss,vts(:,2),'b-','LineWidth',3);grid on;hold on;
+    h13 = plot(tss,ones(numel(vts(:,1)),1).*maxv,'r--','LineWidth', 3);
     plot(tss,ones(numel(vts(:,1)),1).*-maxv,'r--','LineWidth', 3);
-    legend([h11(1) h12],'Generated','Maximum','Interpreter','latex');
+    legend([h11 h12 h13],'v_x','v_y','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$v_x: (m/s)$','Interpreter','latex');
+    ylabel('$velocity: (m/s)$','Interpreter','latex');
     title('Velocity Profile','Interpreter','latex');
-    subplot(3,1,2);
-    c = sqrt(vts(:,2).^2);
-    map = colormap(jet);
-    h13 = ccplot(tss,vts(:,2),c,map);grid on;hold on;
-    h14 = plot(tss,ones(numel(vts(:,2)),1).*maxv,'r--','LineWidth', 3);
-    plot(tss,ones(numel(vts(:,2)),1).*-maxv,'r--','LineWidth', 3);
-    legend([h13(1) h14],'Generated','Maximum','Interpreter','latex');
+    subplot(2,1,2);
+%     c = sqrt(vts(:,2).^2);
+%     map = colormap(jet);
+    h13 = plot(tss,vts(:,3),'c-','LineWidth',3);grid on;hold on;
+    h14 = plot(tss,ones(numel(vts(:,2)),1).*maxvz,'r--','LineWidth', 3);
+    plot(tss,ones(numel(vts(:,2)),1).*-maxvz,'r--','LineWidth', 3);
+    legend([h13 h14],'v_z','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$v_y: (m/s)$','Interpreter','latex');
-    subplot(3,1,3);
-    c = sqrt(vts(:,3).^2);
-    map = colormap(jet);
-    h15 = ccplot(tss,vts(:,3),c,map);grid on;hold on;
-    h16 = plot(tss,ones(numel(vts(:,3)),1).*maxvz,'r--','LineWidth', 3);
-    plot(tss,ones(numel(vts(:,3)),1).*-maxvz,'r--','LineWidth', 3);
-    legend([h15(1) h16],'Generated','Maximum','Interpreter','latex');
-    xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$v_z: (m/s)$','Interpreter','latex');
-    hp1 = get(subplot(3,1,1),'Position');
-    hp2 = get(subplot(3,1,3),'Position');
-    cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp2(2) 0.01 hp2(4)*3.8]);
-    cv.Label.String = '$velocity\ (m/s)$';
-    cv.Label.Interpreter = 'latex';
-    cv.FontSize = 12;
-    caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2+vts(:,3).^2))]);
+    ylabel('$velocity: (m/s)$','Interpreter','latex');
+%     subplot(3,1,3);
+%     c = sqrt(vts(:,3).^2);
+%     map = colormap(jet);
+%     h15 = ccplot(tss,vts(:,3),c,map);grid on;hold on;
+%     h16 = plot(tss,ones(numel(vts(:,3)),1).*maxvz,'r--','LineWidth', 3);
+%     plot(tss,ones(numel(vts(:,3)),1).*-maxvz,'r--','LineWidth', 3);
+%     legend([h15(1) h16],'Generated','Maximum','Interpreter','latex');
+%     xlabel('Time: (s)','Interpreter','latex');
+%     ylabel('$v_z: (m/s)$','Interpreter','latex');
+%     hp1 = get(subplot(3,1,1),'Position');
+%     hp2 = get(subplot(3,1,3),'Position');
+%     cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp2(2) 0.01 hp2(4)*3.8]);
+%     cv.Label.String = '$velocity\ (m/s)$';
+%     cv.Label.Interpreter = 'latex';
+%     cv.FontSize = 12;
+%     caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2+vts(:,3).^2))]);
     
     figure    
-    vx2 = subplot(3,1,1);
-    ca = sqrt(ats(:,1).^2);
-    map1 = colormap(jet);
-    h25 = ccplot(tss,ats(:,1),ca,map1);grid on;hold on;
+    vx2 = subplot(2,1,1);
+%     ca = sqrt(ats(:,1).^2);
+%     map1 = colormap(jet);
+    h25 = plot(tss,ats(:,1),'g-', 'LineWidth', 3);grid on;hold on;
+    h26 = plot(tss,ats(:,2),'b-', 'LineWidth', 3);grid on;hold on;
     plot(tss,ones(numel(ats(:,1)),1).*maxa,'r--', 'LineWidth', 3);
-    h26 = plot(tss,ones(numel(ats(:,1)),1).*-maxa,'r--','LineWidth', 3);
-    legend([h25(1) h26],'Generated','Maximum','Interpreter','latex');
+    h27 = plot(tss,ones(numel(ats(:,1)),1).*-maxa,'r--','LineWidth', 3);
+    legend([h25 h26 h27],'a_x','a_y','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$a_x: (m/s^2)$','Interpreter','latex');
+    ylabel('$acceleration: (m/s^2)$','Interpreter','latex');
     title('Acceleration Profile','Interpreter','latex');
-    subplot(3,1,2);
-    ca = sqrt(ats(:,2).^2);
-    h27 = ccplot(tss,ats(:,2),ca,map1);grid on;hold on;
-    h28 = plot(tss,ones(numel(ats(:,2)),1).*maxa,'r--','LineWidth', 3);
-    plot(tss,ones(numel(ats(:,2)),1).*-maxa,'r--','LineWidth', 3);
-    legend([h27(1) h28],'Generated','Maximum','Interpreter','latex');
+    subplot(2,1,2);
+%     ca = sqrt(ats(:,2).^2);
+    h27 = plot(tss,ats(:,3),'c-', 'LineWidth', 3);grid on;hold on;
+    h28 = plot(tss,ones(numel(ats(:,2)),1).*maxaz,'r--','LineWidth', 3);
+    plot(tss,ones(numel(ats(:,2)),1).*-maxaz,'r--','LineWidth', 3);
+    legend([h27 h28],'a_z','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$a_y: (m/s^2)$','Interpreter','latex');
-    subplot(3,1,3);
-    ca = sqrt(ats(:,3).^2);
-    h29 = ccplot(tss,ats(:,3),ca,map1);grid on;hold on;
-    h210 = plot(tss,ones(numel(ats(:,3)),1).*maxa,'r--','LineWidth', 3);
-    plot(tss,ones(numel(ats(:,2)),1).*-maxa,'r--','LineWidth', 3);
-    legend([h29(1) h210],'Generated','Maximum','Interpreter','latex');
-    xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$a_z: (m/s^2)$','Interpreter','latex');
-    
-    hp3 = get(subplot(3,1,1),'Position');
-    hp4 = get(subplot(3,1,3),'Position');
-    cv1 = colorbar('Position', [hp3(1)+hp3(3)+0.01 hp4(2) 0.01 hp4(4)*3.8]);
-    cv1.Label.String = '$acceleration\ (m/s^2)$';
-    cv1.Label.Interpreter = 'latex';
-    cv1.FontSize = 12;
-    caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2 + ats(:,3).^2))]);
+    ylabel('$acceleration: (m/s^2)$','Interpreter','latex');
+%     subplot(3,1,3);
+%     ca = sqrt(ats(:,3).^2);
+%     h29 = ccplot(tss,ats(:,3),ca,map1);grid on;hold on;
+%     h210 = plot(tss,ones(numel(ats(:,3)),1).*maxa,'r--','LineWidth', 3);
+%     plot(tss,ones(numel(ats(:,2)),1).*-maxa,'r--','LineWidth', 3);
+%     legend([h29(1) h210],'Generated','Maximum','Interpreter','latex');
+%     xlabel('Time: (s)','Interpreter','latex');
+%     ylabel('$a_z: (m/s^2)$','Interpreter','latex');
+%     
+%     hp3 = get(subplot(3,1,1),'Position');
+%     hp4 = get(subplot(3,1,3),'Position');
+%     cv1 = colorbar('Position', [hp3(1)+hp3(3)+0.01 hp4(2) 0.01 hp4(4)*3.8]);
+%     cv1.Label.String = '$acceleration\ (m/s^2)$';
+%     cv1.Label.Interpreter = 'latex';
+%     cv1.FontSize = 12;
+%     caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2 + ats(:,3).^2))]);
     
     
 

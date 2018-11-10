@@ -1,4 +1,5 @@
-function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,endv,enda,maxv,maxa,pz,initvz,endvz,initaz,endaz,maxvz,maxaz,l)
+function [polyCoeffs,realt]=cvx_project_traj_gen_solver_sdp_mo(p,initv,inita,endv,enda,maxv,maxa,pz,initvz,endvz,initaz,endaz,maxvz,maxaz,l)
+    tic
     dims = 3;
     N = size(p,1);
     pWpts = zeros(N,3);
@@ -29,47 +30,28 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
     vzmax = maxvz;%
     azmax = maxaz;%
     
-    %% test sample, Nx2
-%     pWpts = [[1 1]; ...
-%               [3 2]; ...
-%               [5 4]];
-%     vWpts = [[1 1]; ...
-%              [inf inf]; ...
-%              [0 0]];
-%     aWpts = [[1 0]; ...
-%              [inf inf]; ...
-%              [0 0]];
-
-    
-    %% compute hyperplane
-    hyperplanes = zeros(size(pWpts,1)-1,8);
-    for i = 1:1: size(pWpts,1)-1
-        p31 = pWpts(i,:);
-        p32 = pWpts(i+1,:);
-        %% dir
-        pdir = p32-p31;
-        pdir = pdir./norm(pdir);
-        %% n1
-        n1 = [0 -pdir(3) pdir(2)];
-        n1 = n1./norm(n1);
-        d1 = -(n1(1)*pWpts(i,1)+n1(2)*pWpts(i,2)+n1(3)*pWpts(i,3));
-        %% n2
-        n2 = cross(n1,pdir);
-        n2 = n2./norm(n2);
-        d2 = -(n2(1)*pWpts(i,1)+n2(2)*pWpts(i,2)+n2(3)*pWpts(i,3));
-        
-        hyperplanes(i,:) = [n1 d1 n2 d2];
-    end
+    %% compute hyperplane    
+    p31 = pWpts(1:end-1,:);
+    p32 = pWpts(2:end,:);
+    pdir = p32-p31;
+    pdir = pdir./vecnorm(pdir,2);
+    n1 = [zeros(size(pdir,1),1) -pdir(:,3) pdir(:,2)];
+    n1 = n1./vecnorm(n1,2,2);
+    d1 = -(n1(:,1).*pWpts(1:end-1,1)+n1(:,2).*pWpts(1:end-1,2)+n1(:,3).*pWpts(1:end-1,3));
+    n2 = cross(n1,pdir,2);
+    n2 = n2./vecnorm(n2,2,2);
+    d2 = -(n2(:,1).*pWpts(1:end-1,1)+n2(:,2).*pWpts(1:end-1,2)+n2(:,3).*pWpts(1:end-1,3));
+    hyperplanes = [n1 d1 n2 d2];
     
     vmax = maxv;% 5m/s
     amax = maxa;% 6.8 m/s^2
     
     t = linspace(0,size(pWpts,1)-1,size(pWpts,1));
-    %t = [0 2 4];
     order = 5;
-
+ 
     %% 1. pre-allocated timestamp, may not be reasonable
-    [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order, [], l, []);
+    [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order, l, hyperplanes,[],[]);
+   
 %     visulization(pWpts, polyCoeffs, t, order, vmax, amax);    
     corridorExtremes = cell(size(pWpts,1)-1,1);
 
@@ -83,46 +65,14 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
         vxext = {};vyext = {};vzext = {};
         axext = {};ayext = {};azext = {};
         p1maxmin = [];p2maxmin = [];
+        
         for i=1:segments
             scalar = 1./(realt(i+1)-realt(i));
             
             polyx = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,1);
             polyy = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,2);
             polyz = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,3);
-            
-            hyperplane = hyperplanes(i,:);
-            dist1 = hyperplane(1).*polyx + hyperplane(2).*polyy + hyperplane(3).*polyz;
-            dist1(1) = dist1(1) + hyperplane(4);
-            dist2 = hyperplane(5).*polyx + hyperplane(6).*polyy + hyperplane(7).*polyz;
-            dist2(1) = dist2(1) + hyperplane(8);
-            dist1 = flipud(dist1);
-            dist2 = flipud(dist2);
-            pdist1 = scalar.*(hyperplane(1).*[5*polyx(6) 4*polyx(5) 3*polyx(4) 2*polyx(3) polyx(2)] + ...
-                              hyperplane(2).*[5*polyy(6) 4*polyy(5) 3*polyy(4) 2*polyy(3) polyy(2)] + ...
-                              hyperplane(3).*[5*polyz(6) 4*polyz(5) 3*polyz(4) 2*polyz(3) polyz(2)]);
-            pdist2 = scalar.*(hyperplane(5).*[5*polyx(6) 4*polyx(5) 3*polyx(4) 2*polyx(3) polyx(2)] + ...
-                              hyperplane(6).*[5*polyy(6) 4*polyy(5) 3*polyy(4) 2*polyy(3) polyy(2)] + ...
-                              hyperplane(7).*[5*polyz(6) 4*polyz(5) 3*polyz(4) 2*polyz(3) polyz(2)]);
-                          
-            xroots = roots(pdist1);
-            yroots = roots(pdist2);
-            idx = isreal(xroots) & real(xroots) > 0 & real(xroots) < 0.99;
-            xroots = xroots(idx);
-            idy = isreal(yroots) & real(yroots) > 0 & real(yroots) < 0.99;
-            yroots = yroots(idy);
-            if ~isempty(xroots)
-                p1maxmin = polyval(dist1,xroots);
-                idc = abs(p1maxmin)>l;
-                corridorExtremes{i} = [corridorExtremes{i} xroots(idc)'];
-%                 corridorExtremes{i} = [corridorExtremes{i} linspace(realt(i), xroots, 5) linspace(xroots(idc), realt(i+1), 5)];
-            end
-            if ~isempty(yroots)
-                p2maxmin = polyval(dist2,yroots);
-                idc = abs(p2maxmin)>l;
-%                 corridorExtremes{i} = [corridorExtremes{i}  linspace(realt(i), yroots(idc), 5) linspace(yroots(idc), realt(i+1), 5)];
-                corridorExtremes{i} = [corridorExtremes{i} yroots(idc)'];
-            end
-            
+
             %% v
             vxpoly = scalar.*[5*polyx(6) 4*polyx(5) 3*polyx(4) 2*polyx(3) polyx(2)];
             vypoly = scalar.*[5*polyy(6) 4*polyy(5) 3*polyy(4) 2*polyy(3) polyy(2)];
@@ -132,9 +82,9 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
             aypoly = scalar^2.*[20*polyy(6) 12*polyy(5) 6*polyy(4) 2*polyy(3)];
             azpoly = scalar^2.*[20*polyz(6) 12*polyz(5) 6*polyz(4) 2*polyz(3)];
             %% vdot
-            vdxpoly = scalar^2.*[20*polyx(6) 12*polyx(5) 6*polyx(4) 2*polyx(3)];
-            vdypoly = scalar^2.*[20*polyy(6) 12*polyy(5) 6*polyy(4) 2*polyy(3)];
-            vdzpoly = scalar^2.*[20*polyz(6) 12*polyz(5) 6*polyz(4) 2*polyz(3)];
+            vdxpoly = axpoly;
+            vdypoly = aypoly;
+            vdzpoly = azpoly;
             %% adot
             adxpoly = scalar^3.*[60*polyx(6) 24*polyx(5) 6*polyx(4)];
             adypoly = scalar^3.*[60*polyy(6) 24*polyy(5) 6*polyy(4)];
@@ -203,7 +153,7 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
                      isempty(find(abs(axmaxmin) > amax)) && ...
                      isempty(find(abs(aymaxmin) > amax)) && ...
                      isempty(find(abs(vzmaxmin) > vzmax)) && ...
-                     isempty(find(abs(azmaxmin) > azmax)) && isempty(find(abs(p1maxmin)>l)) && isempty(find(abs(p2maxmin)>l));
+                     isempty(find(abs(azmaxmin) > azmax));
             replan = replan + r1;
         end
 
@@ -217,146 +167,67 @@ function [polyCoeffs,realt]=cvx_project_traj_gen_solver_refine(p,initv,inita,end
         %% the scalar is used to map from real world timestamp to virtual timestamp
         scalars = [];
         
-        useCVX = 1;
-        if useCVX == 0
-            for j = 1:segments
-                polyx = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,1);
-                polyy = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,2);
-                polyz = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,3);
-                
-                p1 = costPoly(polyx, 1, 0);
-                p2 = costPoly(polyy, 1, 0);
-                p3 = costPoly(polyz, 1, 0);
+        %% USE CVX, model this as a SDP problem with SDR
+        %% firstly reformulate cost function
+        Aopt = [];
+        bopt = [];
+        nopt = 4;
 
-                mpol s 1
-                %% firstly reformulate cost function
-                g0 = s(1)^5*(p1+p2+p3)+(s(1)^2-2*1*s(1)+1)*lambda;
-                %% then do the same for position, velocity, acceleration constaints
-                K = [];
-                %% vx
-                for k = 1:size(vxext{j},1)
-                    K = [K, vxext{j}(k)*s(1)<=vmax, vxext{j}(k)*s(1)>=-vmax];
-                end
-                %% vy
-                for k = 1:size(vyext{j},1)
-                    K = [K, vyext{j}(k)*s(1)<=vmax, vyext{j}(k)*s(1)>=-vmax];
-                end
-                %% vz
-                for k = 1:size(vzext{j},1)
-                    K = [K, vzext{j}(k)*s(1)<=vzmax, vzext{j}(k)*s(1)>=-vzmax];
-                end
-                %% ax
-                for k = 1:size(axext{j},1)
-                    K = [K, axext{j}(k)*s(1)^2<=amax, axext{j}(k)*s(1)^2>=-amax];
-                end
-                %% ay
-                for k = 1:size(ayext{j},1)
-                    K = [K, ayext{j}(k)*s(1)^2<=amax, ayext{j}(k)*s(1)^2>=-amax];
-                end
-                %% ay
-                for k = 1:size(azext{j},1)
-                    K = [K, azext{j}(k)*s(1)^2<=azmax, azext{j}(k)*s(1)^2>=-azmax];
-                end
-                K = [K, s(1)>=0];
-                Prob = msdp(min(g0), K);
-                tic
-                [status,obj] = msol(Prob);
-                toc
-                xsol = meas;
-                %% parsing solution
-                tt = double(xsol);
-                scalars = [scalars;tt];
-            end
-        else
-            %% USE CVX, model this as a SDP problem with SDR
-            %% firstly reformulate cost function
-            Aopt = [];
-            bopt = [];
-            nopt = 4;
-            
-            %% vx
-            for j = 1:segments
-                polyx = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,1);
-                polyy = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,2);
-                polyz = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,3);
+        %% vx
+        for j = 1:segments
+            polyx = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,1);
+            polyy = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,2);
+            polyz = polyCoeffs((j-1)*numCoeff+1:j*numCoeff,3);
 
-                C = costC(polyx, polyy, polyz);
-                C0 = C+[1 -2 1 0;0 0 0 0;0 0 0 0;0 0 0 0].*lambda;            
-    %             C0 = [1 -2;0 1];
-                
-                kk = 1;
-                
-                [Aopt,bopt,kk] = addAugumentedConstraint(vxext,Aopt,bopt,kk,j,vmax,'v');
-                [Aopt,bopt,kk] = addAugumentedConstraint(vyext,Aopt,bopt,kk,j,vmax,'v');
-                [Aopt,bopt,kk] = addAugumentedConstraint(vzext,Aopt,bopt,kk,j,vzmax,'v');
+            C = costC(polyx, polyy, polyz);
+            C0 = C+[1 -2 1 0;0 0 0 0;0 0 0 0;0 0 0 0].*lambda;            
 
-                [Aopt,bopt,kk] = addAugumentedConstraint(axext,Aopt,bopt,kk,j,amax,'a');
-                [Aopt,bopt,kk] = addAugumentedConstraint(ayext,Aopt,bopt,kk,j,amax,'a');
-                [Aopt,bopt,kk] = addAugumentedConstraint(azext,Aopt,bopt,kk,j,azmax,'a');
-                
-                %% cvx_routine
-                useMosek = 0;
-                if useMosek == 1
-                    cvx_solver mosek
-                    cvx_begin quiet
-                        variable X(nopt,nopt) hankel 
-                        variable x(nopt)
-                        expression Z
-                        Z = [X, x; x', 1];
-                        minimize( trace(C0*X) );
-                        subject to
-                            for ii = 1:kk-1
-                                trace(Aopt(:,:,ii)*X) <= bopt(ii);
-                            end
-                            Z == semidefinite(nopt+1);
-                            X(1,1) == 1;
-                            X(1,2) >= 0;
-                            X(1,3) >= 0;
-                            X(1,4) >= 0;
-                            X(2,4) >= 0;
-                            X(3,4) >= 0;
-                            X(4,4) >= 0;
-%                             diag(X) >= x;
-                    cvx_end
-                    X = (X+X')/2;
-                else
-                    cvx_begin quiet
-                        variable X(nopt, nopt) hankel
-                        minimize( trace(C0*X) );
-                        subject to 
-                            for ii = 1:kk-1
-                                trace(Aopt(:,:,ii)*X) <= bopt(ii);
-                            end
-                            X >= 0
-                            X(1,1) == 1
-                            X(1,2) >= 0
-                            X(1,3) >= 0
-                            X(1,4) >= 0
-                            X(2,4) >= 0
-                            X(3,4) >= 0
-                            X(4,4) >= 0
-                    cvx_end
-                end
-                
-                %% here, I just take the maximum eigvalue corresponding solution
-                [eigvec, eigval] = eig(X);
-                maxEig = eigval(end,end);
-                correspondingEvec = eigvec(:,end);
-                xsol = sqrt(maxEig).*correspondingEvec;
-%                 rank(X)
-                %% parsing solution
-                tt = double(xsol(2)/xsol(1));
-                scalars = [scalars;tt];
-            end
+            kk = 1;
+
+            [Aopt,bopt,kk] = addAugumentedConstraint(vxext,Aopt,bopt,kk,j,vmax,'v');
+            [Aopt,bopt,kk] = addAugumentedConstraint(vyext,Aopt,bopt,kk,j,vmax,'v');
+            [Aopt,bopt,kk] = addAugumentedConstraint(vzext,Aopt,bopt,kk,j,vzmax,'v');
+
+            [Aopt,bopt,kk] = addAugumentedConstraint(axext,Aopt,bopt,kk,j,amax,'a');
+            [Aopt,bopt,kk] = addAugumentedConstraint(ayext,Aopt,bopt,kk,j,amax,'a');
+            [Aopt,bopt,kk] = addAugumentedConstraint(azext,Aopt,bopt,kk,j,azmax,'a');
+
+            cvx_begin quiet
+                variable X(nopt, nopt) hankel
+                minimize( trace(C0*X) );
+                subject to 
+                    for ii = 1:kk-1
+                        trace(Aopt(:,:,ii)*X) <= bopt(ii);
+                    end
+                    X >= 0
+                    X(1,1) == 1
+                    X(1,2) >= 0
+                    X(1,3) >= 0
+                    X(1,4) >= 0
+                    X(2,4) >= 0
+                    X(3,4) >= 0
+                    X(4,4) >= 0
+            cvx_end
+
+            %% here, I just take the maximum eigvalue corresponding solution
+            [eigvec, eigval] = eig(X);
+            maxEig = eigval(end,end);
+            correspondingEvec = eigvec(:,end);
+            xsol = sqrt(maxEig).*correspondingEvec;
+            %% parsing solution
+            tt = double(xsol(2)/xsol(1));
+            scalars = [scalars;tt];
         end
+        
         ttmp = realt;
         for i = 2:numel(t)
             realt(i) = realt(i-1) + (ttmp(i)-ttmp(i-1)) / scalars(i-1);
         end
         origS = scalars;
-        [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, realt, dims, order, corridorExtremes, l, hyperplanes);
+        [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, realt, dims, order, l, hyperplanes,[],[]);
     end
 %     visulization(pWpts, polyCoeffs, realt, order, vmax, amax);
+    toc
 end
 
 function [Aopt,bopt,kk] = addAugumentedConstraint(vext,Aopt,bopt,kk,j,vmax,derv)
@@ -435,7 +306,7 @@ function [Aopt,bopt,kk] = addAugumentedConstraint(vext,Aopt,bopt,kk,j,vmax,derv)
     end
 end
 
-function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order, corridorExtremes, l, hyperplanes)
+function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order, l, hyperplanes, vmax, amax)
     %% order of trajectory 5
     numCoeff = order + 1;
     segments = size(pWpts,1)-1;
@@ -447,35 +318,18 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order,
     %% equality constraint
     maxNumCons = numCoeff * segments;
     alreadySetCons = 0;
-    %% traverse waypts
-    for i=1:size(pWpts,1)
-        if i == 1 || i == size(pWpts,1)
-            alreadySetCons = alreadySetCons + double(pWpts(i,1)~=inf);
-            alreadySetCons = alreadySetCons + double(vWpts(i,1)~=inf);
-            alreadySetCons = alreadySetCons + double(aWpts(i,1)~=inf);            
-        else
-            alreadySetCons = alreadySetCons + 2*double(pWpts(i,1)~=inf);
-            alreadySetCons = alreadySetCons + 2*double(vWpts(i,1)~=inf);
-            alreadySetCons = alreadySetCons + 2*double(aWpts(i,1)~=inf);
-        end
-    end
-    solveAxb = 0;
-    if alreadySetCons > maxNumCons
-        disp('Error, too many constaints!');
-    elseif alreadySetCons == maxNumCons
-        disp('Solve Ax=b!');
-        solveAxb = 1;
-    else
-        %% continuity constraints
-        for i=2:size(pWpts,1)-1
-            if vWpts(i,1) == inf
-                alreadySetCons = alreadySetCons + 1;
-            end
-            if aWpts(i,1) == inf
-                alreadySetCons = alreadySetCons + 1;
-            end
-        end
-    end
+    
+    cc1 = [1;2.*ones(size(pWpts,1)-2,1);1];
+    cc2 = [1.*ones(size(pWpts,1)-2,1)];
+    
+    pc1 = sum(double(pWpts(:,1)~=inf).*cc1);
+    vc1 = sum(double(vWpts(:,1)~=inf).*cc1);
+    ac1 = sum(double(aWpts(:,1)~=inf).*cc1);
+    
+    ctc1 = sum(double(vWpts(2:end-1,1)==inf).*cc2);
+    ctc2 = sum(double(aWpts(2:end-1,1)==inf).*cc2);
+    alreadySetCons = pc1 + vc1 + ac1 + ctc1 + ctc2;
+    
     %% cnstruct A
     Aeq = zeros(alreadySetCons,numCoeff*segments);
     beqs = zeros(alreadySetCons,dims);
@@ -486,33 +340,33 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order,
         scalar = 1./(t(i+1)-t(i));
         %% start point
         if pWpts(i,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = [1 t0 t0^2 t0^3 t0^4 t0^5];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = [1 0 0 0 0 0];
             beqs(k,:) = pWpts(i,:);
             k = k + 1;
         end
         if vWpts(i,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar.*[0 1 2*t0 3*t0^2 4*t0^3 5*t0^4];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar.*[0 1 0 0 0 0];
             beqs(k,:) = vWpts(i,:);
             k = k + 1;
         end
         if aWpts(i,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar^2.*[0 0 2 6*t0 12*t0^2 20*t0^3];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar^2.*[0 0 2 0 0 0];
             beqs(k,:) = aWpts(i,:);
             k = k + 1;
         end
         %% end point
         if pWpts(i+1,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = [1 t1 t1^2 t1^3 t1^4 t1^5];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = [1 1 1 1 1 1];
             beqs(k,:) = pWpts(i+1,:);
             k = k + 1;
         end
         if vWpts(i+1,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar.*[0 1 2*t1 3*t1^2 4*t1^3 5*t1^4];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar.*[0 1 2 3 4 5];
             beqs(k,:) = vWpts(i+1,:);
             k = k + 1;
         end
         if aWpts(i+1,1) ~= inf
-            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar^2.*[0 0 2 6*t1 12*t1^2 20*t1^3];
+            Aeq(k,(i-1)*numCoeff+1:i*numCoeff) = scalar^2.*[0 0 2 6 12 20];
             beqs(k,:) = aWpts(i+1,:);
             k = k + 1;
         end
@@ -524,14 +378,14 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order,
         s1 = 1./(t(i)-t(i-1));
         s2 = 1./(t(i+1)-t(i));
         if vWpts(i,1) == inf
-            Aeq(k,(i-2)*numCoeff+1:(i-1)*numCoeff) = s1.*[0 1 2*t0 3*t0^2 4*t0^3 5*t0^4];
-            Aeq(k,(i-1)*numCoeff+1:(i)*numCoeff) = s2.*[-0 -1 -2*t1 -3*t1^2 -4*t1^3 -5*t1^4];
+            Aeq(k,(i-2)*numCoeff+1:(i-1)*numCoeff) = s1.*[0 1 2 3 4 5];
+            Aeq(k,(i-1)*numCoeff+1:(i)*numCoeff) = s2.*[-0 -1 0 0 0 0];
             beqs(k,:) = zeros(1,dims);
             k = k + 1;
         end
         if aWpts(i,1) == inf
-            Aeq(k,(i-2)*numCoeff+1:(i-1)*numCoeff) = s1^2.*[0 0 2 6*t0 12*t0^2 20*t0^3];
-            Aeq(k,(i-1)*numCoeff+1:(i)*numCoeff) = s2^2.*[-0 -0 -2 -6*t1 -12*t1^2 -20*t1^3];
+            Aeq(k,(i-2)*numCoeff+1:(i-1)*numCoeff) = s1^2.*[0 0 2 6 12 20];
+            Aeq(k,(i-1)*numCoeff+1:(i)*numCoeff) = s2^2.*[-0 -0 -2 0 0 0];
             beqs(k,:) = zeros(1,dims);
             k = k + 1;
         end
@@ -539,73 +393,75 @@ function [polyCoeffs] = trajectoryGenerator(pWpts, vWpts, aWpts, t, dims, order,
     
     %% Q
     for i = 1:segments
-        Qs = constructQ(0, t(i+1)-t(i));
+        Qs = constructQ(t(i+1)-t(i));
         Q((i-1)*numCoeff+1:(i)*numCoeff, (i-1)*numCoeff+1:(i)*numCoeff) = Qs;
     end
-     
-    if isempty(corridorExtremes)
-        %% solve equality constraint convex optimization problem
-        %% here I tried two solutions
-%         tic
-    %     KKT = [Q Aeq';Aeq zeros(size(Q,1)+size(Aeq,1)-size(Aeq,2))];
-    %     xsol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,1)];
-    %     ysol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,2)];
-    %     zsol = inv(KKT)*[zeros(size(Q,1),1);beqs(:,3)];
-        Q1 = blkdiag(Q,Q,Q);
-        Aeq1 = blkdiag(Aeq,Aeq,Aeq);
-        KKT = [Q1 Aeq1';Aeq1 zeros(size(Q1,1)+size(Aeq1,1)-size(Aeq1,2))];
-        sols = inv(KKT)*[zeros(size(Q1,1),1);[beqs(:,1);beqs(:,2);beqs(:,3)]];
-        xsol = sols(1:size(Q,1));
-        ysol = sols(size(Q,1)+1:size(Q,1)*2);
-        zsol = sols(size(Q,1)*2+1:size(Q,1)*3);
-%         toc
-    %     tic
-    %     xsol = quadprog(Q,[],[],[],Aeq,beqs(:,1));
-    %     ysol = quadprog(Q,[],[],[],Aeq,beqs(:,2));
-    %     toc
-    else
-        %% prepare inequality constraints
-        Aineq = [];
-        bineq = [];
-        for i = 1:size(corridorExtremes,1)
-            hyperplane = hyperplanes(i,:);
-            numIneq = size(corridorExtremes{i},2);
-            Ax = zeros(1,numCoeff*segments);
-            Ay = zeros(1,numCoeff*segments);
-            Az = zeros(1,numCoeff*segments);
-            
-            for j = 1:numIneq
-                ts = corridorExtremes{i}(j);
-                Ax(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(1).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                Ay(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(2).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                Az(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(3).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                %% 1st
-                Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
-                bineq = [bineq;0.5*l-hyperplane(4);0.5*l+hyperplane(4)];
-                
-                Ax(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(5).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                Ay(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(6).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                Az(1,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(7).*[1 ts ts^2 ts^3 ts^4 ts^5];
-                Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
-                bineq = [bineq;0.5*l-hyperplane(8);0.5*l+hyperplane(8)];
-            end
-            
-            
-        end
-        Q1 = blkdiag(Q,Q,Q);
-        Aeq1 = blkdiag(Aeq,Aeq,Aeq);
-        beq1 = [beqs(:,1);beqs(:,2);beqs(:,3)];
-        sols = quadprog(2*Q1,[],Aineq,bineq,Aeq1,beq1);
-        xsol = sols(1:size(Q,1));
-        ysol = sols(size(Q,1)+1:size(Q,1)*2);
-        zsol = sols(size(Q,1)*2+1:size(Q,1)*3);
-    end
 
-    
-%     tic
-%     xsol = solveViaQR(Q,Aeq,beqs(:,1));
-% %     toc
-%     ysol = solveViaQR(Q,Aeq,beqs(:,2));
+    %% prepare inequality constraints
+    Aineq = [];
+    bineq = [];
+    nn = 5;
+    for i = 1:segments
+        hyperplane = hyperplanes(i,:);
+        ts = linspace(0, 1, nn)';
+        numIneq = size(numel(ts),2);
+        Ax = zeros(nn,numCoeff*segments);
+        Ay = zeros(nn,numCoeff*segments);
+        Az = zeros(nn,numCoeff*segments);
+        
+        %% position constraint
+        ttp = [ones(nn,1) ts ts.^2 ts.^3 ts.^4 ts.^5];
+        Ax(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(1).*ttp;
+        Ay(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(2).*ttp;
+        Az(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(3).*ttp;
+        
+        Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
+        bineq = [bineq;repmat(0.5*l-hyperplane(4),nn,1);repmat(0.5*l+hyperplane(4),nn,1)];
+        
+        Ax(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(5).*ttp;
+        Ay(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(6).*ttp;
+        Az(:,(i-1)*numCoeff+1:i*numCoeff) = hyperplane(7).*ttp;
+        
+        Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
+        bineq = [bineq;repmat(0.5*l-hyperplane(8),nn,1);repmat(0.5*l+hyperplane(8),nn,1)];
+
+        if ~isempty(vmax)
+            %% velocity constaint
+            Ax = zeros(nn,numCoeff*segments);
+            Ay = zeros(nn,numCoeff*segments);
+            Az = zeros(nn,numCoeff*segments);
+
+            s1 = 1./(t(i+1)-t(i));
+            ttv = s1.*[zeros(nn,1) ones(nn,1) 2.*ts 3.*ts.^2 4.*ts.^3 5.*ts.^4];
+            Ax(:,(i-1)*numCoeff+1:i*numCoeff) = ttv;
+            Ay(:,(i-1)*numCoeff+1:i*numCoeff) = ttv;
+            Az(:,(i-1)*numCoeff+1:i*numCoeff) = ttv;
+            Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
+            bineq = [bineq;repmat(vmax,2*nn,1)];
+        end
+        if ~isempty(amax)
+            Ax = zeros(nn,numCoeff*segments);
+            Ay = zeros(nn,numCoeff*segments);
+            Az = zeros(nn,numCoeff*segments);
+
+            tta = (s1*s1).*[zeros(nn,1) zeros(nn,1) 2.*ones(nn,1) 6.*ts 12.*ts.^2 20.*ts.^3];
+            Ax(:,(i-1)*numCoeff+1:i*numCoeff) = tta;
+            Ay(:,(i-1)*numCoeff+1:i*numCoeff) = tta;
+            Az(:,(i-1)*numCoeff+1:i*numCoeff) = tta;
+            Aineq = [Aineq;[Ax Ay Az];[-Ax -Ay -Az]];
+            bineq = [bineq;repmat(amax,2*nn,1)];
+        end
+    end
+    Q1 = blkdiag(Q,Q,Q);
+    Aeq1 = blkdiag(Aeq,Aeq,Aeq);
+    beq1 = [beqs(:,1);beqs(:,2);beqs(:,3)];
+
+    sols = quadprog(2*Q1,[],Aineq,bineq,Aeq1,beq1);
+
+    xsol = sols(1:size(Q,1));
+    ysol = sols(size(Q,1)+1:size(Q,1)*2);
+    zsol = sols(size(Q,1)*2+1:size(Q,1)*3);
+
     polyCoeffs(:,1) = xsol(1:size(Q,1));
     polyCoeffs(:,2) = ysol(1:size(Q,1));
     polyCoeffs(:,3) = zsol(1:size(Q,1));
@@ -639,16 +495,15 @@ function sol = solveViaQR(Q,A,b)
     sol = x0 + Q2*z;
 end
 
-function Qs = constructQ(ts, te)
-    syms t real
-    assume(t,'positive');
-    scalar = 1/te;
-    f3d = scalar^3.*[0 0 0 6 24*t 60*t^2];
-    Q1 = f3d'*f3d;
-    Q2 = int(Q1,t);
-    Qs = subs(Q2,1) - subs(Q2,ts);
+function Qs = constructQ(dt)
+    scalar = 1/dt;
+    Qs = scalar^3.*[ 0, 0, 0,   0,   0,   0; ...
+                       0, 0, 0,   0,   0,   0; ...
+                       0, 0, 0,   0,   0,   0; ...
+                       0, 0, 0,  36,  72, 120; ...
+                       0, 0, 0,  72, 192, 360; ...
+                       0, 0, 0, 120, 360, 720];
 end
-
 
 function C = costC(polyx, polyy, polyz)
     p3 = polyx(4);
@@ -700,6 +555,43 @@ function C = costC(polyx, polyy, polyz)
      
      
     C = Cx + Cy + Cz;
+end
+
+function [tss,pts,vts,ats] = sample_pvas(pWpts, polyCoeffs, t, order, cnt)
+    numCoeff = order+1;
+    tss = [];
+    pts = [];
+    vts = [];
+    ats = [];
+    for i = 1:size(t,2)-1
+        s = 1./(t(i+1)-t(i));
+        ts = linspace(0,1,cnt)';
+        vtp = [ones(numel(ts),1) ts ts.^2 ts.^3 ts.^4 ts.^5];
+        vtv = [zeros(cnt,1) ones(cnt,1) 2.*ts 3.*ts.^2 4.*ts.^3 5.*ts.^4];
+        vta = [zeros(cnt,1) zeros(cnt,1) 2.*ones(cnt,1) 6.*ts 12.*ts.^2 20.*ts.^3];
+        
+        polyx = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,1);
+        polyy = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,2);
+        polyz = polyCoeffs((i-1)*numCoeff+1:i*numCoeff,3);
+        
+        xsamples = vtp*polyx;
+        ysamples = vtp*polyy;
+        zsamples = vtp*polyz;
+        
+        vxsamples = vtv*polyx.*s;
+        vysamples = vtv*polyy.*s;
+        vzsamples = vtv*polyz.*s;
+        
+        axsamples = vta*polyx.*(s^2);
+        aysamples = vta*polyy.*(s^2);
+        azsamples = vta*polyz.*(s^2);
+        
+        pts = [pts;[xsamples ysamples zsamples]];
+        vts = [vts;[vxsamples vysamples vzsamples]];
+        ats = [ats;[axsamples aysamples azsamples]];
+        
+        tss = [tss;ts+(i-1)];
+    end
 end
 
 function visulization(pWpts, polyCoeffs, t, order, vmax, amax)

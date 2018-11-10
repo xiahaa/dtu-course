@@ -19,7 +19,7 @@ end
 
 function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
     figure
-    plot(pWpts(:,1),pWpts(:,2),'ro','MarkerSize',5);
+    plot(pWpts(:,1),pWpts(:,2),'ro','MarkerSize',10);
     hold on;
     grid on;
     pts = [];
@@ -53,78 +53,88 @@ function visulization(pWpts, polyCoeffs, t, order, vmax, amax)
         
         tss = [tss;linspace(t(i),t(i+1),1000)'];
     end
-    
-    plot(pts(:,1),pts(:,2),'b-','LineWidth', 3);
+    map = colormap(jet);
+
+    c = sqrt(vts(:,1).^2+vts(:,2).^2);
+    h1 = cline(pts(:,1),pts(:,2),c);
+    set(h1,'LineWidth', 3);
     xlabel('x: (m)','Interpreter','latex');
     ylabel('y: (m)','Interpreter','latex');
     title('Trajectory','Interpreter','latex');
     legend('Waypoints','Trajectory','Interpreter','latex');
-    figure
-    vx1 = subplot(2,1,1);
-%     plot(tss,vts(:,1),'b-');grid on;hold on;
-    c = sqrt(vts(:,1).^2);
-    map = colormap(jet);
-    h1 = ccplot(tss,vts(:,1),c,map);grid on;hold on;
-    h2 = plot(tss,ones(numel(vts(:,1)),1).*vmax,'r--','LineWidth', 3);
-    plot(tss,ones(numel(vts(:,1)),1).*-vmax,'r--','LineWidth', 3);
-    legend([h1(1) h2],'Generated','Maximum','Interpreter','latex');
-    xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$v_x: (m/s)$','Interpreter','latex');
-    title('Velocity Profile','Interpreter','latex');
-    subplot(2,1,2);
-    c = sqrt(vts(:,2).^2);
-    map = colormap(jet);
-    h3 = ccplot(tss,vts(:,2),c,map);grid on;hold on;
-    h4 = plot(tss,ones(numel(vts(:,2)),1).*vmax,'r--','LineWidth', 3);
-    plot(tss,ones(numel(vts(:,2)),1).*-vmax,'r--','LineWidth', 3);
-    patch([0.45 0.85 0.85 0.45], [max(ylim)*2 max(ylim)*2 min(ylim)*2 min(ylim)*2], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
-    legend([h3(1) h4],'Generated','Maximum','Interpreter','latex');
-    xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$v_y: (m/s)$','Interpreter','latex');
-    hp1 = get(subplot(2,1,1),'Position');
-    hp2 = get(subplot(2,1,2),'Position');
-    cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp2(2) 0.01 hp2(4)*2.4]);
+    cv=colorbar;
     cv.Label.String = '$velocity\ (m/s)$';
     cv.Label.Interpreter = 'latex';
     cv.FontSize = 12;
-    caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2))]);
-    figure    
-    vx2 = subplot(2,1,1);
-    ca = sqrt(ats(:,1).^2);
-    map1 = colormap(jet);
-%     plot(tss,ats(:,1),'b-');grid on;hold on;
-    h5 = ccplot(tss,ats(:,1),ca,map1);grid on;hold on;
-    plot(tss,ones(numel(ats(:,1)),1).*amax,'r--', 'LineWidth', 3);
-    h6 = plot(tss,ones(numel(ats(:,1)),1).*-amax,'r--','LineWidth', 3);
-    
-    patch([0.02 0.45 0.45 0.02], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
-    patch([0.55 0.97 0.97 0.55], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
+    figure
+    vx1 = subplot(1,1,1);
+%     plot(tss,vts(:,1),'b-');grid on;hold on;
+%     c = sqrt(vts(:,1).^2);
+    h1 = plot(tss,vts(:,1),'g-','LineWidth',3);grid on;hold on;
+    h2 = plot(tss,vts(:,2),'b-','LineWidth',3);grid on;hold on;
+    h3 = plot(tss,ones(numel(vts(:,1)),1).*vmax,'r--','LineWidth', 3);
+    plot(tss,ones(numel(vts(:,1)),1).*-vmax,'r--','LineWidth', 3);
+    patch([0.47 0.8 0.8 0.47], [max(ylim)*2 max(ylim)*2 min(ylim)*2 min(ylim)*2], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
 
+    legend([h1 h2 h3],'v_x','v_y','Maximum','Interpreter','latex');
+    xlabel('Time: (s)','Interpreter','latex');
+    ylabel('$v: (m/s)$','Interpreter','latex');
+    title('Velocity Profile','Interpreter','latex');
+%     subplot(2,1,2);
+%     c = sqrt(vts(:,2).^2);
+%     map = colormap(jet);
+%     h3 = ccplot(tss,vts(:,2),c,map);grid on;hold on;
+%     h4 = plot(tss,ones(numel(vts(:,2)),1).*vmax,'r--','LineWidth', 3);
+%     plot(tss,ones(numel(vts(:,2)),1).*-vmax,'r--','LineWidth', 3);
+    ylim([-15 15]);
+%     axis tight
+%     legend([h3(1) h4],'Generated','Maximum','Interpreter','latex');
+%     xlabel('Time: (s)','Interpreter','latex');
+%     ylabel('$v_y: (m/s)$','Interpreter','latex');
+%     hp1 = get(subplot(2,1,1),'Position');
+%     hp2 = get(subplot(2,1,2),'Position');
+%     cv = colorbar('Position', [hp1(1)+hp1(3)+0.01 hp2(2) 0.01 hp2(4)*2.4]);
+%     cv.Label.String = '$velocity\ (m/s)$';
+%     cv.Label.Interpreter = 'latex';
+%     cv.FontSize = 12;
+%     caxis([0,max(sqrt(vts(:,2).^2+vts(:,1).^2))]);
+    figure    
+    vx2 = subplot(1,1,1);
+%     ca = sqrt(ats(:,1).^2);
+%     map1 = colormap(jet);
+%     plot(tss,ats(:,1),'b-');grid on;hold on;
+    h5 = plot(tss,ats(:,1),'g-','LineWidth',3);grid on;hold on;
+    h6 = plot(tss,ats(:,2),'b-','LineWidth',3);grid on;hold on;
+    plot(tss,ones(numel(ats(:,1)),1).*amax,'r--', 'LineWidth', 3);
+    h7 = plot(tss,ones(numel(ats(:,1)),1).*-amax,'r--','LineWidth', 3);
+    patch([0.02 0.99 0.99 0.02], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
+
+%     patch([0.55 0.97 0.97 0.55], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
+%     patch([0.19 0.62 0.62 0.19], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
+%     patch([0.66 0.98 0.98 0.66], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
     
-    legend([h5(1) h6],'Generated','Maximum','Interpreter','latex');
+    legend([h5 h6 h7],'a_x','a_y','Maximum','Interpreter','latex');
     xlabel('Time: (s)','Interpreter','latex');
     ylabel('$a_x: (m/s^2)$','Interpreter','latex');
     title('Acceleration Profile','Interpreter','latex');
-    subplot(2,1,2);
-    ca = sqrt(ats(:,2).^2);
+
+    ylim([-55 50]);
+%     subplot(2,1,2);
+%     ca = sqrt(ats(:,2).^2);
 %     plot(tss,ats(:,2),'b-');grid on;hold on;
-    h7 = ccplot(tss,ats(:,2),ca,map1);grid on;hold on;
-    h8 = plot(tss,ones(numel(ats(:,2)),1).*amax,'r--','LineWidth', 3);
-    plot(tss,ones(numel(ats(:,2)),1).*-amax,'r--','LineWidth', 3);
-    
-    patch([0.19 0.62 0.62 0.19], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
-    patch([0.66 0.98 0.98 0.66], [max(ylim) max(ylim) min(ylim) min(ylim)], [0.1 0.1 0.1], 'FaceAlpha',0.2,'EdgeColor','none');
-    
-    legend([h7(1) h8],'Generated','Maximum','Interpreter','latex');
-    xlabel('Time: (s)','Interpreter','latex');
-    ylabel('$a_y: (m/s^2)$','Interpreter','latex');
-    hp3 = get(subplot(2,1,1),'Position');
-    hp4 = get(subplot(2,1,2),'Position');
-    cv1 = colorbar('Position', [hp3(1)+hp3(3)+0.01 hp4(2) 0.01 hp4(4)*2.4]);
-    cv1.Label.String = '$acceleration\ (m/s^2)$';
-    cv1.Label.Interpreter = 'latex';
-    cv1.FontSize = 12;
-    caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2))]);
+%     h7 = ccplot(tss,ats(:,2),ca,map1);grid on;hold on;
+%     h8 = plot(tss,ones(numel(ats(:,2)),1).*amax,'r--','LineWidth', 3);
+%     plot(tss,ones(numel(ats(:,2)),1).*-amax,'r--','LineWidth', 3);
+%     legend([h7(1) h8],'Generated','Maximum','Interpreter','latex');
+%     xlabel('Time: (s)','Interpreter','latex');
+%     ylabel('$a_y: (m/s^2)$','Interpreter','latex');
+%     hp3 = get(subplot(2,1,1),'Position');
+%     hp4 = get(subplot(2,1,2),'Position');
+%     cv1 = colorbar('Position', [hp3(1)+hp3(3)+0.01 hp4(2) 0.01 hp4(4)*2.4]);
+%     cv1.Label.String = '$acceleration\ (m/s^2)$';
+%     cv1.Label.Interpreter = 'latex';
+%     cv1.FontSize = 12;
+%     caxis([0,max(sqrt(ats(:,1).^2 + ats(:,2).^2))]);
 end
 
 function Qs = constructQ(ts, te)
