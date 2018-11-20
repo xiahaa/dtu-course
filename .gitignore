@@ -55,3 +55,8 @@ satellite_based_positioning.log
 satellite_based_positioning.out
 
 satellite_based_positioning.synctex.gz
+report_for_satellite_positioning/build/CEE-StandardRapport2015-v1.aux
+*.aux
+report_for_satellite_positioning/build/CEE-StandardRapport2015-v1.log
+report_for_satellite_positioning/build/CEE-StandardRapport2015-v1.toc
+report_for_satellite_positioning/build/files/abstract.aux

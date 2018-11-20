@@ -1,37 +1,31 @@
 \changetocdepth {1}
-\contentsline {chapter}{Preface}{i}{chapter*.1}
-\contentsline {chapter}{Abstract}{ii}{chapter*.2}
-\contentsline {chapter}{Resum\IeC {\'e}}{iii}{chapter*.3}
-\contentsline {chapter}{Symbols}{iv}{chapter*.4}
-\contentsline {chapter}{\scshape {Table of Contents}}{v}{section*.5}
-\contentsline {chapter}{\chapternumberline {1}Introduction}{1}{chapter.1}
-\contentsline {section}{\numberline {1.1}Background}{1}{section.1.1}
-\contentsline {section}{\numberline {1.2}Formulation of the problem}{1}{section.1.2}
-\contentsline {section}{\numberline {1.3}Methodology, scope and conditions}{2}{section.1.3}
-\contentsline {section}{\numberline {1.4}Knowledge accumulated by others}{2}{section.1.4}
-\contentsline {section}{\numberline {1.5}Readability}{2}{section.1.5}
-\contentsline {chapter}{\chapternumberline {2}About writing a report}{3}{chapter.2}
-\contentsline {section}{\numberline {2.1}Title of report}{3}{section.2.1}
-\contentsline {section}{\numberline {2.2}Chapter, sections and headlines}{3}{section.2.2}
-\contentsline {section}{\numberline {2.3}Body text}{3}{section.2.3}
-\contentsline {section}{\numberline {2.4}Further guidance and advice on writing a report}{4}{section.2.4}
-\contentsline {chapter}{\chapternumberline {3}Layout and use of the template }{5}{chapter.3}
-\contentsline {section}{\numberline {3.1}Front page}{5}{section.3.1}
-\contentsline {section}{\numberline {3.2}Title page}{5}{section.3.2}
-\contentsline {subsection}{\numberline {3.2.1}Class}{5}{subsection.3.2.1}
-\contentsline {subsection}{\numberline {3.2.2}License}{6}{subsection.3.2.2}
-\contentsline {subsection}{\numberline {3.2.3}Remarks}{6}{subsection.3.2.3}
-\contentsline {section}{\numberline {3.3}Chapter and appendix}{6}{section.3.3}
-\contentsline {section}{\numberline {3.4}Body text}{7}{section.3.4}
-\contentsline {section}{\numberline {3.5}Hyphenation}{7}{section.3.5}
-\contentsline {section}{\numberline {3.6}Figures}{7}{section.3.6}
-\contentsline {section}{\numberline {3.7}Tables}{8}{section.3.7}
-\contentsline {section}{\numberline {3.8}Equations}{9}{section.3.8}
-\contentsline {section}{\numberline {3.9}English/danish version of Word}{9}{section.3.9}
-\contentsline {chapter}{\chapternumberline {4}Handing in the report}{10}{chapter.4}
-\contentsline {chapter}{\chapternumberline {5}Conclusion}{11}{chapter.5}
-\contentsline {section}{\numberline {5.1}Results}{11}{section.5.1}
-\contentsline {section}{\numberline {5.2}Perspectives}{11}{section.5.2}
-\contentsline {section}{\numberline {5.3}Future work}{11}{section.5.3}
-\contentsline {appendix}{\chapternumberline {A}Write appendix heading here}{12}{chapter.A}
-\contentsline {appendix}{\chapternumberline {B}Write appendix heading here}{13}{chapter.B}
+\contentsline {chapter}{Abstract}{i}{chapter*.1}
+\contentsline {chapter}{\scshape {Table of Contents}}{ii}{section*.2}
+\contentsline {chapter}{\chapternumberline {1}Assignment F: Least Squares Adjustment and DOP}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Theory}{1}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Position Estimation}{1}{subsection.1.1.1}
+\contentsline {subsection}{\numberline {1.1.2}DOP}{2}{subsection.1.1.2}
+\contentsline {subsection}{\numberline {1.1.3}Residual Analysis \& Confidence Ellipsoid}{3}{subsection.1.1.3}
+\contentsline {section}{\numberline {1.2}Tasks}{3}{section.1.2}
+\contentsline {section}{\numberline {1.3}Code}{4}{section.1.3}
+\contentsline {section}{\numberline {1.4}Experiments}{4}{section.1.4}
+\contentsline {subsubsection}{Position Estimation\& Comparison}{4}{subsubsection*.3}
+\contentsline {subsubsection}{DOP}{9}{subsubsection*.4}
+\contentsline {subsection}{\numberline {1.4.1}GUI}{9}{subsection.1.4.1}
+\contentsline {subsection}{\numberline {1.4.2}Conclusion}{10}{subsection.1.4.2}
+\contentsline {chapter}{\chapternumberline {2}Assignment F: Extensions}{11}{chapter.2}
+\contentsline {section}{\numberline {2.1}Initialization}{11}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}The Bancroft Method}{11}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}DLT initialization}{12}{subsection.2.1.2}
+\contentsline {subsection}{\numberline {2.1.3}SOCP initialization}{13}{subsection.2.1.3}
+\contentsline {subsection}{\numberline {2.1.4}Performance}{14}{subsection.2.1.4}
+\contentsline {section}{\numberline {2.2}FIM \& Cram\`er Rao bound}{14}{section.2.2}
+\contentsline {section}{\numberline {2.3}GDOP}{15}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}Fast GDOP computation}{16}{subsection.2.3.1}
+\contentsline {subsubsection}{Eigen Decomposition}{16}{subsubsection*.5}
+\contentsline {subsubsection}{Closed-form solution}{16}{subsubsection*.6}
+\contentsline {subsubsection}{Another closed form solution}{18}{subsubsection*.7}
+\contentsline {subsubsection}{Experiment}{18}{subsubsection*.8}
+\contentsline {section}{\numberline {2.4}Augmented State}{18}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}Result}{19}{subsection.2.4.1}
+\contentsline {chapter}{\scshape {References}}{21}{chapter*.9}
