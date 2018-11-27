@@ -1,6 +1,7 @@
 function varargout = navSolver(prs, sat_pos, options)
-%% GNSS navigation solver: calculate antenna's position from at least 4
+%% GNSS navigation solver: calculate antenna's position from at least 4 
 %% pseudoranges.
+
     global cspd;
     cspd = 299792458;% m / s;
     
@@ -8,43 +9,39 @@ function varargout = navSolver(prs, sat_pos, options)
     x0 = zeros(dim,1);
     
     %% estimate initial value
-    if options.useSOCP == 1
-        x0 = SOCP(prs,sat_pos);
-    elseif options.useDLT == 1
-        x0 = DLT(prs,sat_pos);
-    elseif options.useBancroft == 1
-        x0 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
-    elseif options.usePrior == 1
-        x0 = [options.x0_prior(1:3);options.x0_prior(4)] ;%% plus 1km as requested
-    else
-        error('Choose either SOCP or DLT for initial estimation.');
-        return;
+    switch (options.initialization)
+        case 1
+            x0 = [options.x0_prior(1:3);options.x0_prior(4)] ;%% plus 1km as requested
+        case 2
+            x0 = SOCP(prs,sat_pos);
+        case 3
+            x0 = DLT(prs,sat_pos);
+        case 4
+            x0 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
     end
     
-    if options.useWLS == 1
-        [x,std_x,QDOP,Qenu,llh] = solveWLS(prs, sat_pos, x0, options);
-    elseif options.useGN == 1
-        [x,std_x,QDOP,Qenu,llh] = solveGaussNewton(prs, sat_pos, x0, options);
-    elseif options.useSD == 1
-        [x,std_x,QDOP,Qenu,llh] = solveBySteepestDescentMethod(prs, sat_pos, x0, options);
-    elseif options.useLM == 1
-        [x,std_x,QDOP,Qenu,llh] = solveByLevenbergMarquardt(prs, sat_pos, x0, options);
+    switch (options.solver)
+        case 1
+            %% [x,std_x,QDOP,Qenu,llh] = solveWLS(prs, sat_pos, x0, options); % performs the same as GN
+            [x,std_x,QDOP,Qenu,llh] = solveGaussNewton(prs, sat_pos, x0, options);
+        case 2
+            [x,std_x,QDOP,Qenu,llh] = solveBySteepestDescentMethod(prs, sat_pos, x0, options);
+        case 3
+            [x,std_x,QDOP,Qenu,llh] = solveByLevenbergMarquardt(prs, sat_pos, x0, options);
     end
     
-    x(4) = x(4)./cspd;
-    varargout{1} = x;
-    varargout{2} = std_x;
-    varargout{3} = QDOP;
-    varargout{4} = Qenu;
-    varargout{5} = llh;
+    x(4) = x(4)./cspd;      % from cdT to dT
+    varargout{1} = x;       % receiver position in ECEF
+    varargout{2} = std_x;   % std deviation of x
+    varargout{3} = QDOP;    % QDOP matrix
+    varargout{4} = Qenu;    % QENU matrix
+    varargout{5} = llh;     % receiver position in WGS84
 end
-
-
-
 
 function x0 = DLT(prs, sat_pos)
 %% use DLT to estimate an initial value
-    %% initially, omit receiver clock error
+
+    % initially, omit receiver clock error
     n = size(prs,1);
     v = 1:n;
     C = nchoosek(v,2);
@@ -56,7 +53,6 @@ function x0 = DLT(prs, sat_pos)
             sat_pos(C(:,2),2)-sat_pos(C(:,1),2), ...
             sat_pos(C(:,2),3)-sat_pos(C(:,1),3)];
     x0 = lssolver(A,dprs);
-%     x0 = [x0;0];
     rho = sqrt((sat_pos(:,1)-x0(1)).^2+(sat_pos(:,2)-x0(2)).^2+(sat_pos(:,3)-x0(3)).^2);
     dt = mean(prs-rho) / cspd;
     x0 = [x0;dt];
@@ -64,7 +60,8 @@ function x0 = DLT(prs, sat_pos)
 end
 
 function x0 = SOCP(prs,sat_pos)
-%% estimate initial value using SOCP and relevant relaxation    
+%% estimate initial value using SOCP and relevant relaxation   
+%   note here: assume MOSEK is installed.
     sat_pos = sat_pos ./ 1000;
     prs = prs ./ 1000;
 

@@ -4,6 +4,7 @@ function varargout = solveGaussNewtonAug(prs, sat_pos, x0, options)
     n = size(prs,1);
     p = size(x0,1);
     free = n - p;
+    P = eye(n)/options.prs_var;
     if options.verbose == 1
         %% save some intermediate results
         iters = [];%% iterations cnt
@@ -19,44 +20,45 @@ function varargout = solveGaussNewtonAug(prs, sat_pos, x0, options)
         %% jacobian
         J = calcJacobian(x, sat_pos);
         %% A and b
-        A = J'*J;
-        b = J'*y;
+        A = J'*P*J;
+        b = J'*P*y;
         dxhat = lssolver(A,b);
         %% update
-        x = x - dxhat;
+        x = x + dxhat;
         %% verbose
         if options.verbose == 1
             %% intermediate results for residual analysis
             Ninv = inv(A);
-            vhat = y;%%residual;
-            vtPv = [vtPv vhat'*vhat];%% cost
+            vhat = y - J*dxhat;%%residual;
+            vtPv = [vtPv vhat'*P*vhat];%% cost
             X = [X x];
             iters = [iters iter];
         else
             Ninv = inv(A);
-            vhat = y;%% new residual;
+            vhat = y - J*dxhat;%% new residual;
         end
         
         %% iteration stop criteria
-        cond1 = (vhat'*vhat);
+        cond1 = (vhat'*P*vhat);
         cond2 = norm(dxhat);
         if cond1 < options.threshold1 || cond2 < options.threshold2
             break;
         end
     end
     %% RSS
-    RSS = vhat'*vhat;
+    RSS = vhat'*P*vhat;
     MSE = RSS / free;%% s02
     RMSE = sqrt(MSE); %% s0
     
     Dx = MSE * Ninv;
     std_x = sqrt(diag(Dx));
     
-    QDOP = computeDOP(J(:,1:4),[],options.prs_var);
+    QDOP = computeDOP(J(:,1:4),P,options.prs_var);
     PDOP = sqrt(trace(QDOP(1:3,1:3)));
     TDOP = sqrt(QDOP(4,4));
     GDOP = sqrt(trace(QDOP));
     
+    disp(strcat('RMSE: ', num2str(RMSE)));
     disp(strcat('iter: ', num2str(iter)));
     disp(strcat('xsol: ', num2str(x)));
     disp(strcat('std dev of x: ', num2str(std_x)));
@@ -75,6 +77,8 @@ function varargout = solveGaussNewtonAug(prs, sat_pos, x0, options)
     
     disp(strcat('HDOP: ', num2str(HDOP)));
     disp(strcat('VDOP: ', num2str(VDOP)));
+    
+    DENU = R*Dx(1:3,1:3)*R';
     
     varargout{1} = x;
     varargout{2} = std_x;
@@ -100,7 +104,11 @@ function varargout = solveGaussNewtonAug(prs, sat_pos, x0, options)
         
         hvpv = display_customized(iters,vtPv,'$v^TPv$',2);
         for i = 1:p
-            h(i) = display_customized(iters,X(i,:),strcat('x(', num2str(i),') v.s. iteration'),2);
+            if i <= 3
+                h(i) = display_customized(iters,X(i,:),strcat('x(', num2str(i),') v.s. iteration'),2);
+            else
+                h(i) = display_customized(iters,X(i,:),strcat('x(', num2str(i),') v.s. iteration'),1);
+            end
         end
         
         t = x./std_x;
@@ -119,8 +127,8 @@ function varargout = solveGaussNewtonAug(prs, sat_pos, x0, options)
         he1 = drawConfidenceEllipsoid(Dx(1:3,1:3), 'chi', metrics);
         he2 = drawConfidenceEllipsoid(Dx(1:3,1:3), 'F', metrics);
         
-        he1 = drawConfidenceEllipsoid(Dx(1:3,1:3), 'chi', metrics);
-        he2 = drawConfidenceEllipsoid(Dx(1:3,1:3), 'F', metrics);
+        he1 = drawConfidenceEllipsoid(DENU(1:3,1:3), 'chi', metrics);
+        he2 = drawConfidenceEllipsoid(DENU(1:3,1:3), 'F', metrics);
     end
 end
 
@@ -175,5 +183,5 @@ function J = calcJacobian(x0, xi)
     j16 = (f6_eps - f) ./ eps;
 
     J = [j11 j12 j13 j14 j15 j16];
-    J = -J;
+    J = J;
 end

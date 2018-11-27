@@ -1,29 +1,57 @@
 function ex7_position_estimation
     close all;
+    clc;
+    %% add utils path
     addpath('../utils/');
     addpath('../utils/3rdparty');
     
+    %% generate test case
     [prs, sat_pos, xreal] = generate_test_case1();
-    pseudorange_raw = correct_error_excep_recever(prs(:,1), [], [], prs(:,5));
-    pseudorange_cor = correct_error_excep_recever(prs(:,1), prs(:,3), prs(:,4), prs(:,5));
     
-    x0 = xreal + -100000*rand(3,1)+200000*2;
-    x0 = [x0;0];
+    % raw pseudorange
+    pseudorange_raw = correct_error_excep_recever(prs(:,1), [], [], []);
+    % pseudoranges with satellite clock errors corrected
+    pseudorange_partial_cor = correct_error_excep_recever(prs(:,1), [], [], prs(:,5));
+    % pseudoranges with atomospheric delays and satellite clock error
+    % corrected
+    pseudorange_full_cor = correct_error_excep_recever(prs(:,1), prs(:,3), prs(:,4), prs(:,5));
     
-    sprior2 = 10^2; %5^2; %prior variance [m^2]
-    options.usePrior = 0;options.useSOCP = 0;options.useDLT = 1;options.useBancroft = 0;
-    options.useWLS = 0;options.useGN = 1;options.useSD = 0;options.useLM = 0;
-    options.verbose = 0;
-    options.maxiter = 100;
-    options.threshold1 = 1e-6;
-    options.threshold2 = 1e-6;
-    options.prs_var = sprior2;
+    % initial value
+%     x0 = xreal + 1000;% this is the case required by the assignemnt
+    x0 = [0;0;0];
+    x0 = [x0;0];%% add initial receiver clock error
+    
+    %% options for the navSolver
+    %   for initialization:
+    %       1: use the x0 provided by the user;
+    %       2: use the proposed second-order-cone programming;
+    %       3: use the proposed direct linear transformation method;
+    %       4: use the Bancraft method;
+    %   for iterative solver:
+    %       1: Gauss-Newton;
+    %       2: Steepest Dscent;
+    %       3: Levenberg-Marquardt;   
+    options.initialization = 1;% can be 1,2,3,4
+    options.solver = 1;% can be 1,2,3
+    options.verbose = 0;% will generate intermediate print info
+    options.maxiter = 100;% maximum iteration number
+    %% two thresholds for iteration: smaller, more iteration.
+    options.threshold1 = 1e-6;%  
+    options.threshold2 = 1e-6;%
     
     options.x0_prior = x0;
-    [x_raw1,std_x_raw1,QDOP_raw1,Qenu_raw1,llh_raw1] = navSolver(pseudorange_raw, sat_pos, options);
-    [x_raw2,std_x_raw2,QDOP_raw2,Qenu_raw2,llh_raw2] = navSolverAug(pseudorange_raw, sat_pos, options);
-    
-    [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh_cor] = navSolver(pseudorange_cor, sat_pos, options);
+    %% solve with raw pseudoranges
+    sprior2 = 100000^2; %5^2; %prior variance [m^2]
+    options.prs_var = sprior2;% prior covariance
+    [x_raw1,std_x_raw1,QDOP_raw1,Qenu_raw1,llh1] = navSolver(pseudorange_raw, sat_pos, options);
+    %% solve with partial corrected pseudoranges
+    sprior2 = 10^2; %5^2; %prior variance [m^2]
+    options.prs_var = sprior2;% prior covariance
+    [x_raw2,std_x_raw2,QDOP_raw2,Qenu_raw2,llh2] = navSolverAug(pseudorange_partial_cor, sat_pos, options);
+    %% solve with fully corrected pseudorange
+    sprior2 = 10^2; %5^2; %prior variance [m^2]
+    options.prs_var = sprior2;% prior covariance
+    [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = navSolver(pseudorange_full_cor, sat_pos, options);
     
     err_raw1 = x_raw1(1:3) - xreal;
     err_recerr_raw1 = x_raw1(4) - 0.1*1e-3;
@@ -46,10 +74,9 @@ function ex7_position_estimation
     HDOP_cor = sqrt(trace(Qenu_cor(1:2,1:2)));
     VDOP_cor = sqrt(Qenu_cor(3,3));
     
-    disp('--------------------RAW1---------------------------');
+    disp('--------------------RAW---------------------------');
     disp(strcat("truth: ", num2str(xreal')));
     disp(strcat("estimation:", num2str(x_raw1')));
-
     disp(strcat("error xyz with raw pr:", num2str(err_raw1)));
     disp(strcat("error norm with raw pr:", num2str(norm(err_raw1))));    
     disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_raw1)));
@@ -59,10 +86,9 @@ function ex7_position_estimation
     disp(strcat('HDOP_raw: ',num2str(HDOP_raw1)));
     disp(strcat('VDOP_raw: ',num2str(VDOP_raw1)));
     
-    disp('--------------------RAW2---------------------------');
+    disp('--------------------Partial Correction But Augmented State---------------------------');
     disp(strcat("truth: ", num2str(xreal')));
     disp(strcat("estimation:", num2str(x_raw2')));
-
     disp(strcat("error xyz with raw pr:", num2str(err_raw2)));
     disp(strcat("error norm with raw pr:", num2str(norm(err_raw2))));    
     disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_raw2)));
@@ -72,10 +98,9 @@ function ex7_position_estimation
     disp(strcat('HDOP_raw: ',num2str(HDOP_raw2)));
     disp(strcat('VDOP_raw: ',num2str(VDOP_raw2)));
 
-    disp('--------------------COR---------------------------');
+    disp('--------------------Fully Corrected---------------------------');
     disp(strcat("truth: ", num2str(xreal')));
     disp(strcat("estimation:", num2str(x_cor')));
-    
     disp(strcat("error xyz with raw pr:", num2str(err_cor)));
     disp(strcat("error norm with raw pr:", num2str(norm(err_cor))));    
     disp(strcat("error receiver clock with raw pr:", num2str(err_recerr_cor)));
@@ -85,15 +110,19 @@ function ex7_position_estimation
     disp(strcat('HDOP_raw: ',num2str(HDOP_cor)));
     disp(strcat('VDOP_raw: ',num2str(VDOP_cor)));
     
-    dx = sat_pos(:,1) - x_raw2(1);
-    dy = sat_pos(:,2) - x_raw2(2);
-    dz = sat_pos(:,3) - x_raw2(3);
+    disp('--------------------Ionospheric&Tropospheric Delay Estimated---------------------------');
+    dx = sat_pos(:,1) - x_cor(1);
+    dy = sat_pos(:,2) - x_cor(2);
+    dz = sat_pos(:,3) - x_cor(3);
     consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
     s1 = [];
     s2 = [];
     RE = 6371e3;
     hI = 350e3;
-    [lat, lon, height] = Cartesian2llh(x0(1),x0(2),x0(3),consParams);   
+    [lat, lon, height] = Cartesian2llh(x_cor(1),x_cor(2),x_cor(3),consParams);   
+    azs = [];
+    zns = [];
+    PRN = [];
     for i = 1:size(sat_pos,1)
         %% conversion
         [e,n,u] = WGS842ENU(lat, lon, dx(i), dy(i), dz(i));
@@ -103,14 +132,41 @@ function ex7_position_estimation
         OF = (1-((RE*sin(zenith))/(RE+hI))^2)^(-1/2);
         s1 = [s1;OF];
         s2 = [s2;1/sin(deg2rad(elevation))];
+        
+        azs = [azs;azimuth];
+        zns = [zns;zenith];
+        PRN = [PRN;i];
     end
     A = [s1 s2];
     baug = A * [x_raw2(5);x_raw2(6)];
+    disp('Truth');
+    disp([prs(:,3), prs(:,4)]);
+    disp('Estimated');
+    disp(baug);
     
-    
+    figure
+    hsky = skyPlot(azs,zns.*180./pi,PRN,'o');
+    set(hsky,'LineWidth',2);
+    set(hsky,'MarkerEdgeColor','r');
+    set(hsky,'MarkerFaceColor','r')
+%     figure
+    % sky plot
+%     polar(azs(:),zns(:).*180./pi,'ob');
+    %h = mmpolar(azim(I),zen_ang(I).*180/pi,'*b','TZeroDirection','North','RLimit',[0 90]);
 end
 
 function prs = correct_error_excep_recever(prs_raw, d_iono, d_trop, d_satclk)
+%% correct_error_excep_recever: 
+%   correct pseudoranges with estimated atmospeheric effects.
+%   inputs: 
+%       prs_raw: raw pseudoranges;
+%       d_iono: ionospheric delay;
+%       d_trop: tropospheric delay;
+%       d_satclk: satellite clock error;
+%   outputs:
+%       prs: corrected pseudoranges
+%% Author: xiahaa@space.dtu.dk
+
     prs = prs_raw;
     if ~isempty(d_iono)
         prs = prs - d_iono;
@@ -124,6 +180,15 @@ function prs = correct_error_excep_recever(prs_raw, d_iono, d_trop, d_satclk)
 end
 
 function [prs, sat_pos, x0] = generate_test_case1()
+%% generate_test_case1: 
+%   generate pseudoranges for a hard-coded postision (DTU 101).
+%   inputs: none
+%   outputs:
+%       prs: pseudoranges
+%       sat_pos: satellite positions
+%       x0: true receiver position
+%% Author: xiahaa@space.dtu.dk
+
     % local position llh
     testCase(1,:) = [55.78575300466123,12.525384183973078,0];% DTU 101
     consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants

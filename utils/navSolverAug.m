@@ -8,35 +8,27 @@ function varargout = navSolverAug(prs, sat_pos, options)
     x0 = zeros(dim,1);
     
     %% estimate initial value
-    if options.useSOCP == 1
-        x01 = SOCP(prs,sat_pos);
-        [x5,x6] = estimateAugState(x01, sat_pos, prs);
-        x0 = [x01;x5;x6];
-    elseif options.useDLT == 1
-        x01 = DLT(prs,sat_pos);
-        [x5,x6] = estimateAugState(x01, sat_pos, prs);
-        x0 = [x01;x5;x6];
-    elseif options.useBancroft == 1
-        x01 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
-        [x5,x6] = estimateAugState(x01, sat_pos, prs);
-        x0 = [x01;x5;x6];
-    elseif options.usePrior == 1
-        x01 = [options.x0_prior(1:3);options.x0_prior(4)];
-        [x5,x6] = estimateAugState(x01, sat_pos, prs);
-        x0 = [x01;x5;x6];
-    else
-        error('Choose either SOCP or DLT for initial estimation.');
-        return;
+    switch (options.initialization)
+        case 1
+            x01 = [options.x0_prior(1:3);options.x0_prior(4)];
+        case 2
+            x01 = SOCP(prs,sat_pos);
+        case 3
+            x01 = DLT(prs,sat_pos);
+        case 4
+            x01 = bancroft_fast(prs,sat_pos,[0;0;0;0]);
     end
+    [x5,x6] = estimateAugState(x01, sat_pos, prs);
+    x0 = [x01;x5;x6];
     
-    if options.useWLS == 1
-        error('N/A.');
-    elseif options.useGN == 1
-        [x,std_x,QDOP,Qenu,llh] = solveGaussNewtonAug(prs, sat_pos, x0, options);
-    elseif options.useSD == 1
-        error('N/A.');
-    elseif options.useLM == 1
-        error('N/A.');
+    %% only GN available in this case
+    switch (options.solver)
+        case 1
+            [x,std_x,QDOP,Qenu,llh] = solveGaussNewtonAug(prs, sat_pos, x0, options);
+        case 2
+            [x,std_x,QDOP,Qenu,llh] = solveGaussNewtonAug(prs, sat_pos, x0, options);
+        case 3
+            [x,std_x,QDOP,Qenu,llh] = solveGaussNewtonAug(prs, sat_pos, x0, options);
     end
     
     x(4) = x(4)./cspd;

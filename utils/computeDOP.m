@@ -1,11 +1,10 @@
 function QDOP = computeDOP(A,P,var_prior)
     if isempty(P) == 1
-        QDOP = A'*A;
+        QDOP = inv(A'*A);
     else
-        QDOP = A'*P*A;
+        QDOP = inv(A'*P*A);
     end
     
     QDOP = QDOP/var_prior;
-    
     
 end

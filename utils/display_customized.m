@@ -5,12 +5,12 @@ function h1 = display_customized(varargin)
     type = varargin{4};
     if type == 1
         figure;
-        h1 = plot(x,y);
+        h1 = plot(x,y,'-o');
         grid on;
         title(titles, 'Interpreter', 'latex');
     else
         figure;
-        h1 = semilogy(x,y);
+        h1 = semilogy(x,y,'-o');
         grid on;
         title(titles, 'Interpreter', 'latex');
     end
