@@ -23,9 +23,9 @@ function varargout = RINEX_file_parser(path)
             content.recPosRaw = [x,y,z]';
        elseif linenum == 23
             res = split(tline);
-            Year = str2num(res{2});Month = str2num(res{3});Day = str2num(res{4});
+            year = str2num(res{2});Month = str2num(res{3});Day = str2num(res{4});
             Hour = str2num(res{5});Minute = str2num(res{6});Second = str2num(res{7});
-            content.date = struct('Year',Year,'Month',Month,'Day',Day, ...
+            content.date = struct('year',year,'Month',Month,'Day',Day, ...
                                   'Hour',Hour,'Minute',Minute,'Second',Second);            
         elseif linenum >= (shiftbase)
             if (numel(tline) < 15) || strcmp(tline(1:3), 'EOF') == 1
@@ -58,7 +58,7 @@ function varargout = RINEX_file_parser(path)
                     num = str2num(tline(id+1:id+2));
                     SNRs{j}=strcat(type,num2str(num));
                 end
-                section.Year = str2num(Year);
+                section.year = str2num(Year);
                 section.Month = str2num(Month);
                 section.Day = str2num(Day);
                 section.Hour = str2num(Hour);
