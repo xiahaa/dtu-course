@@ -19,7 +19,7 @@ function ex8
     else
         load('debug.mat');
     end
-    date.Year = 2005; date.Month = 9; date.Day = 20; ...
+    date.year = 2005; date.Month = 9; date.Day = 20; ...
     date.Hour = 3; date.Minute = 28; date.Second = 0;
     %% extract pseudoranges
     data = extract_data(contentRINEX, date);
@@ -83,8 +83,9 @@ function ex8
         Re = consR(radwe, 3);
         satPosPred(i,:) = (Re * satPosPred(i,:)')';
     end
+    
     %% preliminary position
-    x0 = contentRINEX.recPosRaw;
+    x0 = contentRINEX.recPosRaw + 200;
     consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
     [lat,lon,h] = Cartesian2llh(x0(1),x0(2),x0(3),consParams);
     TECU = 10;%TECU
@@ -116,7 +117,7 @@ function ex8
     
     %% correct
     prs_corr = correct_error_excep_recever(prs, dIonos, dTrops, dSatClks);
-
+    
     %% options for the navSolver
     %   for initialization:
     %       1: use the x0 provided by the user;
@@ -134,21 +135,21 @@ function ex8
     % two thresholds for iteration: smaller, more iteration.
     options.threshold1 = 1e-12;%  
     options.threshold2 = 1e-12;%
-    options.x0_prior = [x0 + 100*ones(3,1);0];
+    options.x0_prior = [x0;0];
 
     %% solve with fully corrected pseudorange
     sprior2 = 10^2; %5^2; %prior variance [m^2]
     options.prs_var = sprior2;% prior covariance
     [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = navSolver(prs_corr, satPosPred, options);
 
-    err_cor = x_cor(1:3) - x0;
+    err_cor = x_cor(1:3) - contentRINEX.recPosRaw;
     PDOP_cor = sqrt(trace(QDOP_cor(1:3,1:3)));
     TDOP_cor = sqrt(QDOP_cor(4,4));
     HDOP_cor = sqrt(trace(Qenu_cor(1:2,1:2)));
     VDOP_cor = sqrt(Qenu_cor(3,3));
 
     disp('--------------------Fully Corrected---------------------------');
-    disp(strcat("RINEX: ", num2str(x0')));
+    disp(strcat("RINEX: ", num2str(contentRINEX.recPosRaw')));
     disp(strcat("estimation:", num2str(x_cor')));
     disp(strcat("error xyz with raw pr:", num2str(err_cor)));
     disp(strcat("error norm with raw pr:", num2str(norm(err_cor))));    
@@ -233,7 +234,7 @@ function varargout = extract_data(content, date)
 %% extract data corresponding to the given date from the raw and complete
 %  RINEX content.
 % Author: xiahaa@space.dtu.dk
-    dy = content.date.Year - date.Year;
+    dy = content.date.year - date.year;
     dm = content.date.Month - date.Month;
     dd = content.date.Day - date.Day;
     if abs(dy)>1 || abs(dm)>1 || abs(dd)>1
