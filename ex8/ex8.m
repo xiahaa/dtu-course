@@ -21,9 +21,8 @@ function ex8
     end
     date.year = 2005; date.Month = 9; date.Day = 20; ...
     date.Hour = 3; date.Minute = 28; date.Second = 0;
-    %% extract pseudoranges
-    data = extract_data(contentRINEX, date);
-    [prs, satIDs] = extract_pr(data);
+    
+    [data,prs,satIDs] = prepare_RINEX_data(contentRINEX, date);
 
     %% parsing se3 file
     if debug == 0
@@ -44,18 +43,7 @@ function ex8
     else
         load('debugsp3.mat');
     end
-
-    %% epoch
-    epoch.year = 2005;
-    epoch.Month = 9;
-    epoch.Day = 20;
-    epoch.Hour = 3;
-    epoch.Minute = 28;
-    epoch.Second = 0;
-
-    dataOfToday = find_data(contentSP3, epoch);
-    satInfo = parse_sat_info(dataOfToday, contentSP3.satNum);
-    sp3SatIDs = extract_sat_IDs(contentSP3.satNames, contentSP3.satNum);
+    [dataOfToday, satInfo, sp3SatIDs]=prepare_SP3_data(contentSP3, date);
 
     %% estimate transmission time and interpolate the sat positions
     cnt = 2;
@@ -86,16 +74,14 @@ function ex8
     
     %% preliminary position
     x0 = contentRINEX.recPosRaw + 200;
+
     consParams = struct('a',6378137.0,'f',1/298.257223563); % some constants
-    [lat,lon,h] = Cartesian2llh(x0(1),x0(2),x0(3),consParams);
     TECU = 10;%TECU
+
+    [lat,lon,h] = Cartesian2llh(x0(1),x0(2),x0(3),consParams);
     %% estimate rough zenith, elevation and azimuth
-    azimuths = zeros(numel(prs),1);
-    zeniths = zeros(numel(prs),1);
-    elevations = zeros(numel(prs),1);   
     dIonos = zeros(numel(prs),1);   
     dTrops = zeros(numel(prs),1); 
-    dSatClks = zeros(numel(prs),1); 
     for i = 1:numel(prs)
         dx = satPosPred(i,1) - x0(1);
         dy = satPosPred(i,2) - x0(2);
@@ -103,44 +89,43 @@ function ex8
         %% conversion
         [e,n,u] = WGS842ENU(lat, lon, dx, dy, dz);
         %% compute azimuth and zenith
-        [azimuth, zenith, elevation] = calcAzimuthZenithElevation(e,n,u);
-        azimuths(i) = azimuth;
-        zeniths(i) = zenith;
-        elevations(i) = elevation;
+        [~, ~, elevation] = calcAzimuthZenithElevation(e,n,u);
         %% correct for atomosphric error
         dIonos(i) = iono_delay_first_order_group(elevation, TECU);
         dTrops(i) = tropo_delay_via_saastamoinen_model(lat, h, elevation, '1');
+    end
+
+    dSatClks = zeros(numel(prs),1); 
+    for i = 1:numel(prs)
         %% satellite clock error
         clkerr = satClkPred(i);
         dSatClks(i) = cspd * clkerr * 1e-6;
     end
     
-    %% correct
-    prs_corr = correct_error_excep_recever(prs, dIonos, dTrops, dSatClks);
-    
-    %% options for the navSolver
-    %   for initialization:
-    %       1: use the x0 provided by the user;
-    %       2: use the proposed second-order-cone programming;
-    %       3: use the proposed direct linear transformation method;
-    %       4: use the Bancraft method;
-    %   for iterative solver:
-    %       1: Gauss-Newton;
-    %       2: Steepest Dscent;
-    %       3: Levenberg-Marquardt;   
-    options.initialization = 1;% can be 1,2,3,4
-    options.solver = 1;% can be 1,2,3
-    options.verbose = 0;% will generate intermediate print info
-    options.maxiter = 50;% maximum iteration number
-    % two thresholds for iteration: smaller, more iteration.
-    options.threshold1 = 1e-12;%  
-    options.threshold2 = 1e-12;%
-    options.x0_prior = [x0;0];
+    %% preliminary position
+    x = [x0;0];
+    [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = position_solver(x, ...
+                                                prs, satPosPred, dIonos, ...
+                                                dTrops, dSatClks);
 
-    %% solve with fully corrected pseudorange
-    sprior2 = 10^2; %5^2; %prior variance [m^2]
-    options.prs_var = sprior2;% prior covariance
-    [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = navSolver(prs_corr, satPosPred, options);
+    [lat,lon,~] = Cartesian2llh(x_cor(1),x_cor(2),x_cor(3),consParams);
+    %% estimate rough zenith, elevation and azimuth
+    azimuths = zeros(numel(prs),1);
+    zeniths = zeros(numel(prs),1);
+    elevations = zeros(numel(prs),1);  
+    for i = 1:numel(prs)
+        dx = satPosPred(i,1) - x_cor(1);
+        dy = satPosPred(i,2) - x_cor(2);
+        dz = satPosPred(i,3) - x_cor(3);
+        %% conversion
+        [e,n,u] = WGS842ENU(lat, lon, dx, dy, dz);
+        %% compute azimuth and zenith
+        [azimuth, zenith, elevation] = calcAzimuthZenithElevation(e,n,u);
+        %% correct for atomosphric error
+        azimuths(i) = azimuth;
+        zeniths(i) = zenith;
+        elevations(i) = elevation;
+    end
 
     err_cor = x_cor(1:3) - contentRINEX.recPosRaw;
     PDOP_cor = sqrt(trace(QDOP_cor(1:3,1:3)));
@@ -166,6 +151,39 @@ function ex8
     set(hsky,'MarkerFaceColor','r');
 end
 
+function [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = position_solver(x0, prs, ...
+                                                                    satPosPred, ...
+                                                                    dIonos, ...
+                                                                    dTrops, ...
+                                                                    dSatClks)    
+    %% options for the navSolver
+    %   for initialization:
+    %       1: use the x0 provided by the user;
+    %       2: use the proposed second-order-cone programming;
+    %       3: use the proposed direct linear transformation method;
+    %       4: use the Bancraft method;
+    %   for iterative solver:
+    %       1: Gauss-Newton;
+    %       2: Steepest Dscent;
+    %       3: Levenberg-Marquardt;   
+    options.initialization = 1;% can be 1,2,3,4
+    options.solver = 1;% can be 1,2,3
+    options.verbose = 0;% will generate intermediate print info
+    options.maxiter = 50;% maximum iteration number
+    % two thresholds for iteration: smaller, more iteration.
+    options.threshold1 = 1e-12;%  
+    options.threshold2 = 1e-12;%
+    
+    options.x0_prior = x0;
+
+    %% correct
+    prs_corr = correct_error_excep_recever(prs, dIonos, dTrops, dSatClks);
+        
+    %% solve with fully corrected pseudorange
+    sprior2 = 10^2; %5^2; %prior variance [m^2]
+    options.prs_var = sprior2;% prior covariance
+    [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = navSolver(prs_corr, satPosPred, options);
+end
 
 function prs = correct_error_excep_recever(prs_raw, d_iono, d_trop, d_satclk)
 %% correct_error_excep_recever: 
@@ -190,78 +208,12 @@ function prs = correct_error_excep_recever(prs_raw, d_iono, d_trop, d_satclk)
     end
 end
 
-function satInfo = parse_sat_info(dataOfToday, satNum)
-    satInfo = cell(satNum,1);
-    for i = 1:size(dataOfToday,1)
-        data = dataOfToday{i,1};
-        time = data.Hour * 3600 + data.Minute * 60 + data.Second;
-        for j = 1:size(data.satPos,1)
-            satinfo = [time, data.satPos(j).x, data.satPos(j).y, data.satPos(j).z,data.satPos(j).clock];
-            satInfo{j}=[satInfo{j};satinfo];
-        end
-    end
-end
-
 function satClkErr = interp_sat_clk_err(sp3SatInfo, id, ts)
-%% find the corresponding sp3 indices
+%% prepare_RINEX_data: extract pseudoranges and satellite id
+% Author: xiahaa@space.dtu.dk
+    %% find the corresponding sp3 indices
     tsp3 = sp3SatInfo{id}(:,1);
     clkrec = sp3SatInfo{id}(:,5);
     %% interpolation the clkrec
     satClkErr = interp1(tsp3,clkrec,ts,'linear');
-    satClkErr = satClkErr;
-end
-
-function sp3SatIDs = extract_sat_IDs(sat_names, sat_num)
-    for i = 1:sat_num
-        sp3SatIDs(i) = str2num(sat_names(i,2:end));
-    end
-end
-
-function varargout = extract_pr(data)
-%% here, extract the pseudoranges (L1-L2) from RINEX file.
-%  todo: whether or not we need to correct for the Doppler shift.
-    prs = zeros(size(data.SNRs,1),1);
-    satIDs = zeros(size(data.SNRs,1),1);
-    for i = 1:size(data.SNRs,1)
-        prs(i) = data.satPos(i).C1;
-        satIDs(i) = str2num(data.SNRs{i}(2:end));
-    end
-    varargout{1} = prs;
-    varargout{2} = satIDs;
-end
-
-function varargout = extract_data(content, date)
-%% extract data corresponding to the given date from the raw and complete
-%  RINEX content.
-% Author: xiahaa@space.dtu.dk
-    dy = content.date.year - date.year;
-    dm = content.date.Month - date.Month;
-    dd = content.date.Day - date.Day;
-    if abs(dy)>1 || abs(dm)>1 || abs(dd)>1
-        error('The date does not correspond to the given RINEX file!!!!');
-        varargout{1} = [];
-        return;
-    end
-    ts1 = date.Hour * 3600 + date.Minute * 60 + date.Second;
-    nearest = -1;
-    nesrestDt = 1e6;
-    for i = 1:size(content.sections,1)
-        section = content.sections{i};
-        ts2 = section.Hour * 3600 + section.Minute * 60 + section.Second;
-
-        if abs(ts2 - ts1) < nesrestDt
-            nesrestDt = abs(ts2 - ts1);
-            nearest = i;
-        end
-    end
-    
-    if nesrestDt < 1
-        data = content.sections{nearest};
-        varargout{1} = data;
-        disp('found!');
-    else
-        data = content.sections{nearest};
-        varargout{1} = data;
-        warning('Only found the nearest!');
-    end
 end
