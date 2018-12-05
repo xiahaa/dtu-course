@@ -112,6 +112,10 @@ function ex_9_gdop_galileo_gps
     xlabel('time: (s)','FontSize', font_size, 'Interpreter', 'latex');
     ylabel('PDOP','FontSize', font_size, 'Interpreter', 'latex');
     hold off;   
+    
+    
+    
+    
 end
 
 function [rec_llh, rec_xyz] = prepare()

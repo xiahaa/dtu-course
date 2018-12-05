@@ -132,23 +132,26 @@ function ex8
     TDOP_cor = sqrt(QDOP_cor(4,4));
     HDOP_cor = sqrt(trace(Qenu_cor(1:2,1:2)));
     VDOP_cor = sqrt(Qenu_cor(3,3));
-
+    GDOP_cor = sqrt(trace(QDOP_cor(1:4,1:4)));
     disp('--------------------Fully Corrected---------------------------');
     disp(strcat("RINEX: ", num2str(contentRINEX.recPosRaw')));
     disp(strcat("estimation:", num2str(x_cor')));
-    disp(strcat("error xyz with raw pr:", num2str(err_cor)));
-    disp(strcat("error norm with raw pr:", num2str(norm(err_cor))));    
-    disp(strcat('std_x_raw: ',num2str(std_x_cor)));
-    disp(strcat('PDOP_raw: ',num2str(PDOP_cor)));
-    disp(strcat('TDOP_raw: ',num2str(TDOP_cor)));
-    disp(strcat('HDOP_raw: ',num2str(HDOP_cor)));
-    disp(strcat('VDOP_raw: ',num2str(VDOP_cor)));
+    disp(strcat("error xyz with pr:", num2str(err_cor)));
+    disp(strcat("error norm with pr:", num2str(norm(err_cor))));    
+    disp(strcat('std_x: ',num2str(std_x_cor)));
+    disp(strcat('PDOP: ',num2str(PDOP_cor)));
+    disp(strcat('TDOP: ',num2str(TDOP_cor)));
+    disp(strcat('HDOP: ',num2str(HDOP_cor)));
+    disp(strcat('VDOP: ',num2str(VDOP_cor)));
+    disp(strcat('GDOP: ',num2str(GDOP_cor)));
 
     figure
-    hsky = skyPlot(azimuths,zeniths.*180./pi,satIDs,'o');
+    hsky = skyPlot(azimuths,elevations,satIDs,'o');
     set(hsky,'LineWidth',2);
     set(hsky,'MarkerEdgeColor','r');
     set(hsky,'MarkerFaceColor','r');
+    title('Skyplot','Interpreter','latex');
+    set(gca,'FontSize',16);
 end
 
 function [x_cor,std_x_cor,QDOP_cor,Qenu_cor,llh3] = position_solver(x0, prs, ...

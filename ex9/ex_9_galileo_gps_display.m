@@ -17,7 +17,7 @@ function ex_9_galileo_gps_display
     numGPSSat = size(satGPS,1);    
 
     %% orbit
-    t = linspace(0,60*60*12,50);
+    t = linspace(0,60*60*12,30);
     GalileosatPosX = zeros(numGalileoSat,numel(t));
     GalileosatPosY = zeros(numGalileoSat,numel(t));
     GalileosatPosZ = zeros(numGalileoSat,numel(t));
@@ -46,24 +46,57 @@ function ex_9_galileo_gps_display
     end
     
     figure
-    color = jet(9);
-    markers = {'-o','*','s','d'};
+    color = jet(40);
+    markers = {'o','s','d','*'};
     k = 1;
     for i = 1:numGalileoSat
         if mod(i,9) == 0
-            h(k) = plot3(GalileosatPosX(i,:),GalileosatPosY(i,:),GalileosatPosZ(i,:),markers{1}, 'Color', color(k,:));hold on;
+            h(k) = plot3(GalileosatPosX(i,1),GalileosatPosY(i,1),GalileosatPosZ(i,1),markers{1}, 'Color', color(k*4,:));hold on;
             k = k +1;
         else
-            plot3(GalileosatPosX(i,:),GalileosatPosY(i,:),GalileosatPosZ(i,:),markers{1}, 'Color', color(k,:));hold on;
+            plot3(GalileosatPosX(i,1),GalileosatPosY(i,1),GalileosatPosZ(i,1),markers{1}, 'Color', color(k*4,:));hold on;
         end
     end
     
     for i = 1:numGPSSat
         if mod(i,4) == 0
-            h(k) = plot3(GalileosatPosX(i,:),GalileosatPosY(i,:),GalileosatPosZ(i,:),markers{1}, 'Color', color(k,:));hold on;
+            h(k) = plot3(GPSsatPosX(i,1),GPSsatPosY(i,1),GPSsatPosZ(i,1),markers{2}, 'Color', color(k*4,:));hold on;
             k = k + 1;
         else
-            plot3(GPSsatPosX(i,:),GPSsatPosY(i,:),GPSsatPosZ(i,:),markers{2}, 'Color', color(k,:));hold on;
+            plot3(GPSsatPosX(i,1),GPSsatPosY(i,1),GPSsatPosZ(i,1),markers{2}, 'Color', color(k*4,:));hold on;
+        end
+    end
+    [x,y,z] = sphere;
+    x = x.*6371000;
+    y = y.*6371000;
+    z = z.*6371000;
+    surf(x,y,z);
+    grid on;
+%     title('Satellite Orbits','Interpreter','latex');
+    legend([h(1), h(2), h(3), h(4), h(5), h(6), h(7), h(8), h(9)], ...
+        'Galileo-1', 'Galileo-2', 'Galileo-3', 'GPS-A', 'GPS-B', ...
+         'GPS-C', 'GPS-D',  'GPS-E', 'GPS-F');
+    title('Galileo/Gps Satellite Positions: 1 instance','Interpreter','latex');
+    xlabel('x: (m)','Interpreter','latex');ylabel('y: (m)','Interpreter','latex');zlabel('z: (m)','Interpreter','latex');
+
+    figure
+    markers = {'o','s','d','*'};
+    k = 1;
+    for i = 1:numGalileoSat
+        if mod(i,9) == 0
+            h(k) = plot3(GalileosatPosX(i,:),GalileosatPosY(i,:),GalileosatPosZ(i,:),markers{1}, 'Color', color(k*4,:));hold on;
+            k = k +1;
+        else
+            plot3(GalileosatPosX(i,:),GalileosatPosY(i,:),GalileosatPosZ(i,:),markers{1}, 'Color', color(k*4,:));hold on;
+        end
+    end
+    
+    for i = 1:numGPSSat
+        if mod(i,4) == 0
+            h(k) = plot3(GPSsatPosX(i,:),GPSsatPosY(i,:),GPSsatPosZ(i,:),markers{2}, 'Color', color(k*4,:));hold on;
+            k = k + 1;
+        else
+            plot3(GPSsatPosX(i,:),GPSsatPosY(i,:),GPSsatPosZ(i,:),markers{2}, 'Color', color(k*4,:));hold on;
         end
     end
     [x,y,z] = sphere;
@@ -76,6 +109,8 @@ function ex_9_galileo_gps_display
     legend([h(1), h(2), h(3), h(4), h(5), h(6), h(7), h(8), h(9)], ...
         'Galileo-1', 'Galileo-2', 'Galileo-3', 'GPS-A', 'GPS-B', ...
          'GPS-C', 'GPS-D',  'GPS-E', 'GPS-F');
+    title('Galileo/GPS Satellite Orbits: 12 hours','Interpreter','latex');
+    xlabel('x: (m)','Interpreter','latex');ylabel('y: (m)','Interpreter','latex');zlabel('z: (m)','Interpreter','latex');
 
     %% animation
     drawGif = 0;

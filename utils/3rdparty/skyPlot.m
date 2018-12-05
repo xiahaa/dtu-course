@@ -121,7 +121,7 @@ xunit = cos(th);
 yunit = sin(th); 
  
 %--- Plot elevation grid lines and tick text ------------------------------ 
-for elevation = 0 : 15 : 90 
+for elevation = 0 : 30 : 90 
     elevationSpherical = 90*cos((pi/180) * elevation); 
  
     line(yunit * elevationSpherical, xunit * elevationSpherical, ... 

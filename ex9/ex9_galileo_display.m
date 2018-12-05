@@ -16,14 +16,24 @@ function ex9_galileo_display
         k = k + 1;
     end
     figure
-    color = jet(32);
-    markers = ['o'];
+    color = jet(24);
+    markers = {'-o','s','d','*'};
+    j = 1;
     for i = 1:numSat
-        plot3(initTatPos(i,1),initTatPos(i,2),initTatPos(i,3),'Marker',markers(1), ...
-                'MarkerEdgeColor',color(i,:),'MarkerFaceColor',color(i,:),'MarkerSize', 8);hold on;
+        if mod(i,9) == 0
+            j = j + 1;
+        end
+        plot3(initTatPos(i,1),initTatPos(i,2),initTatPos(i,3),markers{j}, ...
+                'MarkerEdgeColor',color(j*4,:),'MarkerFaceColor',color(j*4,:),'MarkerSize', 8);hold on;
     end
+    [x,y,z] = sphere;
+    x = x.*6371000;
+    y = y.*6371000;
+    z = z.*6371000;
+    surf(x,y,z);
     grid on;
-    title('Satellite Positions','Interpreter','latex');
+    title('Galileo Satellite Positions: 1 instance','Interpreter','latex');
+    xlabel('x: (m)','Interpreter','latex');ylabel('y: (m)','Interpreter','latex');zlabel('z: (m)','Interpreter','latex');
     
     %% Q4
     t = linspace(0,60*60*12,50);
@@ -40,10 +50,13 @@ function ex9_galileo_display
         end
     end
     figure
-    color = jet(32);
-    markers = {'-o','*','s','d'};
+    markers = {'-o','d','s','*'};
+    j = 1;
     for i = 1:numSat
-        plot3(satPosX(i,:),satPosY(i,:),satPosZ(i,:),markers{1}, 'Color', color(i,:));hold on;
+        if mod(i,9) == 0
+            j = j + 1;
+        end
+        plot3(satPosX(i,:),satPosY(i,:),satPosZ(i,:),markers{j}, 'Color', color(j*4,:));hold on;
     end
     [x,y,z] = sphere;
     x = x.*6371000;
@@ -51,8 +64,9 @@ function ex9_galileo_display
     z = z.*6371000;
     surf(x,y,z);
     grid on;
-    title('Satellite Orbits','Interpreter','latex');
-    
+    title('Galileo Satellite Orbits: 12 hours','Interpreter','latex');
+    xlabel('x: (m)','Interpreter','latex');ylabel('y: (m)','Interpreter','latex');zlabel('z: (m)','Interpreter','latex');
+
     drawGif = 0;
     axis tight manual % this ensures that getframe() returns a consistent size
     giffilename = 'satellite.gif';
