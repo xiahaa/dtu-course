@@ -3,5 +3,5 @@ function rad = deg2rad(deg)
 %   rad = deg2rad(deg) produces a corresponding radian value to a 
 %   given degree value.
 %   Author: xiahaa@space.dtu.dk
-    rad = deg * pi / 180.0;
+    rad = deg .* pi ./ 180.0;
 end

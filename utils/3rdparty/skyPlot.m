@@ -64,7 +64,8 @@ if ~isequal(size(az), size(el))
 end 
  
 %% Prepare axis =========================================================== 
-hAxis = newplot(hAxis); 
+% hAxis = newplot(hAxis); 
+hAxis = gca;
  
 %--- Get x-axis text color so grid is in same color ----------------------- 
 tc = get(hAxis, 'xcolor'); 
