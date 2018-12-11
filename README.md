@@ -20,3 +20,14 @@ This repo contains assignments for the course Satellite based Positioning taken 
 5. add clock clock error;
 6. GUI for simualtion;
 
+# F
+## Aims:
+1. Solve positioning equation to get receiver's position and clock error;
+2. implementation of Gauss-Newton algorithm;
+3. DOP analysis;
+
+# G&H
+## Aims:
+1. simulation of Galileo system using the Kepler parameters for Galileo satellites;
+2. DOP analysis for GPS alone, Galileo only and multi-constellation system with GPS and Galileo;
+
