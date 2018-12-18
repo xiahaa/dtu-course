@@ -1,7 +1,7 @@
 function test_on_gdop
     clear all;
     clc;
-    N = 1000;
+    N = 10000;
     dop1 = zeros(N,1);
     dop2 = zeros(N,1);
     t1 = zeros(N,1);
@@ -27,7 +27,7 @@ function test_on_gdop
     
         %% 2
         tic
-        dop = dopeee(M);
+        dop = dopschur(M);
         t2(j)=toc;
         dop2(j) = dop;
     end
@@ -45,6 +45,13 @@ end
 function dop = dopsss(M)
     Minv = inv(M);
     dop = trace(Minv(1:3,1:3));
+end
+
+function dop = dopschur(M)
+    A = M(1:3,1:3);B = M(1:3,4);
+    S = A - B*B'/M(4,4);
+    e = eig(S);
+    dop = (1/e(1)+1/e(2)+1/e(3));
 end
 
 function dop = dopeee(M)

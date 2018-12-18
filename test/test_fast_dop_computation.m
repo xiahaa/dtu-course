@@ -120,7 +120,7 @@ function dop = dop_via_cl(H)
     h1 = trace(M);
     h2 = trace(M*M);
     h3 = trace(M*M*M);
-    h4 = det(M);;
+    h4 = det(M);
     dop = sqrt((0.5*h1*h1*h1-1.5*h1*h2+h3)/(3*h4));
 end
 
@@ -129,7 +129,7 @@ function dop = dop_via_inverse(H)
 end
 
 function random_vecs = gen_ran_vecs(n, dim)
-    rng('shuffle');
+    rng('default');
     random_vecs = rand(n,dim) * 2 - 1;
 end
 
