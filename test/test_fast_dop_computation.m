@@ -18,13 +18,15 @@ function test_fast_dop_computation
     t2s = zeros(runcnt,1);
     t3s = zeros(runcnt,1);
     t4s = zeros(runcnt,1);
+    t5s = zeros(runcnt,1);
 
     
     dop1 = zeros(runcnt,1);
     dop2 = zeros(runcnt,1);
     dop3 = zeros(runcnt,1);
     dop4 = zeros(runcnt,1);
-    
+    dop5 = zeros(runcnt,1);
+
     for k = 1:runcnt
         H = Hs{k};
         tic;
@@ -45,6 +47,11 @@ function test_fast_dop_computation
         tic;
         dop4(k) = eig_decomp2(H);
         t4s(k) = toc;
+ 
+        %% 5
+        tic;
+        dop5(k) = fast_eig_decomp(H);
+        t5s(k) = toc;
     end
     
     
@@ -53,11 +60,13 @@ function test_fast_dop_computation
     mean(t2s)
     mean(t3s)
     mean(t4s)
+    mean(t5s)
     
     sum(t1s)
     sum(t2s)
     sum(t3s)
     sum(t4s)
+    sum(t5s)
     
     plot(dop1,'r');hold on; grid on;
     plot(dop2,'b--');
@@ -108,6 +117,31 @@ function dop = eig_decomp2(H)
 %     toc
     
 
+end
+
+function dop = fast_eig_decomp(H)
+    M = H'*H;
+
+%     A = H(:,1:3)'*H(:,1:3);
+%     s1 = sum(H(:,1));s2 = sum(H(:,2));s3 = sum(H(:,3));
+%     s1s1 = s1*s1;
+%     s1s2 = s1*s2;
+%     s1s3 = s1*s3;
+%     s2s3 = s2*s3;
+%     s2s2 = s2*s2;
+%     s3s3 = s3*s3;
+%     N = size(H,1);
+    
+    tic
+    [e1,v1] = eig(M(1:3,1:3));
+    S1 = M(1:3,1:3) - M(1:3,4)*M(1:3,4)'./M(4,4);
+    S2 = M(4,4) - M(4,1:3)*e1*diag([1/v1(1,1),1/v1(2,2),1/v1(3,3)])*e1'*M(1:3,4);
+    e2 = eig(S1);     
+    dop = sqrt(1/e2(1)+1/e2(2)+1/e2(3) + 1/S2);
+    toc
+    tic
+    Minv = inv(M);
+    toc
 end
 
 function dop = eig_decomp(H)
