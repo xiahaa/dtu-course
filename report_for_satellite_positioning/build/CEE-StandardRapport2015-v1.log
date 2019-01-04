@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6880 64-bit) (preloaded format=pdflatex 2018.11.19)  20 NOV 2018 16:36
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6880 64-bit) (preloaded format=pdflatex 2018.11.19)  3 JAN 2019 15:19
 entering extended mode
 **./CEE-StandardRapport2015-v1.tex
 (CEE-StandardRapport2015-v1.tex
@@ -2128,15 +2128,6 @@ te-based-positioning\report_for_satellite_positioning\build\files/frontpage.aux
 te-based-positioning\report_for_satellite_positioning\build\files/abstract.aux"
 )
 ("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
-te-based-positioning\report_for_satellite_positioning\build\files/assign_f.aux"
-
-LaTeX Warning: Label `fig:con_plot' multiply defined.
-
-
-LaTeX Warning: Label `fig:con_elp' multiply defined.
-
-)
-("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
 te-based-positioning\report_for_satellite_positioning\build\files/assign_f_ext.
 aux")
 ("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
@@ -2400,198 +2391,6 @@ LaTeX Font Warning: Font shape `T1/lmr/bx/sc' undefined
 ) [2
 
 ]
-\openout2 = `files/assign_f.aux'.
-
- (files/assign_f.tex
-
-Class memoir Warning: X Columns too narrow (table too wide)
-(memoir)               on input line 1.
-
-
-Overfull \hbox (11.45352pt too wide) in paragraph at lines 1--1
-[]|[]| 
- []
-
-
-Overfull \hbox (52.82635pt too wide) in alignment at lines 1--1
-[][] 
- []
-
-pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.67 \end{align}
-                 [1
-
-
-
-]
-LaTeX Font Info:    Try loading font information for TS1+lmr on input line 76.
- ("C:\Program Files\MiKTeX 2.9\tex\latex\lm\ts1lmr.fd"
-File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-Package microtype Info: Character `029' is missing
-(microtype)             in font `T1/lmr/m/sc/10.95'.
-(microtype)             Ignoring protrusion settings for this character.
-LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 78.
-
-Underfull \hbox (badness 1152) in paragraph at lines 93--94
-[]$\OML/lmm/m/it/10.95 HDOP \OT1/lmr/m/n/10.95 (+20) = []$ \T1/lmr/m/n/10.95 (+
-20) defines the horizontal dilution of
- []
-
-
-Package natbib Warning: Citation `lsa_allan' on page 2 undefined on input line 
-97.
-
-pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.103 \end{align}
-                  [2]
-Underfull \hbox (badness 1838) in paragraph at lines 120--122
-\T1/lmr/m/n/10.95 (+20) where $\OML/lmm/m/it/10.95 q$ \T1/lmr/m/n/10.95 (+20) i
-s the fractile of a certain confidence. If $\OML/lmm/m/it/10.95 []$ \T1/lmr/m/
-n/10.95 (+20) is known beforehand,
- []
-
-[3] [4]
-<figures/ex7/raw_vtv.pdf, id=139, 553.51122pt x 560.95804pt>
-File: figures/ex7/raw_vtv.pdf Graphic file (type pdf)
-<use figures/ex7/raw_vtv.pdf>
-Package pdftex.def Info: figures/ex7/raw_vtv.pdf  used on input line 188.
-(pdftex.def)             Requested size: 213.0pt x 215.86252pt.
-<figures/ex7/raw_x1_iter.pdf, id=140, 532.24004pt x 548.77048pt>
-File: figures/ex7/raw_x1_iter.pdf Graphic file (type pdf)
-<use figures/ex7/raw_x1_iter.pdf>
-Package pdftex.def Info: figures/ex7/raw_x1_iter.pdf  used on input line 189.
-(pdftex.def)             Requested size: 85.1987pt x 87.83856pt.
-<figures/ex7/raw_x2_iter.pdf, id=141, 523.57442pt x 554.43158pt>
-File: figures/ex7/raw_x2_iter.pdf Graphic file (type pdf)
-<use figures/ex7/raw_x2_iter.pdf>
-Package pdftex.def Info: figures/ex7/raw_x2_iter.pdf  used on input line 190.
-(pdftex.def)             Requested size: 85.1987pt x 90.21672pt.
-<figures/ex7/raw_x3_iter.pdf, id=142, 516.83403pt x 553.88419pt>
-File: figures/ex7/raw_x3_iter.pdf Graphic file (type pdf)
-<use figures/ex7/raw_x3_iter.pdf>
-Package pdftex.def Info: figures/ex7/raw_x3_iter.pdf  used on input line 191.
-(pdftex.def)             Requested size: 85.1987pt x 91.30243pt.
-<figures/ex7/raw_x4_iter.pdf, id=143, 517.58015pt x 550.98909pt>
-File: figures/ex7/raw_x4_iter.pdf Graphic file (type pdf)
-<use figures/ex7/raw_x4_iter.pdf>
-Package pdftex.def Info: figures/ex7/raw_x4_iter.pdf  used on input line 192.
-(pdftex.def)             Requested size: 85.1987pt x 90.69067pt.
-<figures/ex7/raw_ellp_f.pdf, id=144, 498.93065pt x 573.54356pt>
-File: figures/ex7/raw_ellp_f.pdf Graphic file (type pdf)
-<use figures/ex7/raw_ellp_f.pdf>
-Package pdftex.def Info: figures/ex7/raw_ellp_f.pdf  used on input line 198.
-(pdftex.def)             Requested size: 191.6987pt x 220.36424pt.
-<figures/ex7/raw_ellp_f_enu.pdf, id=145, 415.38338pt x 569.15614pt>
-File: figures/ex7/raw_ellp_f_enu.pdf Graphic file (type pdf)
-<use figures/ex7/raw_ellp_f_enu.pdf>
-Package pdftex.def Info: figures/ex7/raw_ellp_f_enu.pdf  used on input line 199
-.
-(pdftex.def)             Requested size: 191.6987pt x 262.66609pt.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 200.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 200.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 200.
-<figures/ex7/full_vtv.pdf, id=146, 530.39458pt x 551.77512pt>
-File: figures/ex7/full_vtv.pdf Graphic file (type pdf)
-<use figures/ex7/full_vtv.pdf>
-Package pdftex.def Info: figures/ex7/full_vtv.pdf  used on input line 205.
-(pdftex.def)             Requested size: 213.0pt x 221.58176pt.
-<figures/ex7/full_x1.pdf, id=147, 529.19067pt x 556.685pt>
-File: figures/ex7/full_x1.pdf Graphic file (type pdf)
-<use figures/ex7/full_x1.pdf>
-Package pdftex.def Info: figures/ex7/full_x1.pdf  used on input line 206.
-(pdftex.def)             Requested size: 85.1987pt x 89.62355pt.
-<figures/ex7/full_x2.pdf, id=148, 522.68903pt x 553.43163pt>
-File: figures/ex7/full_x2.pdf Graphic file (type pdf)
-<use figures/ex7/full_x2.pdf>
-Package pdftex.def Info: figures/ex7/full_x2.pdf  used on input line 207.
-(pdftex.def)             Requested size: 85.1987pt x 90.20602pt.
-<figures/ex7/full_x3.pdf, id=149, 517.25185pt x 552.81482pt>
-File: figures/ex7/full_x3.pdf Graphic file (type pdf)
-<use figures/ex7/full_x3.pdf>
-Package pdftex.def Info: figures/ex7/full_x3.pdf  used on input line 208.
-(pdftex.def)             Requested size: 85.1987pt x 91.05023pt.
-<figures/ex7/full_x4.pdf, id=150, 507.258pt x 557.04308pt>
-File: figures/ex7/full_x4.pdf Graphic file (type pdf)
-<use figures/ex7/full_x4.pdf>
-Package pdftex.def Info: figures/ex7/full_x4.pdf  used on input line 209.
-(pdftex.def)             Requested size: 85.1987pt x 93.5571pt.
-<figures/ex7/full_ellp_f.pdf, id=151, 513.33682pt x 563.91286pt>
-File: figures/ex7/full_ellp_f.pdf Graphic file (type pdf)
-<use figures/ex7/full_ellp_f.pdf>
-Package pdftex.def Info: figures/ex7/full_ellp_f.pdf  used on input line 215.
-(pdftex.def)             Requested size: 191.6987pt x 210.58052pt.
-<figures/ex7/full_ellp_f_enu.pdf, id=152, 476.64473pt x 595.30223pt>
-File: figures/ex7/full_ellp_f_enu.pdf Graphic file (type pdf)
-<use figures/ex7/full_ellp_f_enu.pdf>
-Package pdftex.def Info: figures/ex7/full_ellp_f_enu.pdf  used on input line 21
-6.
-(pdftex.def)             Requested size: 191.6987pt x 239.41562pt.
-<figures/ex7/skyplot.pdf, id=153, 421.98624pt x 408.3261pt>
-File: figures/ex7/skyplot.pdf Graphic file (type pdf)
-<use figures/ex7/skyplot.pdf>
-Package pdftex.def Info: figures/ex7/skyplot.pdf  used on input line 222.
-(pdftex.def)             Requested size: 191.6987pt x 185.4896pt.
-<figures/ex7/h24gdop.pdf, id=156, 542.29854pt x 572.34476pt>
-File: figures/ex7/h24gdop.pdf Graphic file (type pdf)
-<use figures/ex7/h24gdop.pdf>
-Package pdftex.def Info: figures/ex7/h24gdop.pdf  used on input line 230.
-(pdftex.def)             Requested size: 170.3974pt x 179.83542pt.
-<figures/ex7/h24pdop.pdf, id=157, 542.55727pt x 571.6583pt>
-File: figures/ex7/h24pdop.pdf Graphic file (type pdf)
-<use figures/ex7/h24pdop.pdf>
-Package pdftex.def Info: figures/ex7/h24pdop.pdf  used on input line 231.
-(pdftex.def)             Requested size: 170.3974pt x 179.5325pt.
-<figures/ex7/h24hdop.pdf, id=158, 540.48286pt x 566.5743pt>
-File: figures/ex7/h24hdop.pdf Graphic file (type pdf)
-<use figures/ex7/h24hdop.pdf>
-Package pdftex.def Info: figures/ex7/h24hdop.pdf  used on input line 237.
-(pdftex.def)             Requested size: 170.3974pt x 178.6188pt.
-<figures/ex7/h24vdop.pdf, id=159, 535.22978pt x 575.49863pt>
-File: figures/ex7/h24vdop.pdf Graphic file (type pdf)
-<use figures/ex7/h24vdop.pdf>
-Package pdftex.def Info: figures/ex7/h24vdop.pdf  used on input line 238.
-(pdftex.def)             Requested size: 170.3974pt x 183.21492pt.
-<figures/ex7/skyplotmax.pdf, id=160, 473.11276pt x 427.21779pt>
-File: figures/ex7/skyplotmax.pdf Graphic file (type pdf)
-<use figures/ex7/skyplotmax.pdf>
-Package pdftex.def Info: figures/ex7/skyplotmax.pdf  used on input line 244.
-(pdftex.def)             Requested size: 170.3974pt x 153.86346pt.
-<figures/ex7/skyplotmin.pdf, id=161, 434.9432pt x 428.32219pt>
-File: figures/ex7/skyplotmin.pdf Graphic file (type pdf)
-<use figures/ex7/skyplotmin.pdf>
-Package pdftex.def Info: figures/ex7/skyplotmin.pdf  used on input line 245.
-(pdftex.def)             Requested size: 170.3974pt x 167.80312pt.
-
-
-Package natbib Warning: Citation `lsa_allan' on page 5 undefined on input line 
-261.
-
-[5 <./figures/ex7/raw_vtv.pdf> <./figures/ex7/raw_x1_iter.pdf> <./figures/ex7/r
-aw_x2_iter.pdf> <./figures/ex7/raw_x3_iter.pdf> <./figures/ex7/raw_x4_iter.pdf>
-] [6 <./figures/ex7/raw_ellp_f.pdf> <./figures/ex7/raw_ellp_f_enu.pdf> <./figur
-es/ex7/full_vtv.pdf> <./figures/ex7/full_x1.pdf> <./figures/ex7/full_x2.pdf> <.
-/figures/ex7/full_x3.pdf> <./figures/ex7/full_x4.pdf>] [7 <./figures/ex7/full_e
-llp_f.pdf> <./figures/ex7/full_ellp_f_enu.pdf> <./figures/ex7/skyplot.pdf>]
-[8 <./figures/ex7/h24gdop.pdf> <./figures/ex7/h24pdop.pdf> <./figures/ex7/h24hd
-op.pdf> <./figures/ex7/h24vdop.pdf> <./figures/ex7/skyplotmax.pdf> <./figures/e
-x7/skyplotmin.pdf>]
-<figures/ex7/gui.png, id=461, 1076.02pt x 641.39626pt>
-File: figures/ex7/gui.png Graphic file (type png)
-<use figures/ex7/gui.png>
-Package pdftex.def Info: figures/ex7/gui.png  used on input line 271.
-(pdftex.def)             Requested size: 426.0pt x 253.93106pt.
- [9 <./figures/ex7/gui.png>]) [10]
 \openout2 = `files/assign_f_ext.aux'.
 
  (files/assign_f_ext.tex
@@ -2609,41 +2408,48 @@ Overfull \hbox (52.82635pt too wide) in alignment at lines 1--1
 [][] 
  []
 
-[11
+LaTeX Font Info:    Try loading font information for TS1+lmr on input line 7.
+("C:\Program Files\MiKTeX 2.9\tex\latex\lm\ts1lmr.fd"
+File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
+ been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.55 \end{align}
+                 [1
 
 
 
-] [12]
+]pdfTeX warning (ext4): destination with the same identifier (name{page.2}) has
+ been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.96 \end{align}
+                 [2]
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <9> on input line 143.
- [13] [14]
-
-Package natbib Warning: Citation `lsa_allan' on page 15 undefined on input line
- 220.
-
-[15] [16] [17] [18]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 143.
+ [3] [4] [5] [6] [7] [8]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[19]) [20] (CEE-StandardRapport2015-v1.bbl) [21
+[9] [10]) [11] (CEE-StandardRapport2015-v1.bbl) [12
 
 
 ]
 \openout2 = `files/backpage.aux'.
 
- (files/backpage.tex) [22
+ (files/backpage.tex)
+[13
 
-]
-
+] 
 AED: lastpage setting LastPage
-
-Package natbib Warning: There were undefined citations.
-
 \tf@toc=\write6
 \openout6 = `CEE-StandardRapport2015-v1.toc'.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 95.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 95.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 98.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 98.
 
 ("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
 te-based-positioning\report_for_satellite_positioning\build\CEE-StandardRapport
@@ -2655,61 +2461,54 @@ te-based-positioning\report_for_satellite_positioning\build\files/frontpage.aux
 te-based-positioning\report_for_satellite_positioning\build\files/abstract.aux"
 )
 ("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
-te-based-positioning\report_for_satellite_positioning\build\files/assign_f.aux"
-)
-("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
 te-based-positioning\report_for_satellite_positioning\build\files/assign_f_ext.
 aux")
 ("C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based positioning\satelli
 te-based-positioning\report_for_satellite_positioning\build\files/backpage.aux"
 ))
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 95.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 95.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 98.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 98.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-LaTeX Warning: There were multiply-defined labels.
-
  ) 
 Here is how much of TeX's memory you used:
- 66071 strings out of 492969
- 1501726 string characters out of 3135843
+ 65773 strings out of 492969
+ 1495215 string characters out of 3135843
  2244293 words of memory out of 3000000
- 68525 multiletter control sequences out of 15000+200000
- 683387 words of font info for 196 fonts, out of 3000000 for 9000
+ 68366 multiletter control sequences out of 15000+200000
+ 656141 words of font info for 151 fonts, out of 3000000 for 9000
  1143 hyphenation exceptions out of 8191
- 66i,23n,98p,2011b,852s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 66i,17n,98p,2011b,852s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ec.enc}{C:/Program Files/M
-iKTeX 2.9/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/e
-nc/dvips/lm/lm-rm.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit
-.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Fil
-es/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Program Files/MiKTeX 2.9/fon
+iKTeX 2.9/fonts/enc/dvips/lm/lm-rm.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/d
+vips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit
+.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Program 
+Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/MiKTeX 2.9/fon
 ts/enc/dvips/base/8r.enc}<C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmb
 x10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx12.pfb><C:/Progr
 am Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx6.pfb><C:/Program Files/MiKTeX 2.
 9/fonts/type1/public/lm/lmbx8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publ
-ic/lm/lmbxi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmcsc10.pf
-b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmex10.pfb><C:/Program Fil
-es/MiKTeX 2.9/fonts/type1/public/lm/lmmi10.pfb><C:/Program Files/MiKTeX 2.9/fon
-ts/type1/public/lm/lmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm
-/lmmi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr10.pfb><C:/Pro
-gram Files/MiKTeX 2.9/fonts/type1/public/lm/lmr6.pfb><C:/Program Files/MiKTeX 2
-.9/fonts/type1/public/lm/lmr8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publ
-ic/lm/lmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmss17.pfb><C
-:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmssbx10.pfb><C:/Program Files
-/MiKTeX 2.9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts
-/type1/public/lm/lmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/l
-msy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtk10.pfb><C:/Prog
-ram Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 
-2.9/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
-/urw/bookman/ubkl8a.pfb>
+ic/lm/lmbxi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmex10.pfb
+><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi10.pfb><C:/Program File
+s/MiKTeX 2.9/fonts/type1/public/lm/lmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts
+/type1/public/lm/lmmi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/l
+mr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr6.pfb><C:/Progra
+m Files/MiKTeX 2.9/fonts/type1/public/lm/lmr8.pfb><C:/Program Files/MiKTeX 2.9/
+fonts/type1/public/lm/lmr9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/
+lm/lmri10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmss17.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmssbx10.pfb><C:/Program Files/
+MiKTeX 2.9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/
+type1/public/lm/lmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lm
+sy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtt10.pfb><C:/Progr
+am Files/MiKTeX 2.9/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Program Files/MiKTeX
+ 2.9/fonts/type1/urw/bookman/ubkl8a.pfb>
 Output written on "C:\Users\xiahaa\Documents\DTU\DTU Courses\Satellite-based po
 sitioning\satellite-based-positioning\report_for_satellite_positioning\build\CE
-E-StandardRapport2015-v1.pdf" (26 pages, 1393952 bytes).
+E-StandardRapport2015-v1.pdf" (17 pages, 440854 bytes).
 PDF statistics:
- 789 PDF objects out of 1000 (max. 8388607)
- 172 named destinations out of 1000 (max. 500000)
- 47341 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 362 PDF objects out of 1000 (max. 8388607)
+ 120 named destinations out of 1000 (max. 500000)
+ 38487 words of extra memory for PDF output out of 42996 (max. 10000000)
 
