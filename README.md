@@ -31,3 +31,9 @@ This repo contains assignments for the course Satellite based Positioning taken 
 1. simulation of Galileo system using the Kepler parameters for Galileo satellites;
 2. DOP analysis for GPS alone, Galileo only and multi-constellation system with GPS and Galileo;
 
+
+## useful links for GNSS based positioning
+https://github.com/goGPS-Project/goGPS_MATLAB
+http://www2.unb.ca/gge/Resources/gpsworld.april09.pdf
+http://insidegnss.com/pdf/EasySuite.pdf
+
