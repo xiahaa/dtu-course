@@ -7,4 +7,4 @@
 
 5. volumetric image
 6. PCA of multispectral image
-7. ![Bacterial growth from movie frames](./Week 01 - Introduction\ezgif.com-gif-maker.gif)
+7. ![Bacterial growth from movie frames](https://github.com/xiahaa/cn/blob/master/Week%2001%20-%20Introduction/ezgif.com-gif-maker.gif)
