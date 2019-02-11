@@ -9,7 +9,7 @@ end
 addpath ./EX_1_data;
 addpath ../utils/
 
-skip = [1 2 3 4 5 6];
+skip = [2 3 4 5 6];
 drawGif = 1;
 
 if isempty(find(skip == 1,1))
@@ -24,10 +24,15 @@ if isempty(find(skip == 1,1))
     % 2nd try with two seperate 1D Gaussian filter
     gx = gaussian_kernel_calculator(1, 2, 3);
     Ix = imfilter(I0,gx,'replicate');% along x direction
+    
+    If = convImg(I0, gx);
+
+    
     Ix = imfilter(Ix,gx','replicate');% again along y direction
     disp(max(abs(Ixy(:)-Ix(:))));
     If = img_merge(Ixy,Ix);
 
+    
     imshow(If,[]);
     TV0 = total_variantion_calculator(I0);
     TV1 = total_variantion_calculator(Ixy);
@@ -231,9 +236,9 @@ function [num,Imm] = cell_counter(Irgb,dg,g)
     threshold = max(Ms(:))*0.3;
     Mb = imbinarize(Ms,threshold);
     % segmentation
-    tic
+%     tic
     segments = img_segmentation_fast(Mb);
-    toc
+%     toc
     Ic = cat(3, Mb, Mb, Mb);
     % visulization
     num_segments = size(segments, 2);
@@ -258,11 +263,4 @@ function [num,Imm] = cell_counter(Irgb,dg,g)
     num = num_cells;
 end
 
-function dg = derivative_gaussian1d_generator(t, sigma, order)
-    cc = 1/sqrt(2*pi*t*t);
-    syms x real;
-    fg = cc.*exp((-0.5/(t*t)*x^2));
-    dfg = diff(fg,order);
-    xreal = round(-sigma*t):1:round(sigma*t);
-    dg = double(subs(dfg, xreal));
-end
+
