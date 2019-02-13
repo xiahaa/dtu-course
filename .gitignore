@@ -7,3 +7,21 @@
 
 Week 01 - Introduction/Ex_1_data/*
 *.fig
+
+*.aux
+
+*.log
+
+*.out
+
+*.gz
+
+*.m~
+
+*.DS_Store
+
+EX_2_data/.DS_Store
+
+*.DS_Store
+
+EX_2_data/.DS_Store

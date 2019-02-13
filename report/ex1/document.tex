@@ -1,0 +1,89 @@
+\documentclass[a4paper]{article}
+\usepackage[left=3cm, right=3cm]{geometry}
+\usepackage{lipsum}
+\usepackage{tikzpagenodes}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix}
+\pgfplotsset{compat=1.8}
+\usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{epsfig} % for postscript graphics files
+\usepackage[colorlinks=true,citecolor=green]{hyperref}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{bm}
+\usepackage{pbox}
+\usepackage{siunitx,booktabs,etoolbox}
+\usepackage{ulem}
+\usepackage{titling}
+\usepackage{float}
+%\usepackage{pgf,tikz,pgfplots}
+%\pgfplotsset{compat=1.15}
+%\usepackage{mathrsfs}
+
+\usetikzlibrary{arrows}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\title{Ex1: Introductory exercise}
+\author{Xiao Hu, emails: \url{xiahaa@space.dtu.dk}}
+\begin{document}
+	\maketitle
+	\thispagestyle{empty}
+%\maketitle
+%\clearpage
+\section{Results}
+Results are shown as follows:
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{./figures/a1.png}
+\caption{Total Variation (TV) of raw image: 119.5585; TV of smoothed image: 40.9807.}
+\end{figure}
+%\subsection{Q2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{./figures/a2.png}
+	\caption{Counting boundary length (Only boundary with length over 100 are shown with a textbox). The number in each textbox indicate the length of the corresponding boundary.}
+\end{figure}
+%\subsection{Q3}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{./figures/a3.png}
+	\caption{Curve smoothing: comparison of three different strategies of curve smoothing.}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{./figures/a4.png}
+	\caption{Image warpping (see complementary Gif figure for an animation).}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{./figures/a5.png}
+	\caption{Volumetric Image.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\textwidth]{./figures/a6.png}
+	\caption{PCA of multispectral image. The first three channels are used to generate this RGB image. The maximum absolute difference of my implementation and the \textsc{Matlab} internal function is $1.1235e-11$.}
+\end{figure}
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{./figures/a7.png}
+	\caption{Bacterial growth from movie frames. This is a snapshot of a single frame. See the complementary Gif for the animation.}
+	\includegraphics[width=0.7\textwidth]{./figures/a72}
+	\caption{Bacterial growth curve: assume one pixel equals to one bacteria.}
+\end{figure}
+
+%\bibliography{PnPCites} 
+%\bibliographystyle{ieeetr}
+
+\end{document}
