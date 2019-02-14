@@ -9,7 +9,7 @@ end
 addpath ./EX_2_data;
 addpath ../utils/
 
-skip = [1 2];
+skip = [1 2 3 4 5 6 7];
 drawGif = 0;
 
 % since we will work with second order derivation, we need this template

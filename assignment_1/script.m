@@ -6,15 +6,16 @@ if(~isdeployed)
 end
 
 % add path to the data directory
-addpath ./EX_1_data;
-addpath ../utils/
+% addpath ./EX_1_data;
+addpath ../utils/;
+data_dir = '/../data/EX_1_data/';
 
 skip = [1 2 3 4 5 6 7];
 drawGif = 0;
 
 if isempty(find(skip == 1,1))
     %% ex1: image smoothing
-    I0 = imread('fibres_xcth.png');
+    I0 = imread(strcat(data_dir,'fibres_xcth.png'));
     I0 = im2double(I0);
     imshow(I0,[]);
     % gaussian filter
@@ -42,8 +43,8 @@ end
 
 %% ex2: computing contour length
 if isempty(find(skip == 2,1))
-    clear all;close all;
-    I0 = imread('fuel_cell_3.tif');
+    close all;
+    I0 = imread(strcat(data_dir,'fuel_cell_3.tif'));
     segments = img_segmentation(I0);
     % visulization
     num_segments = size(segments, 2);
@@ -72,7 +73,7 @@ end
 
 %% ex3: curve smoothing
 if isempty(find(skip == 3,1))
-    dino = load('dino.txt');
+    dino = load(strcat(data_dir,'dino.txt'));
     dino_noisy = load('dino_noisy.txt');
     figure(1)
     subplot(2,2,1);
@@ -98,7 +99,7 @@ end
 
 %% ex4: image unwarping
 if isempty(find(skip == 4,1))
-    imgpath = strcat(fullfile(pwd),'/EX_1_data/dental/');
+    imgpath = strcat(fullfile(pwd),strcat(data_dir,'dental/'));
     imgFiles = dir(fullfile(imgpath,'*.png'));
     imgFileNames = {imgFiles.name}';
     im = imread(strcat(imgpath,imgFileNames{1}));
@@ -130,7 +131,7 @@ end
 
 %% ex5: 3D images
 if isempty(find(skip == 5,1))
-    imgpath = strcat(fullfile(pwd),'/EX_1_data/dental/');
+    imgpath = strcat(fullfile(pwd),strcat(data_dir,'dental/'));
     imgFiles = dir(fullfile(imgpath,'*.png'));
     imgFileNames = {imgFiles.name}';
     im = imread(strcat(imgpath,imgFileNames{1}));
@@ -164,7 +165,7 @@ end
 
 %% ex6: PCA
 if isempty(find(skip == 6,1))
-    imgpath = strcat(fullfile(pwd),'/EX_1_data/mixed_green/');
+    imgpath = strcat(fullfile(pwd),strcat(data_dir,'mixed_green/'));
     imgFiles = dir(fullfile(imgpath,'*.png'));
     imgFileNames = {imgFiles.name}';
     im = imread(strcat(imgpath,imgFileNames{1}));
@@ -203,7 +204,7 @@ if isempty(find(skip == 6,1))
         Qi = reshape(Qi,M,N);
         imshow(Qi);
         img(:,:,i) = Qi;
-        imwrite(Qi,sprintf('./EX_1_data/pca/pca_%02d.png',i));
+%         imwrite(Qi,sprintf('./EX_1_data/pca/pca_%02d.png',i));
     end
     figure
     imshow(img(:,:,1:3));
@@ -212,7 +213,7 @@ end
 
 % ex7: bacterial growth from movie frames
 if isempty(find(skip == 7,1))
-    v = VideoReader('listeria_movie.mp4');%Read all video frames.
+    v = VideoReader(strcat(data_dir,'listeria_movie.mp4'));%Read all video frames.
     ncs = [];
     dg = derivative_gaussian1d_generator(1, 5, 1);
     g = derivative_gaussian1d_generator(1, 5, 0);

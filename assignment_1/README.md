@@ -1,5 +1,8 @@
 ## README
-This is the implementation of the first exercise. Since I am using relative path to find some relevent functional files, do not make any changes to the folder extracted. 
+This is the implementation of the first exercise. Since I am using relative path to find some relevent functional files, you must provide two paths if it reports any related error:
+1. data_dir = /YourPathToData;% For example, mine is /EX\_1\_data
+
+**Add "/" at the head.**
 
 ### Two options
 In the main entry called script.m, you will find two parameters to run this code:
