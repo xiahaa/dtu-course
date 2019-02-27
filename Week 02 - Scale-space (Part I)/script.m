@@ -6,15 +6,15 @@ if(~isdeployed)
 end
 
 % add path to the data directory
-addpath ./EX_2_data;
+addpath ../data/EX_2_data;
 addpath ../utils/
 
-skip = [1 2 3 4 5 6 7];
+skip = [1 3 4 5 6 7];
 drawGif = 0;
 
 % since we will work with second order derivation, we need this template
 sigma = 3;% window size, 3t ~ 99%
-t = 17;% standard deviation
+t = 0.5;% standard deviation
 
 % dgg = derivative_gaussian1d_generator(t, sigma, 2);% 2 order 
 % g = derivative_gaussian1d_generator(t, sigma, 0);% 0 order
@@ -88,13 +88,13 @@ if isempty(find(skip == 1,1))
     w = linspace(0,2*pi,100);
     dtured = [153/255 0 0];
     for k = 1:K
-        t = 2^(k-1)*t0;
+        t = sqrt(2^(k-1)*t0);
         [LLN] = scale_normalized_LoG(Igray, t);
         LLNs(:,:,k) = LLN;
         half_win_size = 1;
         [blobs_center] = detect_blobs(LLNs(:,:,k), half_win_size);
 
-        radius = sqrt(2)*t;
+        radius = t;
         rcw = radius*cos(w);
         rsw = radius*sin(w);
         
@@ -137,7 +137,7 @@ if isempty(find(skip == 2,1))
         end
 %         Igray = imresize(Igray,[480,640]);
         [M,N] = size(Igray);
-        K = 3;
+        K = 2;
         t0 = 1;
         LLNs = zeros(M,N,K);
         Ic2 = cat(3,Igray,Igray,Igray);
@@ -145,7 +145,7 @@ if isempty(find(skip == 2,1))
         w = linspace(0,2*pi,100);
         dtured = [153/255 0 0];
         for k = 1:K
-            t = 2^(k-1)*t0;
+            t = sqrt(2^(k-1)*t0);
             [LLN] = scale_normalized_LoG(Igray, t);
             LLNs(:,:,k) = LLN;
             half_win_size = 1;
@@ -303,58 +303,63 @@ function [LL] = scale_normalized_LoG(I, tsqrt)
 end
 
 function [blobs_center] = detect_blobs(I, half_win_size)
-%     [xx,yy]=meshgrid([-half_win_size:1:-1,1:1:half_win_size], ...
-%                      [-half_win_size:1:-1,1:1:half_win_size]);
-%     xx = xx(:);
-%     yy = yy(:);
-%     [M,N] = size(I);
-%     
-%     maxcc = zeros(M*N,2);
-%     mincc = zeros(M*N,2);
-%     k1 = 0;
-%     k2 = 0;
-%     
-%     for i = 1:M
-%         subx = xx + i;
-%         for j = 1:N
-%             suby = yy + j;
-%             valid = subx>0 & subx < M & suby>0 & suby < N;
-%             validx = subx(valid);validy = suby(valid);
-%             indxy = sub2ind([M,N],validx,validy);
-% %             indxy = indxy(indxy > 0 & indxy <= M*N);
-%             maxval = max(I(indxy));
-%             if I(i,j) > maxval
-%                 % maxima
-%                 k1 = k1+1;
-%                 maxcc(k1,:) = [i,j];
-%             else
-%                 minval = min(I(indxy));
-%                 if I(i,j) < minval
-%                     % minima
-%                     k2 = k2 + 1;
-%                     mincc(k2,:) = [i,j];
-%                 end
-%             end
-%         end
-%     end
-%     maxcc(k1+1:end,:) = [];
-%     mincc(k2+1:end,:) = [];
+    [xx,yy]=meshgrid([-half_win_size:1:half_win_size], ...
+                     [-half_win_size:1:half_win_size]);
+    xx = xx(:);
+    yy = yy(:);
+    
+    idc = xx == 0 & yy == 0;
+    xx(idc) = []; yy(idc) = [];
+    
+    [M,N] = size(I);
+    
+    maxcc = zeros(M*N,2);
+    mincc = zeros(M*N,2);
+    k1 = 0;
+    k2 = 0;
+    
+    for i = 1:M
+        subx = xx + i;
+        for j = 1:N
+            suby = yy + j;
+            valid = subx>0 & subx < M & suby>0 & suby < N;
+            validx = subx(valid);validy = suby(valid);
+            indxy = sub2ind([M,N],validx,validy);
+%             indxy = indxy(indxy > 0 & indxy <= M*N);
+            maxval = max(I(indxy));
+            if I(i,j) > maxval
+                % maxima
+                k1 = k1+1;
+                maxcc(k1,:) = [i,j];
+            else
+                minval = min(I(indxy));
+                if I(i,j) < minval
+                    % minima
+                    k2 = k2 + 1;
+                    mincc(k2,:) = [i,j];
+                end
+            end
+        end
+    end
+    maxcc(k1+1:end,:) = [];
+    mincc(k2+1:end,:) = [];
+    blobs_center = [maxcc;mincc];
     
     % abs, unify maxima and minima
-    Iabs = abs(I);
-    maxval = max(Iabs(:));
-    threshold = 0.4 * maxval;
-    Ib = imbinarize(Iabs,threshold);
-    segments = img_segmentation_fast(Ib);
-    num_segments = size(segments,2);
-    % compute image moment
-    blobs_center = zeros(num_segments,2);
-    for i = 1:num_segments
-        segment = segments{i};
-        mx = mean(segment.point_set(1,:));
-        my = mean(segment.point_set(2,:));
-        blobs_center(i,:) = [mx,my];
-    end
+%     Iabs = abs(I);
+%     maxval = max(Iabs(:));
+%     threshold = 0.4 * maxval;
+%     Ib = imbinarize(Iabs,threshold);
+%     segments = img_segmentation_fast(Ib);
+%     num_segments = size(segments,2);
+%     % compute image moment
+%     blobs_center = zeros(num_segments,2);
+%     for i = 1:num_segments
+%         segment = segments{i};
+%         mx = mean(segment.point_set(1,:));
+%         my = mean(segment.point_set(2,:));
+%         blobs_center(i,:) = [mx,my];
+%     end
     
     % visulization
 %     num_segments = size(segments, 2);
