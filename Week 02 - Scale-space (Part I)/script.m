@@ -252,30 +252,6 @@ if isempty(find(skip == 3,1))
     end
 end
     
-    
-    % 1st try with 2D Gaussian filter
-%     gxy = gaussian_kernel_calculator(2, 2, 3);
-%     Ixy = imfilter(I0,gxy,'replicate');
-%     % 2nd try with two seperate 1D Gaussian filter
-%     gx = gaussian_kernel_calculator(1, 2, 3);
-%     Ix = imfilter(I0,gx,'replicate');% along x direction
-%     
-%     If = convImg(I0, gx);
-% 
-%     
-%     Ix = imfilter(Ix,gx','replicate');% again along y direction
-%     disp(max(abs(Ixy(:)-Ix(:))));
-%     If = img_merge(Ixy,Ix);
-% 
-%     
-%     imshow(If,[]);
-%     TV0 = total_variantion_calculator(I0);
-%     TV1 = total_variantion_calculator(Ixy);
-%     disp(['TV original: ', num2str(TV0), '; TV filtered: ', num2str(TV1)]);
-
-
-
-
 function res = gassian_fast(t, sigma)
     x = round(-sigma*t):1:round(sigma*t);
     res = (2^(1/2).*exp(-x.^2./(2*t^2)))./(2*pi^(1/2)*(t^2)^(1/2));
@@ -299,7 +275,7 @@ function [LL] = scale_normalized_LoG(I, tsqrt)
     % LoG
     LL = Ixx+Iyy;
     % normalized LoG
-    LL = LL .* tsqrt^2;
+    LL = LL .* tsqrt;
 end
 
 function [blobs_center] = detect_blobs(I, half_win_size)
@@ -344,36 +320,6 @@ function [blobs_center] = detect_blobs(I, half_win_size)
     maxcc(k1+1:end,:) = [];
     mincc(k2+1:end,:) = [];
     blobs_center = [maxcc;mincc];
-    
-    % abs, unify maxima and minima
-%     Iabs = abs(I);
-%     maxval = max(Iabs(:));
-%     threshold = 0.4 * maxval;
-%     Ib = imbinarize(Iabs,threshold);
-%     segments = img_segmentation_fast(Ib);
-%     num_segments = size(segments,2);
-%     % compute image moment
-%     blobs_center = zeros(num_segments,2);
-%     for i = 1:num_segments
-%         segment = segments{i};
-%         mx = mean(segment.point_set(1,:));
-%         my = mean(segment.point_set(2,:));
-%         blobs_center(i,:) = [mx,my];
-%     end
-    
-    % visulization
-%     num_segments = size(segments, 2);
-%     ccmap = jet(num_segments);
-%     [M,N] = size(I);
-%     Ic = cat(3,I,I,I);
-%     for i = 1:num_segments
-%         segment = segments{i};
-%         indices = sub2ind(size(I), segment.point_set(1,:), segment.point_set(2,:));
-%         Ic(indices) = ccmap(i,1);
-%         Ic(indices+M*N) = ccmap(i,2);
-%         Ic(indices+M*N*2) = ccmap(i,3);
-%     end
-%     imshow(Ic,[]);
 end
 
 function [varargout] = find_maxima(I, half_win_size)
