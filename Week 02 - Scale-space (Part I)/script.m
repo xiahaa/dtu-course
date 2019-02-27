@@ -9,7 +9,7 @@ end
 addpath ../data/EX_2_data;
 addpath ../utils/
 
-skip = [ 3 4 5 6 7];
+skip = [1 3 4 5 6 7];
 drawGif = 0;
 
 % since we will work with second order derivation, we need this template
@@ -93,10 +93,10 @@ if isempty(find(skip == 1,1))
         Iyy = imfilter(Iyy, g, 'replicate');%along x
         LL = Ixx+Iyy;
         LL = LL * tsqrt.^2;
-        tsqrt = tsqrt * sqrt(2); % scale update
         half_win_size = 1;
         [blobs_center] = detect_blobs(LL, half_win_size);
         blobs = [blobs_center repmat(sqrt(2)*tsqrt,size(blobs_center,1),1)];
+        tsqrt = tsqrt * sqrt(2); % scale update
     end
     %% drawing
     w = linspace(0,2*pi,100);
@@ -125,13 +125,13 @@ end
 if isempty(find(skip == 2,1))
     close all;
     imgnames = {'CT_lab_high_res.png', ...
-             'CT_lab_low_res.png', ...
+             'CT_lab_med_res.png', ...
              'CT_lab_low_res.png', ...
              'CT_synchrotron.png', ...
              'Optical.png', ...
              'SEM.png'};
     % 4 5, need tuning
-    for kk = 2%size(imgnames,1) 
+    for kk = 4%size(imgnames,1) 
         I0 = imread(imgnames{kk});
         I0 = im2double(I0);
         if size(I0,3) == 3
@@ -142,36 +142,33 @@ if isempty(find(skip == 2,1))
 %         Igray = imresize(Igray,[480,640]);
         [M,N] = size(Igray);
         K = 2;
-        t0 = 1;
-        LLNs = zeros(M,N,K);
+        t0 = 2;
+        [LLNs, radius] = create_scale_normalized_LoG(Igray, t0, K);
+%         half_win_size = 1;
+%         blobs = detect_blobs(LLNs, half_win_size);
+        for i = 1:1:K
+            half_win_size = 1;
+            [blobs_center] = detect_blobs(LLNs(:,:,i), half_win_size);
+            blobs = [blobs_center repmat(radius(i),size(blobs_center,1),1)];
+        end
+        %% drawing
         Ic2 = cat(3,Igray,Igray,Igray);
-        ccmap = jet(128);
         w = linspace(0,2*pi,100);
         dtured = [153/255 0 0];
-        for k = 1:K
-            t = sqrt(2^(k-1)*t0);
-            [LLN] = scale_normalized_LoG(Igray, t);
-            LLNs(:,:,k) = LLN;
-            half_win_size = 1;
-            [blobs_center] = detect_blobs(LLNs(:,:,k), half_win_size);
-
-            radius = sqrt(2)*t;
+        for i = 1:size(blobs,1)
+            radius = blobs(i,3);
             rcw = radius*cos(w);
             rsw = radius*sin(w);
-
-            num_blobs = size(blobs_center, 1);
-            for i = 1:num_blobs
-                xx = round(blobs_center(i,1) + rcw);
-                yy = round(blobs_center(i,2) + rsw);
-                valid = xx > 0 & xx <= M & yy > 0 & yy <= N;
-                indices = sub2ind([M,N], xx(valid), yy(valid));
-%                 nn = [-M +M -1 +1];
-%                 indices = [indices indices+nn(1) indices+nn(2) indices+nn(3) indices+nn(4)];
-                indices = indices(indices > 0 & indices < M*N);
-                Ic2(indices) = dtured(1);%ccmap(i,1);
-                Ic2(indices+M*N) = dtured(2);%ccmap(i,2);
-                Ic2(indices+M*N*2) = dtured(3);%ccmap(i,3);
-            end
+            xx = round(blobs(i,1) + rcw);
+            yy = round(blobs(i,2) + rsw);
+            valid = xx > 0 & xx <= M & yy > 0 & yy <= N;
+            indices = sub2ind([M,N], xx(valid), yy(valid));
+            nn = [-M +M -1 +1];
+            indices = [indices indices+nn(1) indices+nn(2) indices+nn(3) indices+nn(4)];
+            indices = indices(indices > 0 & indices < M*N);
+            Ic2(indices) = dtured(1);%ccmap(i,1);
+            Ic2(indices+M*N) = dtured(2);%ccmap(i,2);
+            Ic2(indices+M*N*2) = dtured(3);%ccmap(i,3);
         end
         figure
         imshow(Ic2,[]);
@@ -256,6 +253,8 @@ if isempty(find(skip == 3,1))
     end
 end
     
+
+
 function res = gassian_fast(t, sigma)
     x = round(-sigma*t):1:round(sigma*t);
     res = (2^(1/2).*exp(-x.^2./(2*t^2)))./(2*pi^(1/2)*(t^2)^(1/2));
@@ -265,6 +264,33 @@ function res = secondorder_der_gaussian_fast(t, sigma)
     x = round(-sigma*t):1:round(sigma*t);
     res = [(2^(1/2).*x.^2.*exp(-x.^2./(2*t^2)))./(2*t^4*pi^(1/2)*(t^2)^(1/2)) - ...
         (2^(1/2).*exp(-x.^2./(2*t^2)))./(2*t^2*pi^(1/2)*(t^2)^(1/2))];
+end
+
+function varargout = create_scale_normalized_LoG(Igray, t0, K)
+    tsqrt = t0;% prev scale
+    prevLayer = Igray;
+    LLs = zeros(size(Igray,1),size(Igray,2),K);
+    radius = zeros(1,K);
+
+    sigma = 3;
+    g = gassian_fast(tsqrt, sigma);
+    dgg = secondorder_der_gaussian_fast(tsqrt, sigma);
+    
+    for k = 1:K
+        % do layer from the previsou layer
+        % gaussian filter
+        Ixx = imfilter(prevLayer, dgg, 'replicate');% along x
+        Ixx = imfilter(Ixx, g', 'replicate');% smooth y, since g=gx*gy, dg=dgx gy + gx dgy. partial dev only pick one item
+        Iyy = imfilter(prevLayer, dgg', 'replicate');% along y
+        Iyy = imfilter(Iyy, g, 'replicate');%along x
+        LL = Ixx+Iyy;
+        LL = LL * tsqrt.^2;
+        LLs(:,:,k) = LL;
+        tsqrt = tsqrt * sqrt(2); % scale update
+        radius(k) = tsqrt;
+    end
+    varargout{1} = LLs;
+    varargout{2} = radius;
 end
 
 function [LL] = scale_normalized_LoG(I, tsqrt)
@@ -294,10 +320,11 @@ function [blobs_center] = detect_blobs(I, half_win_size)
     [M,N] = size(I);
     
     maxcc = zeros(M*N,2);
-    mincc = zeros(M*N,2);
     k1 = 0;
-    k2 = 0;
     
+    I = abs(I);
+    maxval = max(I(:));
+    I(I<0.3*maxval) = 0;
     for i = 1:M
         subx = xx + i;
         for j = 1:N
@@ -311,19 +338,11 @@ function [blobs_center] = detect_blobs(I, half_win_size)
                 % maxima
                 k1 = k1+1;
                 maxcc(k1,:) = [i,j];
-            else
-                minval = min(I(indxy));
-                if I(i,j) < minval
-                    % minima
-                    k2 = k2 + 1;
-                    mincc(k2,:) = [i,j];
-                end
             end
         end
     end
     maxcc(k1+1:end,:) = [];
-    mincc(k2+1:end,:) = [];
-    blobs_center = [maxcc;mincc];
+    blobs_center = [maxcc];
 end
 
 function [varargout] = find_maxima(I, half_win_size)
