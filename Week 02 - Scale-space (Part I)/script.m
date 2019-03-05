@@ -9,7 +9,7 @@ end
 addpath ../data/EX_2_data;
 addpath ../utils/
 
-skip = [1 2 3  5 6 7];
+skip = [1 2 3 ];
 drawGif = 0;
 
 % since we will work with second order derivation, we need this template
@@ -111,10 +111,11 @@ if isempty(find(skip == 2,1))
     LLMax = max(abs(LLNs),[],3);
     blobs = [];
     
-    half_win_size = 9;
-    [blobs_center] = detect_blobs(LLMax, half_win_size);
-    blobs = [blobs;blobs_center repmat(radius(i),size(blobs_center,1),1)];
-        
+    for i = 1:1:1
+        half_win_size = 9;
+        [blobs_center] = detect_blobs(LLMax, half_win_size);
+        blobs = [blobs;blobs_center repmat(radius(i),size(blobs_center,1),1)];
+    end
     % drawing
     [M,N] = size(Igray);
     Ic = cat(3,Igray,Igray,Igray);
@@ -230,7 +231,7 @@ if isempty(find(skip == 4,1))
 %         Ib = imbinarize(Iblur, threshold);
         imshow(Iblur,[]);
         
-        half_win_size = 1;
+        half_win_size = 2;
         [local_maxima, Idebug] = find_maxima(Iblur, half_win_size);
         figure
         imshow(Idebug,[]);
@@ -271,98 +272,8 @@ if isempty(find(skip == 4,1))
         
         figure
         imshow(Ic2,[]);
-        title('$Multi-scale\ blob\ detection$','FontSize',fontSize,'Interpreter','latex');
+        title('Multi-scale blob detection','FontSize',fontSize,'FontName','Arial');
     end
 end
 
-function res = gassian_fast(t, sigma)
-    x = round(-sigma*t):1:round(sigma*t);
-    res = (2^(1/2).*exp(-x.^2./(2*t^2)))./(2*pi^(1/2)*(t^2)^(1/2));
-end
 
-function res = secondorder_der_gaussian_fast(t, sigma)
-    x = round(-sigma*t):1:round(sigma*t);
-    res = [(2^(1/2).*x.^2.*exp(-x.^2./(2*t^2)))./(2*t^4*pi^(1/2)*(t^2)^(1/2)) - ...
-        (2^(1/2).*exp(-x.^2./(2*t^2)))./(2*t^2*pi^(1/2)*(t^2)^(1/2))];
-end
-
-function varargout = create_scale_normalized_LoG(Igray, t0, K)
-    tsqrt = t0;% prev scale
-    LLs = zeros(size(Igray,1),size(Igray,2),K);
-    radius = zeros(1,K);
-    for k = 1:K
-        [LL] = scale_normalized_LoG(Igray, tsqrt);
-        LLs(:,:,k) = LL;
-        tsqrt = tsqrt * sqrt(2); % scale update
-        radius(k) = tsqrt;
-    end
-    varargout{1} = LLs;
-    varargout{2} = radius;
-end
-
-function [LL] = scale_normalized_LoG(I, tsqrt)
-    sigma = 3;
-    g = gassian_fast(tsqrt, sigma);
-    dgg = secondorder_der_gaussian_fast(tsqrt, sigma);
-    % gaussian filter
-    Ixx = imfilter(I, dgg, 'replicate');% along x
-    Ixx = imfilter(Ixx, g', 'replicate');% smooth y, since g=gx*gy, dg=dgx gy + gx dgy. partial dev only pick one item
-    Iyy = imfilter(I, dgg', 'replicate');% along y
-    Iyy = imfilter(Iyy, g, 'replicate');%along x
-    % LoG
-    LL = Ixx+Iyy;
-    % normalized LoG
-    LL = LL .* (tsqrt^2);
-end
-
-function [blobs_center] = detect_blobs(I, half_win_size)
-    I = abs(I);
-    val = I(:);
-    meanval = mean(val);
-    stdv = var(val);
-    thresh = meanval+stdv;
-    mx = imdilate(I, strel('square',2*half_win_size+1));
-
-    % Make mask to exclude points within radius of the image boundary. 
-    bordermask = zeros(size(I));
-    bordermask(half_win_size+1:end-half_win_size, half_win_size+1:end-half_win_size) = 1;
-    
-    % Find maxima, threshold, and apply bordermask
-    cimmx = (I==mx) & (I>thresh) & bordermask;
-    [r,c] = find(cimmx);        % Find row,col coords.
-    blobs_center = [r c];
-end
-
-function [varargout] = find_maxima(I, half_win_size)
-%     I = abs(I);
-    val = I(:);
-    meanval = mean(val);
-    stdv = var(val);
-    thresh = meanval+1*stdv;%0.3*max(I(:));
-    mx = imdilate(I, strel('square',2*half_win_size+1));
-
-    % Make mask to exclude points within radius of the image boundary. 
-    bordermask = zeros(size(I));
-    bordermask(half_win_size+1:end-half_win_size, half_win_size+1:end-half_win_size) = 1;
-    
-    % Find maxima, threshold, and apply bordermask
-    cimmx = (I==mx) & (I>thresh) & bordermask;
-    [r,c] = find(cimmx);        % Find row,col coords.
-    blobs_center = [r c];
-    
-    % visulization
-    cc = blobs_center;
-    num_segments = size(cc, 1);
-    [M,N] = size(I);
-    Idebug = cat(3,I,I,I);
-    for i = 1:num_segments
-        indices = sub2ind(size(I), cc(i,1), cc(i,2));
-        Idebug(indices) = 1;
-        Idebug(indices+M*N) = 0;
-        Idebug(indices+M*N*2) = 0;
-    end
-    varargout{1} = blobs_center;
-    if nargout == 2
-        varargout{2} = Idebug;
-    end
-end
