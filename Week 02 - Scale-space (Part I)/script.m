@@ -237,7 +237,7 @@ if isempty(find(skip == 4,1))
         imshow(Idebug,[]);
         
         [M,N] = size(Igray);
-        K = 10;
+        K = 6;
         t0 = 2^(1/5);
         [LLNs, radius] = create_scale_normalized_LoG(Igray, t0, K);
 %         blobs = [];

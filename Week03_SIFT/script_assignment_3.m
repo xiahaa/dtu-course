@@ -25,9 +25,9 @@ if isempty(find(skip == 1,1))
     q = s.*q;
     figure
     subplot(1,2,1);fontsize = 15;
-    plot(p(1,:),p(2,:),'r*','MarkerSize',5);
+    plot(p(1,:),p(2,:),'r*','MarkerSize',10);
     hold on;
-    plot(q(1,:),q(2,:),'bo','MarkerSize',5);
+    plot(q(1,:),q(2,:),'bo','MarkerSize',10);
     title('Inputs','FontSize',fontsize);
     legend({'p','q'},'FontSize',fontsize);
     xlabel('x: (m)','FontSize',fontsize);
@@ -37,9 +37,9 @@ if isempty(find(skip == 1,1))
     [R1,t1,s1] = lsq_allign(p,q);
     qr = R1'*(q./s1-repmat(t1,1,N));
     subplot(1,2,2);
-    plot(p(1,:),p(2,:),'r*','MarkerSize',5);
+    plot(p(1,:),p(2,:),'r*','MarkerSize',10);
     hold on;
-    plot(qr(1,:),qr(2,:),'bo','MarkerSize',5);
+    plot(qr(1,:),qr(2,:),'bo','MarkerSize',10);
     title('Recover','FontSize',fontsize);
     legend({'p','q'},'FontSize',fontsize);
     xlabel('x: (m)','FontSize',fontsize);
@@ -47,6 +47,42 @@ if isempty(find(skip == 1,1))
     axis equal;grid on;
 
     set(gca,'fontname','arial')  % Set it to Arial
+    
+    %% ex1
+    N = 100;
+    dim = 2;
+    p = rand(dim,N);
+    theta = rand(1)*(2*pi)-pi;% -pi to pi
+    R = [cos(theta) sin(theta);-sin(theta) cos(theta)];
+    t = rand(2,1);
+    s = rand(1)*0.9 + 0.1;
+    q = (R*p + repmat(t,1,N));
+    q = s.*q;
+    figure
+    subplot(1,2,1);fontsize = 15;
+    plot(p(1,:),p(2,:),'r*','MarkerSize',10);
+    hold on;
+    plot(q(1,:),q(2,:),'bo','MarkerSize',10);
+    title('Inputs','FontSize',fontsize);
+    legend({'p','q'},'FontSize',fontsize);
+    xlabel('x: (m)','FontSize',fontsize);
+    ylabel('y: (m)','FontSize',fontsize);
+    axis equal;grid on;
+
+    [R1,t1,s1] = lsq_allign(p,q);
+    qr = R1'*(q./s1-repmat(t1,1,N));
+    subplot(1,2,2);
+    plot(p(1,:),p(2,:),'r*','MarkerSize',10);
+    hold on;
+    plot(qr(1,:),qr(2,:),'bo','MarkerSize',10);
+    title('Recover','FontSize',fontsize);
+    legend({'p','q'},'FontSize',fontsize);
+    xlabel('x: (m)','FontSize',fontsize);
+    ylabel('y: (m)','FontSize',fontsize);
+    axis equal;grid on;
+
+    set(gca,'fontname','arial')  % Set it to Arial
+    
 end
 
 imgnames = {'CT_lab_high_res.png', ...
@@ -174,7 +210,7 @@ if isempty(find(skip == 2,1))
         plot(xx,yy,'r-');
     end
     fontsize = 15;
-    title('Raw Matching','FontSize',fontsize);
+    title('Refined Matching','FontSize',fontsize);
     set(gca,'fontname','arial')  % Set it to Arial
     
     figure
@@ -183,6 +219,8 @@ if isempty(find(skip == 2,1))
     set(h2,'color','b','linewidth',1) ;
     plot(q(2,ransac.inliers),q(1,ransac.inliers),'co');
     plot(qt(2,ransac.inliers),qt(1,ransac.inliers),'m*');
+    title('Alignment of 2D features','FontSize',fontsize);
+    set(gca,'fontname','arial')  % Set it to Arial
 end
 
 if isempty(find(skip == 3,1))
@@ -319,9 +357,28 @@ if isempty(find(skip == 3,1))
     
     [local_maxima1, rs1] = multi_scale_detect_blob(im1, im1blur);
     [local_maxima2, rs2] = multi_scale_detect_blob(im2, im2blur);
-    
     local_maxima1 = local_maxima1';
     local_maxima2 = local_maxima2';
+    
+    figure
+    imshow(cim); hold on;
+    w = linspace(0,2*pi,100);
+    for i = 1:size(local_maxima1,2)
+        cx = local_maxima1(2,i);
+        cy = local_maxima1(1,i);
+        xx = cx + rs1(i).*cos(w);
+        yy = cy + rs1(i).*sin(w);
+        plot(xx,yy,'b-');
+    end
+    for i = 1:size(local_maxima2,2)
+        cx = local_maxima2(2,i);
+        cy = local_maxima2(1,i);
+        xx = cx + rs2(i).*cos(w) + shift;
+        yy = cy + rs2(i).*sin(w);
+        plot(xx,yy,'r-');
+    end
+    
+
     local_maxima2to1 = R'*(local_maxima2./s-repmat(t,1,size(local_maxima2,2)));
 %     s.*(R*local_maxima1+repmat(t,1,size(local_maxima1,2)));
     matches12 = zeros(size(local_maxima2to1,2),2);
@@ -329,7 +386,7 @@ if isempty(find(skip == 3,1))
         diff12 = repmat(local_maxima2to1(:,i),1,size(local_maxima1,2))-local_maxima1;
         err = diag(diff12'*diff12);
         [minval,minid] = min(err);
-        if minval > 1
+        if minval > 4
             continue;
         end
         matches12(i,:) = [minid, i];
@@ -372,7 +429,7 @@ end
 function [local_maxima, rs] = multi_scale_detect_blob(Igray, Iblur)
     half_win_size = 1;
     [local_maxima, ~] = find_maxima(Iblur, half_win_size);
-    K = 10;
+    K = 6;
     t0 = 2^(1/5);
     rs = zeros(size(local_maxima,1),1);
     [LLNs, radius] = create_scale_normalized_LoG(Igray, t0, K);
