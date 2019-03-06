@@ -3,7 +3,6 @@
 
 *.zip
 
-*.png
 
 Week 01 - Introduction/Ex_1_data/*
 *.fig
@@ -33,3 +32,6 @@ report/slides/data.txt
 report/slides/build/document.nav
 report/slides/build/document.snm
 report/slides/build/document.toc
+
+data/Ex_1_data/*
+data/Ex_2_data/*
