@@ -30,3 +30,6 @@ EX_2_data/.DS_Store
 
 test/testfast.m
 report/slides/data.txt
+report/slides/build/document.nav
+report/slides/build/document.snm
+report/slides/build/document.toc
