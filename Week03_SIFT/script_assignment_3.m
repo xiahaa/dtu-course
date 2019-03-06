@@ -378,19 +378,36 @@ if isempty(find(skip == 3,1))
         plot(xx,yy,'r-');
     end
     
-
     local_maxima2to1 = R'*(local_maxima2./s-repmat(t,1,size(local_maxima2,2)));
+    
+    % 2D to 1D
+    [M,N] = size(im1);
+    indices_maxima2to1 = local_maxima2to1(1,:) + local_maxima2to1(2,:).*M;
+    indices_maxima1 = local_maxima1(1,:) + local_maxima1(2,:).*M;
+    
+    n1 = size(indices_maxima2to1,2);
+    n2 = size(indices_maxima1,2);
+    indices_maxima2to1 = repmat(indices_maxima2to1,n2,1);
+    indices_maxima1 = repmat(indices_maxima1',1,n1);
+    diff_indices = indices_maxima2to1 - indices_maxima1;
+    [mindiff,minid] = min(abs(diff_indices),[],1);
+    matched = mindiff < M+1;
+    matches12 = zeros(n1,2);
+    matches12(matched,1) = minid(matched)';
+    tmp = 1:n1;
+    matches12(matched,2) = tmp(matched)';
+    
 %     s.*(R*local_maxima1+repmat(t,1,size(local_maxima1,2)));
-    matches12 = zeros(size(local_maxima2to1,2),2);
-    for i = 1:size(local_maxima2to1,2)
-        diff12 = repmat(local_maxima2to1(:,i),1,size(local_maxima1,2))-local_maxima1;
-        err = diag(diff12'*diff12);
-        [minval,minid] = min(err);
-        if minval > 4
-            continue;
-        end
-        matches12(i,:) = [minid, i];
-    end
+%     matches12 = zeros(size(local_maxima2to1,2),2);
+%     for i = 1:size(local_maxima2to1,2)
+%         diff12 = repmat(local_maxima2to1(:,i),1,size(local_maxima1,2))-local_maxima1;
+%         err = diag(diff12'*diff12);
+%         [minval,minid] = min(err);
+%         if minval > 4
+%             continue;
+%         end
+%         matches12(i,:) = [minid, i];
+%     end
     local_maxima2to1 = local_maxima2to1(:,matches12(:,2) ~= 0);
 
     figure
