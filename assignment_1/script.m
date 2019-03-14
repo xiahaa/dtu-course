@@ -8,9 +8,9 @@ end
 % add path to the data directory
 % addpath ./EX_1_data;
 addpath ../utils/;
-data_dir = '/../data/EX_1_data/';
+data_dir = '../data/EX_1_data/';
 
-skip = [1 2 3 4 5 6 7];
+skip = [1 2  4 5 6 7];
 drawGif = 0;
 
 if isempty(find(skip == 1,1))
@@ -74,7 +74,7 @@ end
 %% ex3: curve smoothing
 if isempty(find(skip == 3,1))
     dino = load(strcat(data_dir,'dino.txt'));
-    dino_noisy = load('dino_noisy.txt');
+    dino_noisy = load(strcat(data_dir,'dino_noisy.txt'));
     figure(1)
     subplot(2,2,1);
     plot(dino(:,1),dino(:,2),'-', 'LineWidth', 3);
