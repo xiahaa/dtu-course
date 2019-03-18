@@ -1,73 +1,50 @@
 function Irec = undistortImg(I, K, k1, k2, k3, p1, p2)
     [xx0,yy0] = meshgrid(1:size(I,2),1:size(I,1));
-    xx0 = xx0(:)' - 1;
-    yy0 = yy0(:)' - 1;
-    
+    xx0 = xx0(:)';
+    yy0 = yy0(:)';
+    % normalized
     xx1 = (xx0 - K(1,3))./K(1,1);
     yy1 = (yy0 - K(2,3))./K(2,2);
-    
-%     iter = 1;
-%     maxiter = 1;
-     
-%     r2 = xx.^2 + yy.^2;
-%     r4 = r2.*r2;
-%     r6 = r4.*r2;
-%     xy = xx.*yy;
-    
+    % projection and distortion
     [xx,yy] = forward(xx1,yy1,k1,k2,k3,p1,p2);
+    % interpolation
+    xxf = xx.*K(1,1) + K(1,3);
+    yyf = yy.*K(2,2) + K(2,3);
+    xx = floor(xxf);
+    yy = floor(yyf);
+    valid = xx > 1 & xx <= size(I,2)-1 & yy > 1 & yy <= size(I,1)-1;
+    xx = xx(valid);xxf = xxf(valid);
+    yy = yy(valid);yyf = yyf(valid);
     
-    xx = round(xx.*K(1,1) + K(1,3));
-    yy = round(yy.*K(2,2) + K(2,3));
-    valid = xx > 0 & xx <= size(I,2) & yy > 0 & yy <= size(I,1);
     m = size(I,1);n = size(I,2);
-    ind0 = sub2ind([m,n], round(yy(valid)), round(xx(valid)));
-    ind1 = sub2ind([m,n], round(yy0(valid)+1), round(xx0(valid)+1));
-    Irec = uint8(zeros(m,n));
-    Irec(ind1) = I(ind0);
+    ind0 = sub2ind([m,n], yy, xx);
+    ind1 = sub2ind([m,n], yy, xx+1);
+    ind2 = sub2ind([m,n], yy+1,xx);
+    ind3 = sub2ind([m,n], yy+1,xx+1);
     
+    % bilinear interpolation
+    dx = xxf - xx;
+    dy = yyf - yy;
+    d0 = (1-dx).*(1-dy);
+    d1 = dx.*(1-dy);
+    d2 = (1-dx).*dy;
+    d3 = dx.*dy;
     
-    % backward
-%     newxx = (xx - (2*p1.*xy + p2.*(r2 + 2.*xx.^2)))./(1 + r2.*k1+r4.*k2+r6.*k3);
-%     newyy = (yy - (p1.*(r2 + 2.*yy.^2) + 2*p2.*xy))./(1 + r2.*k1+r4.*k2+r6.*k3);
-%     
-%     while iter <= maxiter
-%         % forward
-%         [xx1,yy1] = forward(newxx,newyy,k1,k2,k3,p1,p2);
-%         if max(abs(xx1-xx)) < 1e-3 && max(abs(yy1-yy)) < 1e-3
-%             break;
-%         end
-%         
-%         r2 = newxx.^2 + newyy.^2;
-%         r4 = r2.*r2;
-%         r6 = r4.*r2;
-%         xy = newxx.*newyy;
-%         
-%         newxx = (xx - (2*p1.*xy + p2.*(r2 + 2.*newxx.^2)))./(1 + r2.*k1+r4.*k2+r6.*k3);
-%         newyy = (yy - (p1.*(r2 + 2.*newyy.^2) + 2*p2.*xy))./(1 + r2.*k1+r4.*k2+r6.*k3);
-% 
-%         iter = iter + 1;
-%     end
+    ind4 = sub2ind([m,n], round(yy0(valid)), round(xx0(valid)));
     
-%     xx = round(newxx.*K(1,1) + K(1,3));
-%     yy = round(newyy.*K(2,2) + K(2,3));
-%     
-%     valid = xx > 0 & xx <= size(I,2) & yy > 0 & yy <= size(I,1);
-%     m = size(I,1);n = size(I,2);
-%     ind0 = sub2ind([m,n], round(yy(valid)), round(xx(valid)));
-%     Irec = uint8(zeros(m,n));
-%     Irec(ind0) = I(ind0);
+    if size(I,3) == 1
+        Irec = uint8(zeros(m,n));
+        Irec(ind4) = uint8(double(I(ind0)).*d0+double(I(ind1)).*d1+double(I(ind2)).*d2+double(I(ind3)).*d3);
+    else
+        Ir = I(:,:,1);Ig = I(:,:,2);Ib = I(:,:,3);
+        Irecr = uint8(zeros(m,n));
+        Irecg = uint8(zeros(m,n));
+        Irecb = uint8(zeros(m,n));
+        Irecr(ind4) = uint8(double(Ir(ind0)).*d0+double(Ir(ind1)).*d1+double(Ir(ind2)).*d2+double(Ir(ind3)).*d3);
+        Irecg(ind4) = uint8(double(Ig(ind0)).*d0+double(Ig(ind1)).*d1+double(Ig(ind2)).*d2+double(Ig(ind3)).*d3);
+        Irecb(ind4) = uint8(double(Ib(ind0)).*d0+double(Ib(ind1)).*d1+double(Ib(ind2)).*d2+double(Ib(ind3)).*d3);
+        Irec = cat(3,Irecr,Irecg,Irecb);
+    end
 end
 
-function [xx,yy] = forward(xx,yy,k1,k2,k3,p1,p2)
-    r2 = xx.^2 + yy.^2;
-    r4 = r2.*r2;
-    r6 = r4.*r2;
-    xy = xx.*yy;
-    
-    dradial = 1+r2.*k1+r4.*k2+r6.*k3;
-    dtangentx = 2*p1.*xy + p2.*(r2 + 2.*xx.^2);
-    dtangenty = p1.*(r2 + 2.*yy.^2) + 2*p2.*xy;
 
-    xx = xx.*dradial + dtangentx;
-    yy = yy.*dradial + dtangenty;
-end
