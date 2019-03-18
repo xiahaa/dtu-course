@@ -1,0 +1,141 @@
+\documentclass[a4paper]{article}
+\usepackage[left=2.1cm, right=2.1cm, top=2.1cm]{geometry}
+\usepackage{lipsum}
+\usepackage{tikzpagenodes}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix}
+\pgfplotsset{compat=1.8}
+\usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{epsfig} % for postscript graphics files
+\usepackage[colorlinks=true,citecolor=green]{hyperref}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{bm}
+\usepackage{pbox}
+\usepackage{siunitx,booktabs,etoolbox}
+\usepackage{ulem}
+\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+\usepackage{filecontents}
+%\usepackage{bigfoot} % to allow verbatim in footnote
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{filecontents*}{box.m}
+clear
+close all
+Q=Box3D;
+plot3(Q(1,:),Q(2,:),Q(3,:),'.'),
+axis equal
+axis([-1 1 -1 1 -1 5])
+xlabel('x')
+ylabel('y')
+zlabel('z')
+\end{filecontents*}
+\begin{filecontents*}{cube.m}
+x = 0:0.1:5;
+y = 0:0.1:5;
+pt = [x repmat(x(end), 1, numel(y)) fliplr(x) repmat(x(1), 1, numel(y)); repmat(y(1), 1, numel(y)) y repmat(y(end), 1, numel(y)) fliplr(y)];
+pt = [pt;ones(1,size(pt,2))];  
+\end{filecontents*}
+
+\begin{filecontents*}{ipm1.m}
+clc;close all;clear all;
+I = imread('Tiles_perspective_distort.png');
+I = im2double(I);
+h = figure;
+imshow(I);
+[x,y] = ginput(4);
+q = round([x y]');
+q = [q;ones(1,4)];
+I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
+imshow(I);
+\end{filecontents*}
+
+%\begin{filecontents*}{box.mat}
+%clear
+%close all
+%Q=Box3D;
+%%plot3(Q(1,:),Q(2,:),Q(3,:),’.’),
+%%axis equal
+%%axis([-1 1 -1 1 -1 5])
+%%xlabel(’x’)
+%%ylabel(’y’)
+%%zlabel(’z’)
+%\end{filecontents*}
+
+\begin{document}
+
+\title{Exercise on Intrinsics, Extrinsics \& Perspective-$3$-Point}
+%\author{xiahaa@space.dtu.dk}
+\maketitle%%
+
+In this exercise, we will work with a few assignments related to intrinsic and extrinsic camera parameters, camera calibration, and pose estimation using perspective-3-point method.
+
+\section{Intrinsics/Extrinsics}
+Here you should exercise in computing with the pinhole camera model. For you to have something to 'photograph'. a sample object is supplied in the accompanying file \textbf{Box3D.mat}. To see this box try the following script:
+\lstinputlisting{box.m}
+\paragraph{Q1:} 
+The intrinsics and extrinsics are given as: 
+\begin{itemize}
+\item the rotation is given by the function $\mathbf{R}=$\textbf{Rxyz}(0.2,-0.3,0.1).
+\item $\mathbf{t}= \left[\begin{matrix}
+0.88 \\ 0.57 \\  0.19
+ \end{matrix}\right]$.
+ \item $f=1000, c_u = 300, c_v = 200$.
+\end{itemize}
+Form the projection matrix as $\mathbf{P}=\mathbf{K}\left(\mathbf{R} | \mathbf{t}\right)$ and project the $3$D points from the Box3D. Plot the image you get. 
+\paragraph{Q2:} 
+Using the same pinhole camera as in Question 1, extend the model with radial distortion with $k1 = -5e^{-1},\ k2 = -3e^{-1},\ k3 = -5e^{-2}$, project the Box3D points and compare to the results from Question 1. Plot again and observe what has changed.
+
+\section{Camera Calibration}
+In this exercise, you are asked to do the camera calibration for given images. There are two calibration toolboxes that you can use:
+\begin{itemize}
+\item \textbf{Camera Calibrator} from \textsc{Matlab} computer vision toolbox.
+\item \textbf{Camera Calibration Toolbox} for \textsc{Matlab} by Jean-Yves Bouguet\footnote{\url{http://www.vision.caltech.edu/bouguetj/calib_doc/}}: this toolbox is one of the earliest camera calibration toolbox.
+\end{itemize}
+\paragraph{Q3:} 
+\begin{enumerate}
+\item read relevant docs to learn how to use those toolboxes.
+\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration.
+\item verify the calibrated results and interpret the results you get.
+\end{enumerate}
+\paragraph{Q4:} 
+Use the previous calibrated parameters to rectify a distorted image \textbf{distort.bmp}.
+
+%\section{2D Transformation}
+%To give your an better illustration of 2D transformation, we will work with a simple square. The square can be generated using the following code:
+%\lstinputlisting[caption = {Sample code from Matlab}]{cube.m}
+
+
+
+%
+%\section{Inverse Perspective Mapping}
+%\paragraph{Q9:} Here you will work on how to remove the perspective effect by using the vanishing line and 2D transformation. Use the following code to load and display the image you will work:
+%\lstinputlisting{ipm1.m}
+%Then click on the displayed image to obtain the coordinates of four points you clicked. \textbf{q} will contain their homogeneous coordinates. You should work from here.
+
+%In this attachment, you will find two supplementary files.
+%\begin{itemize}
+%\item \textbf{drawlines.m} - draw lines on image I.
+%\item \textbf{warpping.m} - warp image I by transformation matrix $\mathbf{H}$. So after you find $\mathbf{H}$, call this function to get the resultant image.
+%\end{itemize}
+%%If you succeed, you will have a similar image like
+%\begin{figure*}[!b]
+%\centering
+%\includegraphics[scale=0.6]{figures/ipm}
+%\caption{Illustration of the inverse perspective mapping.}
+%\end{figure*}
+
+
+ 
+\bibliography{hand_eye_calibration} 
+\bibliographystyle{ieeetr}
+
+\end{document}
