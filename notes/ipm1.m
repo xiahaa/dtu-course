@@ -1,0 +1,10 @@
+clc;close all;clear all;
+I = imread('Tiles_perspective_distort.png');
+I = im2double(I);
+h = figure;
+imshow(I);
+[x,y] = ginput(4);
+q = round([x y]');
+q = [q;ones(1,4)];
+I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
+imshow(I);

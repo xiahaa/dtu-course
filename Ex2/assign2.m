@@ -83,16 +83,29 @@ figure
 imshow(imc);
 
 % test undistort point
-% figure
-% imshow(I);hold on;
-% [x,y] = ginput(4);
-% x1 = round([x y]');
-% plot(x1(1,:),x1(2,:),'ro','MarkerSize',10);
-% 
-% x2 = undistortPoint(x1, K, k1, k2, k3, p1, p2);
-% figure
-% imshow(Irec);hold on;
-% plot(x2(1,:),x2(2,:),'ro','MarkerSize',10);
+figure
+imshow(I);
+[x,y] = ginput(10);
+x1 = round([x y]');
+% plot(x1(1,:),x1(2,:),'r-','MarkerSize',10);
+Ic = cat(3,I,I,I);
+indices = zeros(size(x1,2)-1,2);
+for i = 1:size(x1,2)-1
+    indices(i,:) = [i,i+1];
+end
+for i = 1:size(indices,1)
+    Ic = drawline(Ic,[x1(1,indices(i,1)) x1(1,indices(i,2))], [x1(2,indices(i,1)) x1(2,indices(i,2))], [255,0,0]);
+end
+
+x2 = undistortPoint(x1, K, k1, k2, k3, p1, p2);
+Irecc = cat(3,Irec,Irec,Irec);
+for i = 1:size(indices,1)
+    Irecc = drawline(Irecc,[x2(1,indices(i,1)) x2(1,indices(i,2))], [x2(2,indices(i,1)) x2(2,indices(i,2))], [0,255,0]);
+end
+
+Ishow = cat(2,Ic,Irecc);
+imshow(Ishow);
+
 
 % I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
 

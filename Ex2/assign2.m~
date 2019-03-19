@@ -84,13 +84,18 @@ imshow(imc);
 
 % test undistort point
 figure
-imshow(I);
-[x,y] = ginput(4);
+
+imshow(I);hold on;
+[x,y] = ginput(10);
 x1 = round([x y]');
-x1h = tohomogeneous(x1);
+plot(x1(1,:),x1(2,:),'r-','MarkerSize',10);
 
+x2 = undistortPoint(x1, K, k1, k2, k3, p1, p2);
+figure
+imshow(Irec);hold on;
+plot(x2(1,:),x2(2,:),'rg-','MarkerSize',10);
 
-% I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
+I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
 
 
 
