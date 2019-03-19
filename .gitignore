@@ -9,3 +9,4 @@ notes/*.log
 notes/*.blg
 notes/*.synctex.gz
 
+sub/*
