@@ -1,4 +1,18 @@
 function ptres = undistortPoint(ptsrc, K, k1, k2, k3, p1, p2)
+% function ptres = undistortPoint(ptsrc, K, k1, k2, k3, p1, p2)
+%
+% Undistorb points.
+%
+%   Inputs:
+%       ptsrc: raw distorted 2D points in image - 2xN.
+%       k1, k2, k3, p1, p2: radial and tangent parameters.
+%		K: camera intrinsics.
+%   Outputs:
+%       ptres: undistorted 2D points.
+%
+% Author: xiahaa@space.dtu.dk
+% Disclaimer: This code comes with no guarantee at all and its author
+%   is not liable for any damage that its utilization may cause.
     % normalized
     x0 = (ptsrc(1,:) - K(1,3))./K(1,1);
     y0 = (ptsrc(2,:) - K(2,3))./K(2,2);

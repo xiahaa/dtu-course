@@ -1,4 +1,19 @@
 function Irec = undistortImg(I, K, k1, k2, k3, p1, p2)
+% function Irec = undistortImg(I, K, k1, k2, k3, p1, p2)
+%
+% Rectify image.
+%   Inputs:
+%       I: input image, gray or color.
+%       K: camera intrinsics.
+%       k1,k2,k3: radial distortion parameters.
+%       p1,p2: tangent distortion parameters.
+%   Outputs:
+%       Irec: Rectified image.
+%
+% Author: xiahaa@space.dtu.dk
+% Disclaimer: This code comes with no guarantee at all and its author
+%   is not liable for any damage that its utilization may cause.
+
     [xx0,yy0] = meshgrid(1:size(I,2),1:size(I,1));
     xx0 = xx0(:)';
     yy0 = yy0(:)';
@@ -15,13 +30,13 @@ function Irec = undistortImg(I, K, k1, k2, k3, p1, p2)
     valid = xx > 1 & xx <= size(I,2)-1 & yy > 1 & yy <= size(I,1)-1;
     xx = xx(valid);xxf = xxf(valid);
     yy = yy(valid);yyf = yyf(valid);
-    
+
     m = size(I,1);n = size(I,2);
     ind0 = sub2ind([m,n], yy, xx);
     ind1 = sub2ind([m,n], yy, xx+1);
     ind2 = sub2ind([m,n], yy+1,xx);
     ind3 = sub2ind([m,n], yy+1,xx+1);
-    
+
     % bilinear interpolation
     dx = xxf - xx;
     dy = yyf - yy;
@@ -29,9 +44,9 @@ function Irec = undistortImg(I, K, k1, k2, k3, p1, p2)
     d1 = dx.*(1-dy);
     d2 = (1-dx).*dy;
     d3 = dx.*dy;
-    
+
     ind4 = sub2ind([m,n], round(yy0(valid)), round(xx0(valid)));
-    
+
     if size(I,3) == 1
         Irec = uint8(zeros(m,n));
         Irec(ind4) = uint8(double(I(ind0)).*d0+double(I(ind1)).*d1+double(I(ind2)).*d2+double(I(ind3)).*d3);

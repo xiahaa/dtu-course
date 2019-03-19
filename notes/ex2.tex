@@ -58,6 +58,28 @@ I = drawlines(I,q,[[1 2];[3 4];[1 4];[2 3]]);
 imshow(I);
 \end{filecontents*}
 
+\begin{filecontents*}{p3p.m}
+Cc1 = -Rc1'*tc1;% recover camera center
+Cc2 = -Rc2'*tc2;% recover camera center
+Cc3 = -Rc3'*tc3;% recover camera center
+
+C1 = -R1'*t1;% recover camera center
+C2 = -R2'*t2;% recover camera center
+C3 = -R3'*t3;% recover camera center
+
+figure
+cam1 = plotCamera('Location',C1,'Orientation',R1,'Opacity',0.0,'Color',[1 0 0],'Label','Camera1');hold on;
+cam2 = plotCamera('Location',C2,'Orientation',R2,'Opacity',0.0,'Color',[1 0 0],'Label','Camera2');
+cam3 = plotCamera('Location',C3,'Orientation',R3,'Opacity',0.0,'Color',[1 0 0],'Label','Camera3');
+
+camc1 = plotCamera('Location',Cc1,'Orientation',Rc1,'Opacity',0.2,'Color',[0 1 0],'Size',0.5,'Label','Est1');
+camc2 = plotCamera('Location',Cc2,'Orientation',Rc2,'Opacity',0.2,'Color',[0 1 0],'Size',0.5,'Label','Est2');
+camc3 = plotCamera('Location',Cc3,'Orientation',Rc3,'Opacity',0.2,'Color',[0 1 0],'Size',0.5,'Label','Est3');
+xlabel('x:(m)','FontName','Aerial','FontSize',15);
+ylabel('y:(m)','FontName','Aerial','FontSize',15);
+zlabel('z:(m)','FontName','Aerial','FontSize',15);
+\end{filecontents*}
+
 %\begin{filecontents*}{box.mat}
 %clear
 %close all
@@ -124,10 +146,32 @@ Better results can be obtained by applying bilinear interpolation.
 \end{figure*}
 
 \section{Perspective $3$ Point}
+Load the \textbf{p3p.mat} which contains:
+\begin{itemize}
+\item $\mathbf{K}$: simulated camera intrinsics;
+\item $\mathbf{R}_i,\ \mathbf{t}_i,\ i=1,2,3$: ground truth extrinsics;
+\item $\mathbf{p}_i,\ \mathbf{q}_i,\ i=1,2,3$: $\mathbf{p}_i$ contains raw $3$D points and $\mathbf{q}_i$ contains the projected pixels of $\mathbf{p}_i$, i.e. $$\mathbf{q}_i \sim \mathbf{K}(\mathbf{R}_i\mathbf{p}_i+\mathbf{t}_i)$$
+\end{itemize}
+The Perspective $3$ Point can be decoupled into $2$ steps
+\begin{enumerate}
+\item Recover the $3$D points in camera coordinate system (recall the lectures on cosine rule, fourth order polynomial, etc).
+\item Use provided code \textbf{lssol.m} to recover the extrinsics.
+\end{enumerate}
+You should use $3$ points for the Perspective $3$ Point algorithm. Since multiple solutions may be obtained, you can select the best one by computing the re-projection error and select the one with minimum re-projection error:
+\begin{align*}
+\mathbf{q}'_i&=\mathbf{K}(\mathbf{Rp}_i+\mathbf{t}),\ \mathbf{q}'_i= \frac{\mathbf{q}'_i}{\mathbf{q}'_i(3)} \\
+\mathbf{R^*}, \mathbf{t^*}&=\underset{\mathbf{R}, \mathbf{t}}{argmin}\ ||\mathbf{q}'_i-\mathbf{q}_i||\\
+\end{align*}
 
-%\section{2D Transformation}
-%To give your an better illustration of 2D transformation, we will work with a simple square. The square can be generated using the following code:
-%\lstinputlisting[caption = {Sample code from Matlab}]{cube.m}
+You can check your recovered results using the following code:
+\lstinputlisting{p3p.m}
+Result obtained:
+\begin{figure*}[!b]
+\centering
+\includegraphics[scale=0.4]{figures/p3p.png}
+\caption{Example of undistorted image.}
+\end{figure*}
+
 
 %
 %\section{Inverse Perspective Mapping}
