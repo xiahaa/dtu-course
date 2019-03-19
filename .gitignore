@@ -1,3 +1,11 @@
 
 *.asv
 notes/build/*
+*.gz
+notes/*.aux
+notes/*.bbl
+notes/*.out
+notes/*.log
+notes/*.blg
+notes/*.synctex.gz
+
