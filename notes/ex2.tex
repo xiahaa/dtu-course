@@ -110,11 +110,39 @@ The intrinsics and extrinsics are given as:
 \item $\mathbf{t}= \left[\begin{matrix}
 0.88 \\ 0.57 \\  0.19
  \end{matrix}\right]$.
- \item $f=1000, c_u = 300, c_v = 200$.
+ \item $f_x=f_y=1000,\ p_x = 300, p_y = 200$.
 \end{itemize}
-Form the projection matrix as $\mathbf{P}=\mathbf{K}\left(\mathbf{R} | \mathbf{t}\right)$ and project the $3$D points from the Box3D. Plot the image you get. 
+Form the projection matrix as $\mathbf{P}=\mathbf{K}\left(\mathbf{R} | \mathbf{t}\right)$ and project the $3$D points from the Box3D as
+$$
+\mathbf{x} \sim \mathbf{PX}=\mathbf{K}\left(\mathbf{R} | \mathbf{t}\right) \mathbf{X}
+$$
+where $\sim$ means there is an homogeneous-to-inhomogeneous transformation.
+Plot the image you get. 
 \paragraph{Q2:} 
-Using the same pinhole camera as in Question 1, extend the model with radial distortion with $k1 = -5e^{-1},\ k2 = -3e^{-1},\ k3 = -5e^{-2}$, project the Box3D points and compare to the results from Question 1. Plot again and observe what has changed.
+Using the same pinhole camera as in Question 1, extend the model with radial distortion with $a_1 = -5e^{-1},\ a_2 = -3e^{-1},\ a_3 = -5e^{-2}$ and the radial distortion model as follows:
+\begin{itemize}
+\item apply extrinsics $$ \mathbf{x}' = \left(\mathbf{R} | \mathbf{t}\right) \mathbf{X} $$ 
+\item to inhomogeneous coordinates
+$$
+\mathbf{x}''(1)=\frac{\mathbf{x}'(1)}{\mathbf{x}'(3)},\ \mathbf{x}''(2)=\frac{\mathbf{x}'(2)}{\mathbf{x}'(3)}
+$$
+\item apply radial distortion model
+\begin{align*}
+r^2 &= \mathbf{x}''(1)^2+\mathbf{x}''(2)^2 \\
+\mathbf{x}''(1) &= \mathbf{x}''(1)(1+a_1r^2+a_2r^4+a_3r^6) \\
+\mathbf{x}''(2) &= \mathbf{x}''(2)(1+a_1r^2+a_2r^4+a_3r^6)
+\end{align*}
+\item multiply $\mathbf{K}$
+\begin{align*}
+\mathbf{x}''' = \mathbf{K}\left[
+\begin{matrix}
+\mathbf{x}''(1) \\ \mathbf{x}''(2) \\ 1
+\end{matrix}
+\right]
+\end{align*}
+
+\end{itemize}
+project the Box3D points and compare to the results from Question 1. Plot again and observe what has changed.
 
 \section{Camera Calibration}
 In this exercise, you are asked to do the camera calibration for given images. There are two calibration toolboxes that you can use:
@@ -123,6 +151,11 @@ In this exercise, you are asked to do the camera calibration for given images. T
 \item \textbf{Camera Calibration Toolbox} for \textsc{Matlab} by Jean-Yves Bouguet\footnote{\url{http://www.vision.caltech.edu/bouguetj/calib_doc/}}: this toolbox is one of the earliest camera calibration toolbox.
 \end{itemize}
 \paragraph{Q3:} 
+\begin{figure*}[!b]
+\centering
+\includegraphics[scale=0.2]{figures/rec.png}
+\caption{Example of undistorted and corresponding rectified image.}
+\end{figure*}
 \begin{enumerate}
 \item read relevant docs to learn how to use those toolboxes.
 \item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration.
@@ -134,33 +167,38 @@ Use the previous calibrated parameters to rectify a distorted image \textbf{dist
 Recall that the distortion models are nonlinear, so it is not trivial to directly find the undistorted points from distorted points with known distorsion parameters. In stead, we can do it as follows:
 \begin{itemize}
 	\item Initialize a blank image.
-	\item For each pixel $(u,v)$, compute the so called normalized coordiante $(u_n,v_n)$ as $u_n=\frac{u-c_u}{f_u},\ v_n=\frac{v-c_v}{f_v}$.
-	\item Apply the radial and tangent distorsions to $(u_n,v_n)$ and denote the result as $(u_d,v_d)$.
-	\item Find the nearest neighbor of $(u_d,v_d)$ in distorted image and copy the corresponding intensity (or RGB) for $(u,v)$. 
+	\item For each pixel $(x,y)$, compute the so called normalized coordiante $(x',y')$ as $x'=\frac{x-p_x}{f_x},\ y'=\frac{y-p_y}{f_y}$.
+	\item Apply the radial and tangent distorsions to $(x',y')$ and denote the result as $(x_d,y_d)$ as
+	\begin{align*}
+		r^2 &= x'^2+y'^2 \\
+		x'' &= x'(1+a_1r^2+a_2r^4+a_3r^6)+(2p_1x'y'+p_2(r^2+2x'^2)) \\
+		y'' &= y'(1+a_1r^2+a_2r^4+a_3r^6)+(p_1(r^2+2y'^2)+2p_2x'y') \\
+		x_d &= f_xx''+p_x\\
+		y_d &=f_yy''+p_y
+	\end{align*}
+
+	\item Find the nearest neighbor of $(x_d,y_d)$ in distorted image and copy the corresponding intensity (or RGB) for $(x,y)$. 
 \end{itemize}
 Better results can be obtained by applying bilinear interpolation.
-\begin{figure*}[!b]
-\centering
-\includegraphics[scale=0.2]{figures/rec.png}
-\caption{Example of undistorted image.}
-\end{figure*}
+
 
 \section{Perspective $3$ Point}
 Load the \textbf{p3p.mat} which contains:
 \begin{itemize}
 \item $\mathbf{K}$: simulated camera intrinsics;
 \item $\mathbf{R}_i,\ \mathbf{t}_i,\ i=1,2,3$: ground truth extrinsics;
-\item $\mathbf{p}_i,\ \mathbf{q}_i,\ i=1,2,3$: $\mathbf{p}_i$ contains raw $3$D points and $\mathbf{q}_i$ contains the projected pixels of $\mathbf{p}_i$, i.e. $$\mathbf{q}_i \sim \mathbf{K}(\mathbf{R}_i\mathbf{p}_i+\mathbf{t}_i)$$
+\item $\mathbf{x}_i,\ \mathbf{X}_i,\ i=1,2,3$: $\mathbf{X}_i$ denotes raw $3$D point and $\mathbf{x}_i$ represents the corresponding image point of $\mathbf{X}_i$, i.e. $$\mathbf{x}_i \sim \mathbf{K}(\mathbf{R}_i\mathbf{X}_i+\mathbf{t}_i)$$
 \end{itemize}
 The Perspective $3$ Point can be decoupled into $2$ steps
 \begin{enumerate}
 \item Recover the $3$D points in camera coordinate system (recall the lectures on cosine rule, fourth order polynomial, etc).
 \item Use provided code \textbf{lssol.m} to recover the extrinsics.
 \end{enumerate}
-You should use $3$ points for the Perspective $3$ Point algorithm. Since multiple solutions may be obtained, you can select the best one by computing the re-projection error and select the one with minimum re-projection error:
+You should use $3$ points for the Perspective $3$ Point algorithm. Since multiple solutions may be obtained, you need at least a fourth point to choose the correct one. If you have more then $4$ points, you can select the best one by computing the re-projection errors for all points and select the one with the minimum re-projection error:
 \begin{align*}
-\mathbf{q}'_i&=\mathbf{K}(\mathbf{Rp}_i+\mathbf{t}),\ \mathbf{q}'_i= \frac{\mathbf{q}'_i}{\mathbf{q}'_i(3)} \\
-\mathbf{R^*}, \mathbf{t^*}&=\underset{\mathbf{R}, \mathbf{t}}{argmin}\ ||\mathbf{q}'_i-\mathbf{q}_i||\\
+\text{Apply extrinsics: }\mathbf{x}'_i&=\mathbf{K}(\mathbf{RX}_i+\mathbf{t}),\\
+\text{Homogeneous to inhomogeneous: } \mathbf{x}'_i&= \frac{\mathbf{x}'_i}{\mathbf{x}'_i(3)}  \\
+\text{Compute reprojection error: }\mathbf{R^*}, \mathbf{t^*}&=\underset{\mathbf{R}, \mathbf{t}}{argmin}\ \sum_{i=1}^{n}||\mathbf{x}'_i-\mathbf{x}_i||\\
 \end{align*}
 
 You can check your recovered results using the following code:
@@ -168,8 +206,8 @@ You can check your recovered results using the following code:
 Result obtained:
 \begin{figure*}[!b]
 \centering
-\includegraphics[scale=0.4]{figures/p3p.png}
-\caption{Example of undistorted image.}
+\includegraphics[scale=0.9]{figures/p3p.png}
+\caption{Result obtained by applying Perspective-$3$-Point Method.}
 \end{figure*}
 
 
