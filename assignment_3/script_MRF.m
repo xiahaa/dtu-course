@@ -9,11 +9,13 @@ addpath ../utils;
 
 data_dir = '../data/EX_3_data/';
 
-imnoisy = imread(strcat(data_dir,'noisy_circles.png'));
-imreal = imread(strcat(data_dir,'noise_free_circles.png'));
+imnoisy = (imread(strcat(data_dir,'noisy_circles.png')));
+imreal = (imread(strcat(data_dir,'noise_free_circles.png')));
 
 f = [1;2;3];
 miuf = [70;130;190];
+alpha = 0.0005;
+beta = 1;
 
 %% Q1
 configurationTruth = imreal;
@@ -23,19 +25,19 @@ configurationTruth(configurationTruth == miuf(f(3))) = 3;
 
 buildHistogram(imnoisy,configurationTruth);
 
+Etrue = calcLikelihood(miuf,imnoisy,configurationTruth,alpha) + calcSmoothnessPrior(configurationTruth, beta);
+
 %% Q2
 % test = [1 0 1 0 0;0 1 1 1 2;1 0 0 3 5;1 0 1 5 1;8 2 3 1 1;];
 % V2 = calcSmoothnessPrior(im1, 1);
 % V21 = burteForceSol(im1, 1);
-
-alpha = 0.0005;
 
 figure;
 subplot(3,2,1);imshow(imreal); title('Raw','FontName','Arial','FontSize',20);
 subplot(3,2,2);imshow(imnoisy); title('Noisy','FontName','Arial','FontSize',20);
 
 
-%% configuration 1
+% configuration 1
 threshold1 = 100;
 threshold2 = 160;
 configuration1 = imnoisy;
@@ -44,26 +46,143 @@ configuration1(imnoisy>=100 & imnoisy <= 160) = f(2);
 configuration1((imnoisy>=160)) = f(3);
 
 imseg1 = segmentation(imnoisy, configuration1, f, miuf);
-E1 = calcLikelihood(miuf,imnoisy,configuration1,alpha) + calcSmoothnessPrior(configuration1, 1);
+L1 = calcLikelihood(miuf,imnoisy,configuration1,alpha);
+P1 = calcSmoothnessPrior(configuration1, beta);
+E1 = L1 + P1;
 subplot(3,2,3);imshow(imseg1); title('Threshold','FontName','Arial','FontSize',20);
 
-%% configuration 2
+% configuration 2
 configuration2 = medfilt2(configuration1,[3,3],'symmetric');
 imseg2 = segmentation(imnoisy, configuration2, f, miuf);
-E2 = calcLikelihood(miuf,imnoisy,configuration2,alpha) + calcSmoothnessPrior(configuration2, 1);
+L2 = calcLikelihood(miuf,imnoisy,configuration2,alpha);
+P2 = calcSmoothnessPrior(configuration2, beta);
+E2 = L2 + P2;
 subplot(3,2,4);imshow(imseg2); title('3x3 Median Filter','FontName','Arial','FontSize',20);
 
-%% configuration 3
-configuration2 = medfilt2(configuration1,[3,3],'symmetric');
-imseg2 = segmentation(imnoisy, configuration2, f, miuf);
-E2 = calcLikelihood(miuf,imnoisy,configuration2,alpha) + calcSmoothnessPrior(configuration2, 1);
-subplot(3,2,4);imshow(imseg2); title('3x3 Median Filter','FontName','Arial','FontSize',20);
+% configuration 3
+imsmmoth = imgaussfilt(imnoisy,1,'FilterSize',3,'Padding','replicate');
+configuration3(imsmmoth<100) = f(1);
+configuration3(imsmmoth>=100 & imsmmoth <= 160) = f(2);
+configuration3((imsmmoth>=160)) = f(3);
 
-%% configuration 4
-configuration2 = medfilt2(configuration1,[3,3],'symmetric');
-imseg2 = segmentation(imnoisy, configuration2, f, miuf);
-E2 = calcLikelihood(miuf,imnoisy,configuration2,alpha) + calcSmoothnessPrior(configuration2, 1);
-subplot(3,2,4);imshow(imseg2); title('3x3 Median Filter','FontName','Arial','FontSize',20);
+imseg3 = segmentation(imnoisy, configuration3, f, miuf);
+L3 = calcLikelihood(miuf,imnoisy,configuration3,alpha);
+P3 = calcSmoothnessPrior(configuration3, beta);
+E3 = L3 + P3
+subplot(3,2,5);imshow(imseg3); title('Gaussian','FontName','Arial','FontSize',20);
+
+% configuration 4
+se = strel('disk',1);
+configuration4 = imopen(configuration1,se);
+imseg4 = segmentation(imnoisy, configuration4, f, miuf);
+L4 = calcLikelihood(miuf,imnoisy,configuration4,alpha);
+P4 = calcSmoothnessPrior(configuration4, beta);
+E4 = L4 + P4;
+subplot(3,2,6);imshow(imseg4); title('Morpho','FontName','Arial','FontSize',20);
+
+figure
+subplot(2,2,1);
+buildHistogram(imnoisy,configuration1); title('Threshold','FontName','Arial','FontSize',20);
+subplot(2,2,2);
+buildHistogram(imnoisy,configuration2); title('3x3 Median Filter','FontName','Arial','FontSize',20);
+subplot(2,2,3);
+buildHistogram(imnoisy,configuration3); title('Gaussian filter','FontName','Arial','FontSize',20);
+subplot(2,2,4);
+buildHistogram(imnoisy,configuration4); title('Morphological: Close','FontName','Arial','FontSize',20);
+
+% plot likelihood cost
+figure
+bar([L1 L2 L3 L4]);
+xticklabels({'CF1','CF2','CF3','CF4'});
+xtickangle(45);
+xlim=get(gca,'xlim');
+hold on
+title('Likelihood');
+set(gca,'FontName','Arial','FontSize',20);
+
+% plot smoothness prior cost
+figure
+bar([P1 P2 P3 P4]);
+xticklabels({'CF1','CF2','CF3','CF4'});
+xtickangle(45);
+xlim=get(gca,'xlim');
+hold on
+title('Prior');
+set(gca,'FontName','Arial','FontSize',20);
+
+% plot posterior cost
+figure
+bar([E1 E2 E3 E4]);
+xticklabels({'CF1','CF2','CF3','CF4'});
+xtickangle(45);
+set(gca,'FontName','Arial','FontSize',20);
+xlim=get(gca,'xlim');
+hold on
+h1 = plot(xlim,[Etrue Etrue],'r--');
+legend([h1],{'Truth'});
+title('Posterior');
+
+%% Q3-ICM
+
+% try with parallel optimization
+iter = 1;
+maxiter = 1e2;
+oldCost = 1e6;
+figure
+configuration = configuration1;
+mask = checkerboard(1,round(size(imnoisy,1)*0.5),round(size(imnoisy,2)*0.5));
+mask(mask > 0.5) = 1; mask = mask == 1;
+while iter < maxiter
+    localPotential = ICMOpt(imnoisy, configuration, f, miuf, alpha, beta);
+    [~,id] = min(localPotential,[],3);
+%     newconfiguration = configuration;
+    configuration(mask) = f(id(mask));
+    
+    localPotential = ICMOpt(imnoisy, configuration, f, miuf, alpha, beta);
+    [~,id] = min(localPotential,[],3);
+    configuration(~mask) = f(id(~mask));
+    
+    Lnew = calcLikelihood(miuf,imnoisy,configuration,alpha);
+    Pnew = calcSmoothnessPrior(configuration, beta);
+    newCost = Lnew + Pnew;
+    
+    if abs(newCost-oldCost) < 0.1 || newCost > oldCost
+        break;
+    end
+%     configuration = newconfiguration;
+    oldCost = newCost;
+    iter = iter + 1;
+    imres = segmentation(imnoisy, configuration, f, miuf);
+    imshow(imres);pause(0.1);
+end
+
+function localPotential = ICMOpt(im, configuration, f, miuf, alpha, beta)
+    localPotential = zeros(size(im,1),size(im,2),numel(f));
+    % likelihood
+    for i = 1:numel(f)
+        p1(:,:,i) = alpha.*(miuf(f(i))-double(im)).^2;
+    end
+    [m,n] = size(im);
+    % smoothness
+    [xx,yy]=meshgrid(1:m,1:n);
+    xx = xx(:); yy = yy(:);
+    nnu = [xx-1, yy]; n1 = nnu(:,1) > 0;
+    nnd = [xx+1, yy]; n2 = nnd(:,1) <= m;
+    nnl = [xx, yy-1]; n3 = nnl(:,2) > 0;
+    nnr = [xx, yy+1]; n4 = nnr(:,2) <= n;
+    
+    for i = 1:numel(f)
+        b = zeros(m*n,1);
+    %     fi = configuration((yy-1).*m+xx);
+        b(n1) = b(n1) + double(configuration((nnu(n1,2)-1).*m + nnu(n1,1)) ~= f(i));
+        b(n2) = b(n2) + double(configuration((nnd(n2,2)-1).*m + nnd(n2,1)) ~= f(i));
+        b(n3) = b(n3) + double(configuration((nnl(n3,2)-1).*m + nnl(n3,1)) ~= f(i));
+        b(n4) = b(n4) + double(configuration((nnr(n4,2)-1).*m + nnr(n4,1)) ~= f(i));
+        b = reshape(b,m,n);
+    
+        localPotential(:,:,i) = p1(:,:,i) + b;
+    end
+end
 
 function imseg = segmentation(im, configuration, f, miuf)
     imseg = im;
@@ -78,6 +197,7 @@ function V1 = calcLikelihood(miuf, ds, fs, alpha)
 end
 
 function V2 = calcSmoothnessPrior(ds, beta)
+    ds = double(ds);
     [m,n]=size(ds);
     V2 = 0;
     ds = double(ds);
