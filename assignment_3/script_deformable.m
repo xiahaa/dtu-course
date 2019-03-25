@@ -60,8 +60,13 @@ else
         % draw
         plot(curve(2,[1:end,1]),curve(1,[1:end,1]),'r-','LineWidth',2);
         
+        mask = poly2mask(curve(2,:), curve(1,:), m, n);
+        boundary = findBoundary(mask);
+        se = strel('disk',5);
+        boundary = imdilate(boundary, se);
+            
         % find mean intensities inside and outside
-        [cin, cout] = meanIntensity(im, curve);
+        [cin, cout] = meanIntensity(im, curve, boundary);
         
         % compute the displacement along the normal direction
         displacement = computeDisplacement(im, curve, cin, cout);
@@ -86,59 +91,19 @@ else
     
 end
 
-function curve = suppressSelfIntersection(curve)
-    [~,~,segments]=selfintersect(curve(2,:),curve(1,:)); 
-    id = ones(1,size(curve,2));
-    for i = 1:size(segments,1)
-        id(segments(i,1)+1:segments(i,2)-1) = 0;
+% poisson blending
+function boundary = findBoundary(bw)
+    boundary = zeros(size(bw));
+    for i = 2:size(bw,1)-1
+        for j = 2:size(bw,2)-1
+            block = bw(i-1:i+1,j-1:j+1);
+            if block(5) == 1 && sum(block([1,2,3,4,6,7,8,9])==0)~=0
+                boundary(i,j) = 1;
+            end
+        end
     end
-    id = id == 1;
-    curve = curve(:,id);
-    curve = reInterpolate(curve);
 end
 
-function curve = constraintCurve(curve, m, n)
-    id1 = curve(1,:) < 2;
-    id2 = curve(1,:) > m-1;
-    id3 = curve(2,:) < 2;
-    id4 = curve(2,:) > n-1;
-    curve(1,id1) = 2;
-    curve(1,id2) = m - 1;
-    curve(2,id3) = 2;
-    curve(2,id4) = n - 1;
-end
-
-function curve = reInterpolate(curve)
-    accumulateDist = zeros(1,size(curve,2));
-    err = curve(:,[2:end]) - curve(:,1:end-1);
-    dist = diag(err'*err)';
-    for i = 2:size(curve,2)
-        accumulateDist(i) = accumulateDist(i-1) + cumsum(dist(i-1));
-    end
-    accumulateDistNew = linspace(0,accumulateDist(end),size(curve,2));
-    try
-        xnew = interp1(accumulateDist,curve(1,:),accumulateDistNew);
-    catch
-        error('s');
-    end
-    ynew = interp1(accumulateDist,curve(2,:),accumulateDistNew);
-    curve = [xnew;ynew];
-end
-
-function Bint = regularization(a, b, N)
-    L1 = spdiags([-2.*ones(N,1) ones(N,1) ones(N,1)],[0,1,-1],N,N);
-    L1(1,N) = 1;
-    L1(N,1) = 1;
-    L1 = L1.*a;
-    L2 = spdiags([-1.*ones(N,1) 4.*ones(N,1) -6.*ones(N,1) 4.*ones(N,1) -1.*ones(N,1)], ...
-                 [-2,-1,0,1,2],N,N);
-    L2(1,N) = 4;L2(1,N-1)=-1;
-    L2(2,N) = -1;
-    L2(N,1) = 4;L2(N,2) = -1;
-    L2(N-1,1) = -1;
-    L2 = L2.*b;
-    Bint = (eye(N) - (L1+L2));
-end
 
 function displacement = computeDisplacement(im, curve, cin, cout)
     Icurve = biInterIntensity(im, curve);
@@ -163,41 +128,24 @@ function normals = computeNormal(curve)
     normals = [tangent(2,:);-tangent(1,:)];
 end
 
-function Icurve = biInterIntensity(im, curve)
-    point1 = floor(curve);point2 = point1;point3 = point1;
-    point2(2,:) = point2(2,:) + 1;
-    point3(1,:) = point3(1,:) + 1;
-    point4 = point2;
-    point4(1,:) = point4(1,:) + 1;
-    
-    d1 = curve(1,:) - point1(1,:);
-    d2 = curve(2,:) - point1(2,:);
-    
-    s1 = (1-d1).*(1-d2);
-    s2 = (1-d1).*d2;
-    s3 = d1.*(1-d2);
-    s4 = (d1).*(d2);
-    
-    index1 = sub2ind(size(im), point1(1,:),point1(2,:));
-    index2 = sub2ind(size(im), point2(1,:),point2(2,:));
-    index3 = sub2ind(size(im), point3(1,:),point3(2,:));
-    index4 = sub2ind(size(im), point4(1,:),point4(2,:));
-    
-    Icurve = im(index1).*s1 + ...
-             im(index2).*s2 + ...
-             im(index3).*s3 + ...
-             im(index4).*s4;
-end
-
-function [cin, cout] = meanIntensity(im, curve)
+function [cin, cout] = meanIntensity(im, curve, boundary)
     polygon = curve;
     polygon(:,end+1) = curve(:,1);
     mask = poly2mask(polygon(2,:),polygon(1,:),size(im,1),size(im,2));
+    
+    if isempty(boundary)
+        maskin = mask;
+        maskout = ~mask;
+    else
+        maskin = mask & boundary;
+        maskout = ~mask & boundary;
+    end
+    
     % debug
 %     im(mask) = 1;
 %     imshow(im);
-    cin = mean(vec(im(mask)));
-    cout = mean(vec(im(~mask)));
+    cin = mean(vec(im(maskin)));
+    cout = mean(vec(im(maskout)));
 end
 
 function im = imPreprocessing(im, type)
