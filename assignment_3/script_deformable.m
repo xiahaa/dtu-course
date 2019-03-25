@@ -3,7 +3,7 @@ clc;close all;clear all;
 addpath ../data/EX_4_data;
 addpath ../utils;
 
-% videoname = 'crawling_amoeba.mov';
+videoname = 'crawling_amoeba.mov';
 % videoname = 'echiniscus.mp4';
 data_dir = '/../data/EX_4_data/';
 
@@ -21,7 +21,7 @@ if debug == 0
         image(vidFrame, 'Parent', currAxes);
         currAxes.Visible = 'off';
         pause(1/vidobj.FrameRate);
-        imwrite(vidFrame,sprintf('../data/EX_4_data/echiniscus/im_%03d.png',id));% save one frame as
+        imwrite(vidFrame,sprintf('../data/EX_4_data/crawling_amoeba/im_%03d.png',id));% save one frame as
         %     the sample data for tuning
         id = id + 1;
     end
@@ -58,7 +58,7 @@ else
         % show
         imshow(im);hold on;
         % draw
-        plot(curve(2,[1:end,1]),curve(1,[1:end,1]),'r-');
+        plot(curve(2,[1:end,1]),curve(1,[1:end,1]),'r-','LineWidth',2);
         
         % find mean intensities inside and outside
         [cin, cout] = meanIntensity(im, curve);

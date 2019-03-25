@@ -128,60 +128,91 @@ title('Posterior');
 iter = 1;
 maxiter = 1e2;
 oldCost = 1e6;
+
+%configuration = configuration1;% start with cfg1
+configuration = randi(3,size(imnoisy));
+
 figure
-configuration = configuration1;
-mask = checkerboard(1,round(size(imnoisy,1)*0.5),round(size(imnoisy,2)*0.5));
-mask(mask > 0.5) = 1; mask = mask == 1;
 while iter < maxiter
-    localPotential = ICMOpt(imnoisy, configuration, f, miuf, alpha, beta);
-    [~,id] = min(localPotential,[],3);
-%     newconfiguration = configuration;
-    configuration(mask) = f(id(mask));
-    
-    localPotential = ICMOpt(imnoisy, configuration, f, miuf, alpha, beta);
-    [~,id] = min(localPotential,[],3);
-    configuration(~mask) = f(id(~mask));
+    configuration = GibbsSampling(imnoisy, configuration, f, miuf, alpha, beta);%ICM
     
     Lnew = calcLikelihood(miuf,imnoisy,configuration,alpha);
     Pnew = calcSmoothnessPrior(configuration, beta);
     newCost = Lnew + Pnew;
     
-    if abs(newCost-oldCost) < 0.1 || newCost > oldCost
+    if abs(newCost-oldCost) < 1e-3 || newCost > oldCost
         break;
     end
 %     configuration = newconfiguration;
     oldCost = newCost;
+    costs(iter) = newCost;
     iter = iter + 1;
     imres = segmentation(imnoisy, configuration, f, miuf);
     imshow(imres);pause(0.1);
 end
+% cost variantion
+figure
+plot(costs,'r-o','LineWidth',2);grid on;
+xlabel('Iteration');
+ylabel('Cost')
+title('ICM')
+set(gca,'FontName','Arial','FontSize',20);
 
-function localPotential = ICMOpt(im, configuration, f, miuf, alpha, beta)
-    localPotential = zeros(size(im,1),size(im,2),numel(f));
-    % likelihood
-    for i = 1:numel(f)
-        p1(:,:,i) = alpha.*(miuf(f(i))-double(im)).^2;
-    end
-    [m,n] = size(im);
-    % smoothness
-    [xx,yy]=meshgrid(1:m,1:n);
-    xx = xx(:); yy = yy(:);
-    nnu = [xx-1, yy]; n1 = nnu(:,1) > 0;
-    nnd = [xx+1, yy]; n2 = nnd(:,1) <= m;
-    nnl = [xx, yy-1]; n3 = nnl(:,2) > 0;
-    nnr = [xx, yy+1]; n4 = nnr(:,2) <= n;
+% plot posterior cost
+figure
+bar([E1 E2 E3 E4 newCost]);
+xticklabels({'CF1','CF2','CF3','CF4','ICM'});
+xtickangle(45);
+set(gca,'FontName','Arial','FontSize',20);
+xlim=get(gca,'xlim');
+hold on
+h1 = plot(xlim,[Etrue Etrue],'r--');
+legend([h1],{'Truth'});
+title('Posterior');
+
+function configuration = SimulatedAnn
+% TODO
+end
+
+function configuration = GibbsSampling(im, configuration, f, miuf, alpha, beta)
+    mask = checkerboard(1,round(size(im,1)*0.5),round(size(im,2)*0.5));
+    mask(size(im,1)+1:end,:) = [];
+    mask(:,size(im,2)+1:end) = [];
+    mask(mask > 0.5) = 1; mask = mask == 1;
     
-    for i = 1:numel(f)
-        b = zeros(m*n,1);
-    %     fi = configuration((yy-1).*m+xx);
-        b(n1) = b(n1) + double(configuration((nnu(n1,2)-1).*m + nnu(n1,1)) ~= f(i));
-        b(n2) = b(n2) + double(configuration((nnd(n2,2)-1).*m + nnd(n2,1)) ~= f(i));
-        b(n3) = b(n3) + double(configuration((nnl(n3,2)-1).*m + nnl(n3,1)) ~= f(i));
-        b(n4) = b(n4) + double(configuration((nnr(n4,2)-1).*m + nnr(n4,1)) ~= f(i));
-        b = reshape(b,m,n);
-    
-        localPotential(:,:,i) = p1(:,:,i) + b;
+    localPotential = calclocalPotentials(im, configuration, f, miuf, alpha, beta);
+    prob = exp(-localPotential);
+    probNorm = sum(prob,3);
+    prob(:,:,1) = prob(:,:,1) ./ probNorm;
+    for i = 2:size(localPotential,3) 
+        prob(:,:,i) = prob(:,:,i) ./ probNorm;
+        prob(:,:,i) = prob(:,:,i) + prob(:,:,i-1);
     end
+    
+    randProb = rand(size(probNorm));
+    
+    id = cumsum(prob>randProb,3);
+    id = id(:,:,end);
+    id = size(localPotential,3) - id;
+    id = id + 1;
+    
+    configuration(mask) = f(id(mask));
+    
+    localPotential = calclocalPotentials(im, configuration, f, miuf, alpha, beta);
+    prob = exp(-localPotential);
+    probNorm = sum(prob,3);
+    prob(:,:,1) = prob(:,:,1) ./ probNorm;
+    for i = 2:size(localPotential,3) 
+        prob(:,:,i) = prob(:,:,i) ./ probNorm;
+        prob(:,:,i) = prob(:,:,i) + prob(:,:,i-1);
+    end
+    randProb = rand(size(probNorm));
+    id = cumsum(prob>randProb,3);
+    id = id(:,:,end);
+    id = size(localPotential,3) - id;
+    id = id + 1;
+    
+    configuration(~mask) = f(id(~mask));
 end
 
 function imseg = segmentation(im, configuration, f, miuf)
@@ -209,6 +240,7 @@ function V2 = calcSmoothnessPrior(ds, beta)
     for i = 1:n-1   
         V2 = V2+sum(abs(ds(:,i)-ds(:,i+1))>1e-3);
     end
+    V2 = V2.*beta;
 end
 
 function V2 = burteForceSol(ds,beta)
@@ -232,6 +264,7 @@ function V2 = burteForceSol(ds,beta)
             end
         end
     end
+    V2 = V2.*beta;
 end
 
 function buildHistogram(im1,seg)
