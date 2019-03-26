@@ -39,7 +39,7 @@ else
     
     % parameters
     Num = 500;
-    stepSize = 50;
+    stepSize = 20;
     a = 0.5;
     b = 0.5;
     
@@ -85,7 +85,7 @@ else
         curve = (Bint\(curve+displacement)')';
         
         % reinterpolation
-        curve = suppressSelfIntersection(curve);
+        curve = suppressSelfIntersection(curve,m,n);
         curve = constraintCurve(curve, m, n);
         curve = reInterpolate(curve,Num);
         pause(0.1);

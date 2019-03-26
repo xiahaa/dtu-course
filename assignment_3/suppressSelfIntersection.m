@@ -1,8 +1,14 @@
-function curve = suppressSelfIntersection(curve)
+function curve = suppressSelfIntersection(curve,varargin)
+    if nargin == 3
+        m = varargin{1};
+        n = varargin{2};
+    end
+
     cnt = size(curve,2);
-%     [~,~,segments]=selfintersect(curve(2,:),curve(1,:)); 
-    segments = checkSelfIntersect(curve(1,:),curve(2,:));
+    [~,~,segments]=selfintersect(curve(2,:),curve(1,:)); 
+%     segments = InterX(curve,m,n);
     id = ones(1,size(curve,2));
+    
     for i = 1:size(segments,1)
         id(segments(i,1):segments(i,2)) = 0;
     end
@@ -11,48 +17,38 @@ function curve = suppressSelfIntersection(curve)
     curve = reInterpolate(curve,cnt);
 end
 
-function segments = checkSelfIntersect(x,y)
-    minx = min(x);
-    maxx = max(x);
-    miny = min(y);
-    maxy = max(y);
-    
-    % bounding box
-    bb = zeros(round(maxx - minx)+1,round(maxy-miny) + 1);
-    
-    mask = poly2mask(y-miny+1,x-minx+1,size(bb,1),size(bb,2));
-    boundary = findBoundary(mask);
-    
-    xx = round(x-minx)+1;
-    yy = round(y-miny)+1;
-    xx = xx';
-    yy = yy';
-    nnu = [xx-1, yy];n1 = nnu(:,1) > 0;
-    nnd = [xx+1, yy];n2 = nnd(:,1) <= size(bb,1);
-    nnl = [xx, yy-1];n3 = nnl(:,2) > 0;
-    nnr = [xx, yy+1];n4 = nnr(:,2) <= size(bb,2);
-    
-    valid = zeros(size(x,2),1);valid = valid == 1;
-    valid(n1) = valid(n1) | (boundary((nnu(n1,2)-1).*size(bb,1)+(nnu(n1,1))) == 1);
-    valid(n2) = valid(n2) | (boundary((nnd(n2,2)-1).*size(bb,1)+(nnd(n2,1))) == 1);
-    valid(n3) = valid(n3) | (boundary((nnl(n3,2)-1).*size(bb,1)+(nnl(n3,1))) == 1);
-    valid(n4) = valid(n4) | (boundary((nnr(n4,2)-1).*size(bb,1)+(nnr(n4,1))) == 1);
-    
-    id = 1:size(x,2);
-    idd = id(~valid);
-    segments = [];
-    if numel(idd) == 0
-        return;
-    end
-    
-    if numel(idd) > 0 && mod(numel(idd),2) == 0
-        segments = [idd(1:2:end-1) idd(2:2:end)];
-    else
-        findidd = idd(end);
-%         nextidd = min(findidd + 1,size(x,2));
-        idd = [idd findidd];
-        segments = [idd(1:2:end-1) idd(2:2:end)];
-    end
+function segments = InterX(curve,m,n)
+    point = [];
+    id1 = [];
+    for i = 1:size(curve,2)-1
+        x = [curve(2,i) curve(2,i+1)];
+        y = [curve(1,i) curve(1,i+1)];
         
+        nPoints = max(abs(diff(x)), abs(diff(y)))+1;  % Number of points in line
+        rIndex = round(linspace(y(1), y(2), nPoints));  % Row indices
+        cIndex = round(linspace(x(1), x(2), nPoints));  % Column indices
+        
+        rcIndex = (cIndex-1).*m + rIndex;
+        
+        [rcIndex,id] = unique(rcIndex);
+        rIndex = rIndex(id);
+        cIndex = cIndex(id);
+        
+        if ~isempty(point) && rcIndex(1) == ((point(end,2)-1)*m+point(end,1))
+            rIndex(1) = [];
+            cIndex(1) = [];
+        end
+        point = [point;[rIndex' cIndex']];
+        id1 = [id1;i*ones(length(rIndex),1)];
+    end
+    point(end,:) = [];
+    id1(end) = [];
     
+    bb = zeros(m,n);
+    ind = round((point(:,2)-1).*m+point(:,1));
+    bb(ind) = id1;
+    idnew = bb(ind);
+    intersects = abs(idnew - id1) > 5 & abs(idnew - id1) < 0.7*size(curve,2);
+    
+    segments = [id1(intersects) idnew(intersects)];
 end
