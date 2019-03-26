@@ -1,7 +1,6 @@
 clc;close all;clear all;
 
-addpath ../data/EX_4_data;
-addpath ../utils;
+addpath ./utils;
 
 videoname = 'crawling_amoeba.mov';
 % videoname = 'echiniscus.mp4';
@@ -27,7 +26,7 @@ if debug == 0
     end
 else
     typename = {'crawling_amoeba', 'echiniscus'};
-    type = 2;
+    type = 1;
     
     imgpath = strcat(fullfile(pwd),strcat(data_dir,typename{type},'/'));  
     imgFiles = dir(fullfile(imgpath,'*.png'));
@@ -39,10 +38,11 @@ else
     
     % parameters
     Num = 500;
-    stepSize = 40;
+    stepSize = 20;
     a = 0.5;
     b = 0.5;
     
+    % regularization matrix
     Bint = regularization(a, b, Num);
     
     % curve initialization
@@ -59,11 +59,6 @@ else
         imshow(im);hold on;
         % draw
         plot(curve(2,[1:end,1]),curve(1,[1:end,1]),'r-','LineWidth',2);
-        
-        mask = poly2mask(curve(2,:), curve(1,:), m, n);
-        boundary = findBoundary(mask);
-        se = strel('disk',10);
-        boundary = imdilate(boundary, se);
             
         % find mean intensities inside and outside
         [cin, cout] = meanIntensity(im, curve, []);
@@ -89,8 +84,9 @@ else
         curve = constraintCurve(curve, m, n);
         curve = reInterpolate(curve,Num);
         pause(0.1);
-        F = getframe;
-        imwrite(F.cdata,strcat('../data/Ex_4_data/output_2/',num2str(i,'%d'),'.png'));
+        % if write
+        %F = getframe;
+        %imwrite(F.cdata,strcat('../data/Ex_4_data/output_2/',num2str(i,'%d'),'.png'));
     end 
 end
 
@@ -123,6 +119,7 @@ function displacement = findDisplacement(im, curve, displacement)
         catch
             error('');
         end
+        % gradient and find the one with maximum gradient
         gval = gradient(val);
         [~,id] = max((gval));
         displacement(:,i) = [xraw(id)-curve(1,i);yraw(id)-curve(2,i)];
