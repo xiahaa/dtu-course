@@ -201,6 +201,14 @@ numOfImages = size(info,1);
         
         load('MRF3.mat');
         
+        % parameters
+        Num = 100;
+        stepSize = 50;
+        a = 0.5;
+        b = 0.5;
+        % regularization
+        Bint = regularization(a, b, Num);
+        
         for k = 1:1:numOfImages
             disp(k);
             im1 = imread(strcat(data_dir,'nerves_part.tiff'),k);%
@@ -209,15 +217,47 @@ numOfImages = size(info,1);
             mask = conf == f(1);
             
             se = strel('disk',2);
-            mask = imdilate(mask, se);
+            mask = imclose(mask, se);
             
             im1(~mask) = 0;
             
             imshow(im1);
+            
+            %% todo issue
+            % 1. generate serveral curve
+            % 2. for each initialize a deformable curve
+            % 3. log results.
         end
         
     end
 
+function curve = defromableCurve(im, curve, Num, stepSize, Bint)
+    mask = poly2mask(curve(2,:), curve(1,:), m, n);
+    boundary = findBoundary(mask);
+    se = strel('disk',5);
+    boundary = imdilate(boundary, se);
+
+    % find mean intensities inside and outside
+    [cin, cout] = meanIntensity(im, curve, boundary);
+
+    % compute the displacement along the normal direction
+    displacement = computeDisplacement(im, curve, cin, cout);
+
+    % find final
+    displacement = displacement.*stepSize;
+    %         displacement = findDisplacement(im, curve, displacement);
+
+    % draw normals
+    quiver(curve(2,:),curve(1,:),displacement(2,:),displacement(1,:));
+
+    % update
+    curve = (Bint\(curve+displacement)')';
+
+    % reinterpolation
+    curve = reInterpolate(curve,Num);
+    curve = suppressSelfIntersection(curve);
+    curve = constraintCurve(curve, m, n);
+end
 
 function buildHistogram(im1,seg,f)
     [h,wout] = hist(double(im1(:)),256);

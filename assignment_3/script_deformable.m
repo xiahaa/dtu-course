@@ -40,8 +40,8 @@ else
     % parameters
     Num = 500;
     stepSize = 30;
-    a = 0.5;
-    b = 0.5;
+    a = 0.3;
+    b = 0.3;
     
     Bint = regularization(a, b, Num);
     
@@ -71,81 +71,61 @@ else
         % compute the displacement along the normal direction
         displacement = computeDisplacement(im, curve, cin, cout);
         
+        % regularization
+%         Bint = regularization(a, b, size(curve,2));
+
+        % find final
+        displacement = displacement.*stepSize;
+%         displacement = findDisplacement(im, curve, displacement);
+        
         % draw normals
         quiver(curve(2,:),curve(1,:),displacement(2,:),displacement(1,:));
         
-        % regularization
-        Bint = regularization(a, b, size(curve,2));
-
         % update
-        curve = (Bint\(curve+displacement.*stepSize)')';
+        curve = (Bint\(curve+displacement)')';
         
         % reinterpolation
-        curve = reInterpolate(curve);
+        curve = reInterpolate(curve,Num);
         curve = suppressSelfIntersection(curve);
         curve = constraintCurve(curve, m, n);
-        
+
         pause(0.1);
-    end
-    
-    
+    end 
 end
 
-% poisson blending
-function boundary = findBoundary(bw)
-    boundary = zeros(size(bw));
-    for i = 2:size(bw,1)-1
-        for j = 2:size(bw,2)-1
-            block = bw(i-1:i+1,j-1:j+1);
-            if block(5) == 1 && sum(block([1,2,3,4,6,7,8,9])==0)~=0
-                boundary(i,j) = 1;
-            end
+function displacement = findDisplacement(im, curve, displacement)
+    % assume normals have already been signed
+    [m,n] = size(im);
+    
+    finalPoint = (curve + displacement);
+    startPoint = (curve);
+    
+    for i = 1:size(curve,2)
+        % warp from normals to img
+        x = [startPoint(1,i) finalPoint(1,i)];
+        y = [startPoint(2,i) finalPoint(2,i)];
+        nPoints = max(abs(diff(x)), abs(diff(y)))+1;  % Number of points in line
+        
+        xraw = linspace(x(1), x(2), nPoints);
+        yraw = linspace(y(1), y(2), nPoints)
+        cIndex = round(xraw);  % column indices
+        rIndex = round(yraw);  % row indices
+        
+        id = cIndex > 0 & cIndex <= n & rIndex > 0 & rIndex <= m;
+        rIndex = rIndex(id);
+        cIndex = cIndex(id);
+        xraw = xraw(id);
+        yraw = yraw(id);
+        
+        try
+            val = im((cIndex-1).*m+rIndex);
+        catch
+            error('');
         end
+        gval = gradient(val);
+        [~,id] = max((gval));
+        displacement(:,i) = [xraw(id)-curve(1,i);yraw(id)-curve(2,i)];
     end
-end
-
-
-function displacement = computeDisplacement(im, curve, cin, cout)
-    Icurve = biInterIntensity(im, curve);
-    % scalar
-    s = (cin - cout).*(2*Icurve - cin - cout);
-    % project to normal direction
-    normals = computeNormal(curve);
-    % debug;
-%     imshow(im);hold on;plot(curve(2,:),curve(1,:),'r-');
-%     quiver(curve(2,:),curve(1,:),normals(2,:),normals(1,:));
-    displacement = s.*normals;
-end
-
-function normals = computeNormal(curve)
-    tangent = zeros(2,size(curve,2));
-    tangent(:,1) = curve(:,2) - curve(:,end);
-    tangent(:,2:end-1) = curve(:,3:end) - curve(:,1:end-2);
-    tangent(:,end) = curve(:,1) - curve(:,end-1);
-    % normalize
-    tangent = tangent ./ sqrt(tangent(1,:).^2+tangent(2,:).^2);
-    % rotate to outward normal direction
-    normals = [tangent(2,:);-tangent(1,:)];
-end
-
-function [cin, cout] = meanIntensity(im, curve, boundary)
-    polygon = curve;
-    polygon(:,end+1) = curve(:,1);
-    mask = poly2mask(polygon(2,:),polygon(1,:),size(im,1),size(im,2));
-    
-    if isempty(boundary)
-        maskin = mask;
-        maskout = ~mask;
-    else
-        maskin = mask & boundary;
-        maskout = ~mask & boundary;
-    end
-    
-    % debug
-%     im(mask) = 1;
-%     imshow(im);
-    cin = mean(vec(im(maskin)));
-    cout = mean(vec(im(maskout)));
 end
 
 function im = imPreprocessing(im, type)
