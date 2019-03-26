@@ -4,7 +4,7 @@ function curve = suppressSelfIntersection(curve)
     segments = checkSelfIntersect(curve(1,:),curve(2,:));
     id = ones(1,size(curve,2));
     for i = 1:size(segments,1)
-        id(segments(i,1)+2:segments(i,2)-2) = 0;
+        id(segments(i,1):segments(i,2)) = 0;
     end
     id = id == 1;
     curve = curve(:,id);
@@ -20,34 +20,39 @@ function segments = checkSelfIntersect(x,y)
     % bounding box
     bb = zeros(round(maxx - minx)+1,round(maxy-miny) + 1);
     
-    % inter distance
-    dist = sqrt((x(2:end) - x(1:end-1)).^2 + (y(2:end) - y(1:end-1)).^2);
+    mask = poly2mask(y-miny+1,x-minx+1,size(bb,1),size(bb,2));
+    boundary = findBoundary(mask);
     
-    % 
-    interpolateCnt = round(dist);
+    xx = round(x-minx)+1;
+    yy = round(y-miny)+1;
+    xx = xx';
+    yy = yy';
+    nnu = [xx-1, yy];n1 = nnu(:,1) > 0;
+    nnd = [xx+1, yy];n2 = nnd(:,1) <= size(bb,1);
+    nnl = [xx, yy-1];n3 = nnl(:,2) > 0;
+    nnr = [xx, yy+1];n4 = nnr(:,2) <= size(bb,2);
     
-    % interpolation
-    xf = zeros(sum(interpolateCnt),1);
-    yf = zeros(sum(interpolateCnt),1);
-    id = zeros(sum(interpolateCnt),1);
-    k = 1;
-    for i = 1:size(x,2)-1
-        x1 = linspace(x(i),x(i+1),interpolateCnt(i));
-        y1 = interp1([x(i);x(i+1)],[y(i);y(i+1)],x1);
-        xf(k:k+length(x1)-1) = x1;
-        yf(k:k+length(x1)-1) = y1;
-        id(k:k+length(x1)-1) = i;
-        k = k + length(x1);
+    valid = zeros(size(x,2),1);valid = valid == 1;
+    valid(n1) = valid(n1) | (boundary((nnu(n1,2)-1).*size(bb,1)+(nnu(n1,1))) == 1);
+    valid(n2) = valid(n2) | (boundary((nnd(n2,2)-1).*size(bb,1)+(nnd(n2,1))) == 1);
+    valid(n3) = valid(n3) | (boundary((nnl(n3,2)-1).*size(bb,1)+(nnl(n3,1))) == 1);
+    valid(n4) = valid(n4) | (boundary((nnr(n4,2)-1).*size(bb,1)+(nnr(n4,1))) == 1);
+    
+    id = 1:size(x,2);
+    idd = id(~valid);
+    segments = [];
+    if numel(idd) == 0
+        return;
     end
     
-    %
-    xf = round(xf-minx)+1; yf = round(yf-miny)+1;
-    ind = round((yf-1).*size(bb,1)+xf);
-    
-    bb(ind) = id;
-    idnew = bb(ind);
-    
-    intersects = abs(idnew - id) > 5 & abs(idnew - id) < 0.9*max(id);
+    if numel(idd) > 0 && mod(numel(idd),2) == 0
+        segments = [idd(1:2:end-1) idd(2:2:end)];
+    else
+        findidd = idd(end);
+%         nextidd = min(findidd + 1,size(x,2));
+        idd = [idd findidd];
+        segments = [idd(1:2:end-1) idd(2:2:end)];
+    end
         
-    segments = [id(intersects) idnew(intersects)];
+    
 end
