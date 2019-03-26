@@ -1,5 +1,6 @@
 
 function Icurve = biInterIntensity(im, curve)
+%Performs bilinear interpolation of intensity for curve points.
     point1 = floor(curve);point2 = point1;point3 = point1;
     point2(2,:) = point2(2,:) + 1;
     point3(1,:) = point3(1,:) + 1;

@@ -1,4 +1,5 @@
 function localPotential = calclocalPotentials(im, configuration, f, miuf, alpha, beta)
+%Compute potentials per pixels for each label.
     localPotential = zeros(size(im,1),size(im,2),numel(f));
     % likelihood
     for i = 1:numel(f)

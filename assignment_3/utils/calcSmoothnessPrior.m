@@ -1,4 +1,5 @@
 function V2 = calcSmoothnessPrior(ds, beta)
+%Compute smoothness prior.
     ds = double(ds);
     [m,n]=size(ds);
     V2 = 0;

@@ -1,5 +1,5 @@
-
 function Bint = regularization(a, b, N)
+%Compute sparse regularization matrix for deformable models.
     L1 = spdiags([-2.*ones(N,1) ones(N,1) ones(N,1)],[0,1,-1],N,N);
     L1(1,N) = 1;
     L1(N,1) = 1;

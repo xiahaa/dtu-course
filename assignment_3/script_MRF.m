@@ -5,11 +5,14 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-addpath ../utils;
+addpath ./utils;
 
 data_dir = '../data/EX_3_data/';
 
-skip = [ ];
+% if you want to skip section 1, place 1 inside this skip array, otherwise delete 1.
+% for example, [1 2 3] means skip 1, 2, 3.
+% [1 2] means skip 1,2 but run 3.
+skip = [];
 
 if isempty(find(skip==1,1))
     %% exercise 1
@@ -47,6 +50,7 @@ if isempty(find(skip==1,1))
     configuration1(imnoisy>=100 & imnoisy <= 160) = f(2);
     configuration1((imnoisy>=160)) = f(3);
 
+    % cost
     imseg1 = segmentation(imnoisy, configuration1, f, miuf);
     L1 = calcLikelihood(miuf,imnoisy,configuration1,alpha);
     P1 = calcSmoothnessPrior(configuration1, beta);

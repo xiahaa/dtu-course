@@ -1,4 +1,5 @@
 function curve = suppressSelfIntersection(curve,varargin)
+%find self intersected segments and delete.
     if nargin == 3
         m = varargin{1};
         n = varargin{2};
@@ -18,8 +19,12 @@ function curve = suppressSelfIntersection(curve,varargin)
 end
 
 function segments = InterX(curve,m,n)
+%self-implemented intersection finding algorithm.
+%not very stable. incase the intersection doesnot occupy
+%the same point, the method will fail.
     point = [];
     id1 = [];
+    % use bresenham to traver curve and collect visited points.
     for i = 1:size(curve,2)-1
         x = [curve(2,i) curve(2,i+1)];
         y = [curve(1,i) curve(1,i+1)];
@@ -41,12 +46,16 @@ function segments = InterX(curve,m,n)
         point = [point;[rIndex' cIndex']];
         id1 = [id1;i*ones(length(rIndex),1)];
     end
+    % delete end point
     point(end,:) = [];
     id1(end) = [];
     
+    % visited grid map
     bb = zeros(m,n);
     ind = round((point(:,2)-1).*m+point(:,1));
     bb(ind) = id1;
+
+    % if a grid point is more than once visited, then the id will be different
     idnew = bb(ind);
     intersects = abs(idnew - id1) > 5 & abs(idnew - id1) < 0.5*size(curve,2);
     

@@ -1,4 +1,5 @@
 function V2 = burteForceSol(ds,beta)
+%The most straightforward way to compute the prior cost, only for validatation.
     [m,n]=size(ds);
     V2 = 0;
 

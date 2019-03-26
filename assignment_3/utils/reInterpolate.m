@@ -1,4 +1,5 @@
 function curve = reInterpolate(curve,Num)
+% re-interpolate curve to make points equally distributed.
     accumulateDist = zeros(1,size(curve,2));
     err = curve(:,[2:end]) - curve(:,1:end-1);
     dist = diag(err'*err)';

@@ -1,5 +1,6 @@
 
 function curve = constraintCurve(curve, m, n)
+%Constrain curves being inside the image.
     id1 = curve(1,:) < 2;
     id2 = curve(1,:) > m-1;
     id3 = curve(2,:) < 2;
