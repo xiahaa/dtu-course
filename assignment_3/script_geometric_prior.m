@@ -5,38 +5,49 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-addpath ../utils;
+addpath ./utils;
 addpath(genpath('./'));% addpath for graphcut 
 
 data_dir = '../data/EX_5_data/';
 
-skip = [1 2 ];
+% if you want to skip section 1, place 1 inside this skip array, otherwise delete 1.
+% for example, [1 2 3] means skip 1, 2, 3.
+% [1 2] means skip 1,2 but run 3.
+skip = [1 2 3];
 
 %% exercise 1
 info = imfinfo(strcat(data_dir,'nerves_part.tiff'));
 numOfImages = size(info,1);
-    
+
     if isempty(find(skip==1,1))
         im1 = imread(strcat(data_dir,'nerves_part.tiff'),1);% 
 
+        % label
         f = [1,2];
+        % mean intensity for labels
         miuf = [0.15,0.5];
-    
+        
+        % if we need to generate 3D figure
         gen3D = 0;
-    
+        
+
         if gen3D == 0
             %% Q1, slice by slice
             truncatedNum = 700;
+            % storage for configuration obtained
             confs = zeros(size(im1,1),size(im1,2),truncatedNum);
             for k = 1:1:numOfImages
                 disp(k);
+                % load image
                 im1 = imread(strcat(data_dir,'nerves_part.tiff'),k);% 
                 figure(1);subplot(1,2,1);imshow(im1);
+                % to double
                 im1 = im2double(im1);
 
         %         figure;
         %         buildHistogram(im1,[],[]);
 
+                % to vector
                 d = im1(:); % intensity (data)
                 mu = miuf; % means of two classes
 
@@ -70,13 +81,15 @@ numOfImages = size(info,1);
                 nn = [nn1;nn2];
                 E_internal = [nn(:,1),nn(:,2),beta*ones(size(nn,1),2)]; 
 
-                [Scut,flow] = GraphCutMex(N,E_terminal,E_internal); % here it happens
+                % cut for optimum configuration
+                [Scut,flow] = GraphCutMex(N,E_terminal,E_internal);
 
+                % obatin configuration
                 S = f(1).*ones(1,N);
                 S(Scut) = f(2);
                 configuration = reshape(S,m,n);
 
-                % show variation
+                % show segmentation
                 ccmap = lines(numel(f));
                 imseg1 = zeros(m,n);
                 imseg2 = zeros(m,n);
@@ -89,6 +102,7 @@ numOfImages = size(info,1);
                 imseg = cat(3,imseg1,imseg2,imseg3);
                 figure(1);subplot(1,2,2);imshow(imseg);
 
+                % save
 %                 F = getframe(gcf);
 %                 imwrite(F.cdata,strcat('../data/Ex_5_data/output_mrf_1/',num2str(k,'%d'),'.png'));
                 confs(:,:,k) = configuration;
@@ -96,8 +110,10 @@ numOfImages = size(info,1);
                     break;
                 end
             end
+            % save result
             save('mrf_1.mat','confs');
         else
+            % generate 3D figure
             if gen3D == 1
                 load('mrf_1.mat');
                 numOfImages = size(confs,3);
@@ -112,11 +128,11 @@ numOfImages = size(info,1);
         end
 
         if gen3D == 1
-            save('MRF.mat','V');
+            save('MRF.mat','V');% for later use
 
             pp = patch(isosurface(X,Y,Z,V,0));
             isonormals(X,Y,Z,V,pp)
-            pp.FaceColor = [153/255,0/255,0/255];
+            pp.FaceColor = lines(1);% use lines colormap
             pp.EdgeColor = 'none';
             daspect([1 1 1]);
             view(3);
@@ -129,10 +145,14 @@ numOfImages = size(info,1);
    
     %% Q2: full 3D segmentation
     if isempty(find(skip==2,1))
+        % label
         f = [1,2];
+        % mean intensity
         miuf = [0.2,0.5];
         mu = miuf; % means of two classes
+        
         im1 = imread(strcat(data_dir,'nerves_part.tiff'),1);% 
+        % image height, width
         m = size(im1,1);n = size(im1,2);
         N = numel(im1); % number of graph nodes
         d = 100;
@@ -140,17 +160,21 @@ numOfImages = size(info,1);
         startid = 0;
         shouldExit = 0;
         
+        % storage of configuration
         configurationfinal = zeros(m,n,numOfImages);
         
-        doSegmentation = 0;
+        % if do segmentation
+        doSegmentation = 1;
         
         if doSegmentation == 1
             while shouldExit == 0
+                % compute exact number of images for 3D MRF
                 if (startid + d) > numOfImages
                     d = numOfImages - startid;
-                    shouldExit = 1;
+                    shouldExit = 1;% alreay the last sequence
                 end
 
+                % terminal cost
                 E_terminal = zeros(m*n*d, 1+numel(f));
                 for k = 1:d
                     kk = k + startid;
@@ -181,12 +205,15 @@ numOfImages = size(info,1);
 
                 edge_n(:,[3,4]) = beta;
 
+                % cut
                 [Scut,flow] = GraphCutMex(m*n*d,E_terminal,edge_n); % here it happens
+                
+                % new configuration
                 S = f(1).*ones(1,m*n*d);
                 S(Scut) = f(2);
                 configurations = reshape(S,m,n,d);
 
-                % show variation
+                % show segmentation
                 for j = 1:d
                     configuration = configurations(:,:,j);
                     ccmap = lines(numel(f));
@@ -202,13 +229,16 @@ numOfImages = size(info,1);
                     imshow(imseg);pause(0.1);
                 end
 
+                % save
                 configurationfinal(:,:,startid+1:startid+d) = configurations;
+                % update start id
                 startid = startid + d;
             end
             save('MRF3.mat','configurationfinal');
         else
             load('MRF3.mat');
             
+            % how many images you want for 3D figure
             numOfImages = 200;
             V = zeros(size(im1,1),size(im1,2),numOfImages);
             [X,Y,Z] = meshgrid(1:size(im1,1),1:size(im1,2),1:numOfImages);
@@ -250,23 +280,26 @@ numOfImages = size(info,1);
     
     %% Q3: deformable detection on segmented image
     if isempty(find(skip==3,1))
+        % label
         f = [1,2];
+        % mean intensity
         miuf = [0.2,0.5];
         mu = miuf; % means of two classes
         im1 = imread(strcat(data_dir,'nerves_part.tiff'),1);% 
         m = size(im1,1);n = size(im1,2);
         
-        load('MRF3.mat');
-        load('nerves.mat');
+        load('MRF3.mat');% segmentation result
+        load('nerves.mat');% center of initial curves
         
         % parameters
         Num = 50;
         stepSize = 30;
         a = 0.2;
         b = 0.8;
-        % regularization
+        % regularization matrix
         Bint = regularization(a, b, Num);
         
+        % how many curves
         numNerves = size(ncc,1);
         
         % curve initialization, for each initialize a deformable curve
@@ -276,13 +309,16 @@ numOfImages = size(info,1);
             nerves(i).curve(1,:) = ncc(i,1) + r*cos(alpha);
             nerves(i).curve(2,:) = ncc(i,2) + r*sin(alpha);
         end
+
+        % two figures for drawing
         figure(1);
         figure(2);
-        se = strel('disk',40);
+
         ccmap = lines(numNerves);
         
+        % how many images to process
         numOfImages = min(numOfImages, 500);
-        
+
         doDeformable = 1;
         
         if doDeformable == 1
@@ -294,6 +330,7 @@ numOfImages = size(info,1);
 
                 mask = conf == f(1);
 
+                % show segmentation result
     %             ccmap = lines(numel(f));
     %             imseg1 = zeros(m,n);
     %             imseg2 = zeros(m,n);
@@ -306,20 +343,26 @@ numOfImages = size(info,1);
     %             imseg = cat(3,imseg1,imseg2,imseg3);
     %             figure(1);imshow(imseg);
 
+                % segmented image, can use this for doDeformable models
                 im2 = im1;
                 im2(mask) = miuf(f(1));
                 im2(~mask) = miuf(f(2));
 
                 figure(2);imshow(im1); hold on;
 
+                % show curves
                 for i = 1:numNerves
                     plot(nerves(i).curve(2,[1:end,1]),nerves(i).curve(1,[1:end,1]),'-','Color',ccmap(i,:),'LineWidth',2);
+                    % deform
                     nerves(i).curve = defromableCurve(im1, nerves(i).curve, Num, stepSize, Bint);
                 end
+                pause(0.1);
 
+                % save result
     %             F = getframe;
     %             imwrite(F.cdata,strcat('../data/Ex_5_data/output_1/',num2str(k,'%d'),'.png'));
 
+                % save result
 %                 save(strcat('../data/Ex_5_data/nerves/',num2str(k,'%d'),'.mat'), 'nerves');
             end
         else
