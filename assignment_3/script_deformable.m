@@ -39,9 +39,9 @@ else
     
     % parameters
     Num = 500;
-    stepSize = 30;
-    a = 0.3;
-    b = 0.3;
+    stepSize = 50;
+    a = 0.5;
+    b = 0.5;
     
     Bint = regularization(a, b, Num);
     
@@ -52,7 +52,7 @@ else
     curve(2,:) = n / 2 + r*sin(alpha);
     
     
-    for i = 1:size(imgFileNames,1)
+    for i = 200:size(imgFileNames,1)
         im = imread(strcat(imgpath,imgFileNames{i}));
         im = imPreprocessing(im, type);
         % show
@@ -62,11 +62,11 @@ else
         
         mask = poly2mask(curve(2,:), curve(1,:), m, n);
         boundary = findBoundary(mask);
-        se = strel('disk',5);
+        se = strel('disk',10);
         boundary = imdilate(boundary, se);
             
         % find mean intensities inside and outside
-        [cin, cout] = meanIntensity(im, curve, boundary);
+        [cin, cout] = meanIntensity(im, curve, []);
         
         % compute the displacement along the normal direction
         displacement = computeDisplacement(im, curve, cin, cout);
@@ -85,10 +85,9 @@ else
         curve = (Bint\(curve+displacement)')';
         
         % reinterpolation
-        curve = reInterpolate(curve,Num);
         curve = suppressSelfIntersection(curve);
         curve = constraintCurve(curve, m, n);
-
+        curve = reInterpolate(curve,Num);
         pause(0.1);
     end 
 end
