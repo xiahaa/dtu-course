@@ -53,3 +53,6 @@ report/slides/document.snm
 
 report/slides/document.toc
 data/Ex_5_data/nerves_part.tiff
+data/Ex_5_data/nerves/*.mat
+data/Ex_5_data/output_1/*.png
+data/Ex_5_data/output_mrf_1/*.png

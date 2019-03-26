@@ -9,7 +9,7 @@ function curve = reInterpolate(curve,Num)
     try
         xnew = interp1(accumulateDist,curve(1,:),accumulateDistNew);
     catch
-        error('s');
+%         error('s');
     end
     ynew = interp1(accumulateDist,curve(2,:),accumulateDistNew);
     curve = [xnew;ynew];

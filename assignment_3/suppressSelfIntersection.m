@@ -5,8 +5,8 @@ function curve = suppressSelfIntersection(curve,varargin)
     end
 
     cnt = size(curve,2);
-    [~,~,segments]=selfintersect(curve(2,:),curve(1,:)); 
-%     segments = InterX(curve,m,n);
+%     [~,~,segments]=selfintersect(curve(2,:),curve(1,:)); 
+    segments = InterX(curve,m,n);
     id = ones(1,size(curve,2));
     
     for i = 1:size(segments,1)
@@ -48,7 +48,7 @@ function segments = InterX(curve,m,n)
     ind = round((point(:,2)-1).*m+point(:,1));
     bb(ind) = id1;
     idnew = bb(ind);
-    intersects = abs(idnew - id1) > 5 & abs(idnew - id1) < 0.7*size(curve,2);
+    intersects = abs(idnew - id1) > 5 & abs(idnew - id1) < 0.5*size(curve,2);
     
     segments = [id1(intersects) idnew(intersects)];
 end

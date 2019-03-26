@@ -9,7 +9,7 @@ addpath ../utils;
 
 data_dir = '../data/EX_3_data/';
 
-skip = [1 ];
+skip = [ ];
 
 if isempty(find(skip==1,1))
     %% exercise 1
@@ -128,12 +128,8 @@ if isempty(find(skip==1,1))
     title('Posterior');
 
     %% Q3-ICM
-    iter = 1;% current iteration
-    maxiter = 1e4;% maximum iteration count
-    oldCost = 1e6;% cost of previous iteration
-
     %configuration = configuration1;% start with cfg1
-    configuration = randi(3,size(imnoisy));% start with random configuration
+    original_configuration = randi(3,size(imnoisy));% start with random configuration
 
     % create a checkerboard with 1 pixel width for partial parallel
     % optimization
@@ -150,53 +146,59 @@ if isempty(find(skip==1,1))
     optHandler = {@ICM,@GibbsSampling,@SimulatedAnneling};
     optName = {'ICM','Gibbs','SA'};
         
+    res = cell(3,1);
     % optmization loop
-    while iter < maxiter
-        fhandle = optHandler{optType};
+    for i = 1:1:3
+        optType = i;
         
-        if strcmp(optName{optType},'SA')
-            configuration = fhandle(imnoisy, configuration, f, miuf, alpha, beta, mask,T);
-            T = T * 0.8;
-        else
-            configuration = fhandle(imnoisy, configuration, f, miuf, alpha, beta, mask);
-        end
+        iter = 1;% current iteration
+        maxiter = 1e4;% maximum iteration count
+        oldCost = 1e6;% cost of previous iteration
+        configuration = original_configuration;
+        
+        while iter < maxiter
+            fhandle = optHandler{optType};
 
-        % new cost
-        Lnew = calcLikelihood(miuf,imnoisy,configuration,alpha);
-        Pnew = calcSmoothnessPrior(configuration, beta);
-        newCost = Lnew + Pnew;
-    
-        if abs(newCost-oldCost) < 1e-6
-            break;
+            if strcmp(optName{optType},'SA')
+                configuration = fhandle(imnoisy, configuration, f, miuf, alpha, beta, mask,T);
+                T = T * 0.8;
+            else
+                configuration = fhandle(imnoisy, configuration, f, miuf, alpha, beta, mask);
+            end
+
+            % new cost
+            Lnew = calcLikelihood(miuf,imnoisy,configuration,alpha);
+            Pnew = calcSmoothnessPrior(configuration, beta);
+            newCost = Lnew + Pnew;
+
+            if abs(newCost-oldCost) < 1e-6
+                break;
+            end
+
+            oldCost = newCost;
+            costs(iter) = newCost;
+            iter = iter + 1;
+            % show variation
+            imres = segmentation(imnoisy, configuration, f, miuf);
+            imshow(imres);pause(0.1);
         end
-        
-        oldCost = newCost;
-        costs(iter) = newCost;
-        iter = iter + 1;
-        % show variation
-        imres = segmentation(imnoisy, configuration, f, miuf);
-        imshow(imres);pause(0.1);
+        result.costs = costs;
+        result.newCost = newCost;
+        result.imres = imres;
+        res{i} = result;
     end
     
     % cost cost variation with iterations
     figure
-    plot(costs,'r-o','LineWidth',2);grid on;
+    ccmap = lines(3);
+    for i = 1:3
+        plot(res{i}.costs,'-o','Color',ccmap(i,:),'LineWidth',1.5);hold on;
+    end
+    grid on;
     xlabel('Iteration');
     ylabel('Cost')
-    title(optName{optType})
+    legend(optName);
     set(gca,'FontName','Arial','FontSize',20);
-
-    % plot posterior cost
-    figure
-    bar([E1 E2 E3 E4 newCost]);
-    xticklabels({'CF1','CF2','CF3','CF4',optName{optType}});
-    xtickangle(45);
-    set(gca,'FontName','Arial','FontSize',20);
-    xlim=get(gca,'xlim');
-    hold on
-    h1 = plot(xlim,[Etrue Etrue],'r--');
-    legend([h1],{'Truth'});
-    title('Posterior');
     
     %% use multilabel cut
     localPotential = calclocalPotentials(imnoisy, [], f, miuf, alpha, beta);
@@ -207,7 +209,13 @@ if isempty(find(skip==1,1))
     
     % show variation
     imres = segmentation(imnoisy, S, f, miuf);
-    figure;imshow(imres);
+    figure;
+    subplot(2,2,4);imshow(imres);title('Graph Cut');
+    for i = 1:3
+        subplot(2,2,i);
+        imshow(res{i}.imres);title(optName{i});
+    end
+    set(gca,'FontName','Arial','FontSize',20);
     
     Lnew = calcLikelihood(miuf,imnoisy,S,alpha);
     Pnew = calcSmoothnessPrior(S, beta);
@@ -215,8 +223,8 @@ if isempty(find(skip==1,1))
     
     % plot posterior cost
     figure
-    bar([E1 E2 E3 E4 newCost newCostCut]);
-    xticklabels({'CF1','CF2','CF3','CF4',optName{optType},'Cut'});
+    bar([res{1}.newCost res{2}.newCost res{3}.newCost newCostCut]);
+    xticklabels({optName{1},optName{2},optName{3},'Graph Cut'});
     xtickangle(45);
     set(gca,'FontName','Arial','FontSize',20);
     xlim=get(gca,'xlim');

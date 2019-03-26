@@ -8,7 +8,7 @@ function [cin, cout] = meanIntensity(im, curve, boundary)
         maskout = ~mask;
     else
         maskin = mask & boundary;
-        maskout = ~mask & boundary;
+        maskout = xor(maskin, boundary);
     end
     
     % debug

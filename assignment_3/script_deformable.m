@@ -27,7 +27,7 @@ if debug == 0
     end
 else
     typename = {'crawling_amoeba', 'echiniscus'};
-    type = 1;
+    type = 2;
     
     imgpath = strcat(fullfile(pwd),strcat(data_dir,typename{type},'/'));  
     imgFiles = dir(fullfile(imgpath,'*.png'));
@@ -39,7 +39,7 @@ else
     
     % parameters
     Num = 500;
-    stepSize = 20;
+    stepSize = 40;
     a = 0.5;
     b = 0.5;
     
@@ -52,7 +52,7 @@ else
     curve(2,:) = n / 2 + r*sin(alpha);
     
     
-    for i = 200:size(imgFileNames,1)
+    for i = 1:size(imgFileNames,1)
         im = imread(strcat(imgpath,imgFileNames{i}));
         im = imPreprocessing(im, type);
         % show
@@ -89,6 +89,8 @@ else
         curve = constraintCurve(curve, m, n);
         curve = reInterpolate(curve,Num);
         pause(0.1);
+        F = getframe;
+        imwrite(F.cdata,strcat('../data/Ex_4_data/output_2/',num2str(i,'%d'),'.png'));
     end 
 end
 
