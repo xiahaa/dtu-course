@@ -40,20 +40,20 @@
 	\centering
 	\includegraphics[width=0.54\textwidth]{./figures/res2.png}
 	\includegraphics[width=0.45\textwidth]{./figures/res4.png}
-	\caption{Left image shows the comparison of using four simple configurations. Visually speaking, the median filter based configuration can give us the best result. A guess would be that the added noise could be salty noise. Simple threshold cannot produce promising result. However, it can be improved by applying a Gaussian filter in advance. The cost to pay it that the edges may be destroyed to some extent. Right image shows the cost comparison: it is clear that the median filter and Gaussian filter give the most approximated results compared with ground truth.}
+    \caption{Left image shows the comparison of using four simple configurations. Visually speaking, the median filter based configuration can give us the best result. A guess would be that the added noise could be salty noise. The simple threshold cannot produce a promising result. However, it can be improved by applying a Gaussian filter in advance. The cost to pay it that the edges may be destroyed to some extent. The right image shows the cost comparison: it is clear that the median filter and Gaussian filter give the most approximated results compared with ground truth.}
 \end{figure*}
 
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{./figures/cmp1.png}
 	\includegraphics[width=0.38\textwidth]{./figures/cmp2.png}
-	\caption{Comparison of using MRF with different optimization approaches. Visually speaking, ICM, Simulated Annealing and Graph Cut give better performance than Gibbs Sampling method. Right image shows the cost for the four optimization approaches. It is clear that ICM, SA and Graph Cut all achieves the ground truth. However, local optimization method like ICM cannot always guarantee to achieve the global minimum. SA, however, is probabilistic optimum. So with the iteration increasing, its probability of achieving global optimum will increase up to 1. Graph cut is a global optimal method for binary label segmentation.}
+    \caption{Comparison of using MRF with different optimization approaches. Visually speaking, ICM, Simulated Annealing, and Graph Cut give better performance than the Gibbs Sampling method. The right image shows the cost of the four optimization approaches. It is clear that ICM, SA, and Graph Cut all achieves the ground truth. However, local optimization method like ICM cannot always guarantee to achieve the global minimum. SA, however, is probabilistic optimum. So with the iteration increasing, its probability of achieving global optimum will increase up to 1. Graph cut is a globally optimal method for binary label segmentation.}
 \end{figure}
 
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.5\textwidth]{./figures/cmp.png}
-	\caption{Iteration comparison: SA will use more iteration to converge because it needs the temperature to be cooled down. Faster convergence can be achieved by make temperature cool down faster at a expense of increasing the possibility of being trapped in a local minimum. ICM and Gibbs sampling methods can converge rapidly compared with SA.}
+    \caption{Iteration comparison: SA will use more iteration to converge because it needs the temperature to be cooled down. Faster convergence can be achieved by make temperature cool down faster at the expense of increasing the possibility of being trapped in a local minimum. ICM and Gibbs sampling methods can converge rapidly compared with SA.}
 \end{figure}
 
 	\begin{figure}[htbp]
@@ -61,7 +61,7 @@
 	\includegraphics[width=0.5\textwidth]{./figures/assign2_raw.png}
 	\includegraphics[width=0.5\textwidth]{./figures/assign2_seg.png}
 	\includegraphics[width=0.5\textwidth]{./figures/assign2_mseg.png}
-	\caption{Middle image shows the segmentation of bone (bright) and air (dark). Bottom image shows the segmentation of bone (yellow), cartilage (light blue), and air (dark blue).}
+    \caption{Middle image shows the segmentation of bone (bright) and air (dark). The bottom image shows the segmentation of bone (yellow), cartilage (light blue), and air (dark blue).}
 \end{figure}
 	\section{Deformable Models}
 	\begin{figure}[htbp]
@@ -80,7 +80,7 @@
 	\centering
 	\includegraphics[width=0.8\textwidth]{./figures/1.png}
 	\includegraphics[width=0.8\textwidth]{./figures/final_res1.png}
-	\caption{Top image is a snapshot of the slice-by-slice MRF segmentation of nerves image. Bottom image shows the 3D visualization of the segmented nerves.}
+    \caption{Top image is a snapshot of the slice-by-slice MRF segmentation of nerves image. The bottom image shows the 3D visualization of the segmented nerves.}
 	\label{final1}
 \end{figure}
 	
@@ -90,119 +90,53 @@
 	\centering
 	\includegraphics[width=0.8\textwidth]{./figures/2.png}
 	\includegraphics[width=0.8\textwidth]{./figures/final_res2.png}
-	\caption{Top image is a snapshot of the $3$D MRF segmentation of nerves image. Bottom image shows the 3D visualization of the segmented nerves (using $1-300$ frames).}
-	\label{final2}
-\end{figure}	
+    \caption{Top image is a snapshot of the $3$D MRF segmentation of nerves image. Bottom image shows the 3D visualization of the segmented nerves (using $1-300$ frames).}
+\label{final2}
+\end{figure}    
 
-	\item Perform deformable models using Chan-Vese approach. Since a nerve consists of a dark myelin and a bright axon, $m_{in}$ and $m_{out}$ have to be estimated from a thin band inside and outside the curve. In order to implement this modification without adding too many computational burdens, what I did here are as follows:
-	\begin{itemize}
-	\item \textit{poly2mask}: find enclosed region of the curve, denoted as $mask_1$;
-	\item \textit{findboudary}: self-implemented function for finding boundary of the mask given by a certain curve;
-	\item \textit{imdilate}: extend the boundary to its neighbouring pixels by morphological operations, denoted as $mask_2$.
-	\item $m_{in}$ and $m_{out}$ can be easily computed by taking the mean intensities of pixels covered by $mask_1\ \&\ mask_2$ and $xor(mask_1\ \&\ mask_2, mask_2)$.
-	\item 
-	\end{itemize}
-	A snapshot of the final result is shown in Figure~\ref{final3}.
+\item Perform deformable models using the Chan-Vese approach. Since a nerve consists of dark myelin and a bright axon, $m_{in}$ and $m_{out}$ have to be estimated from a thin band inside and outside the curve. In order to implement this modification without adding too many computational burdens, what I did here are as follows:
+\begin{itemize}
+    \item \textit{poly2mask}: find enclosed region of the curve, denoted as $mask_1$;
+\item \textit{findboudary}: self-implemented function for finding boundary of the mask given by a certain curve;
+\item \textit{imdilate}: extend the boundary to its neighbouring pixels by morphological operations, denoted as $mask_2$.
+\item $m_{in}$ and $m_{out}$ can be easily computed by taking the mean intensities of pixels covered by $mask_1\ \&\ mask_2$ and $xor(mask_1\ \&\ mask_2, mask_2)$.
+\item Combination of MRF and deformable models: use MRF to do the binary segmentation, then two options were tried:
+\begin{itemize}
+	\item[*] Apply deformable models on the segmented binary image.
+	\item[*] Use binary image as a mask and crop patches from the original image.
+\end{itemize}
+    Finally, the Chan-Vese approach is applied to the processed image.
+\end{itemize}
+A snapshot of the final result is shown in Figure~\ref{final3}.
 	\begin{figure}[!b]
 	\centering
 	\includegraphics[width=0.5\textwidth]{./figures/257.png}
 	\includegraphics[width=0.8\textwidth]{./figures/final_res3.png}
-	\caption{Top image is a snapshot of the segmentation of nerves image using Chan-Vese approach. Bottom image shows the 3D visualization of the segmented nerves (using $1-500$ frames).}
+    \caption{Top image is a snapshot of the segmentation of nerves image using the Chan-Vese approach. The bottom image shows the 3D visualization of the segmented nerves (using $1-500$ frames).}
 	\label{final3}
 \end{figure}		
-	
+
+\section{Discussion}
+    From these results, some observations can be obtained:
+\begin{itemize}
+	\item Deformable model based approach can generate more fine segmentation while the results from MRF are more coarse. Moreover, $3$D full MRF produce a finer result than slice-by-slice based MRF. This is easy to understand since the curve is continuously tracked which means frame-to-frame (or temporal) information is considered. Similarly, $3$D full MRF also considers frame-to-frame smoothness priors. As a result, they can produce better results than the single frame based MRF. 
+	\item Although the Chan-Vese method provides finer segmentation result, MRF is more efficient than the Chan-Vese method. Apparently, the complexity of the Chan-Vese method grows linearly with the curves involved. 
+\end{itemize}
+Some possible improvements:
+	\begin{itemize}
+		\item For both methods, images with significant contrast can make the segmentation easier and more stable. So it is always a good idea to generate images of good quality.
+		\item For both methods, parameter tuning plays a key role in their performance. However, tuning is tedious work for human being. Perhaps reinforcement learning can be used to automatically tune those parameters.
+		\item More efficient combination of the two methods. The following are some thoughts:
+		\begin{enumerate}
+			\item Since MRF is very fast but produces coarse results, we can use MRF not for binary segmentation, but for intensity enhancement (like estimating disparity for stereo vision system). For example, MRF will give a high intensity to pixels with a high probability of being background but a low intensity to pixels of nerves. Then we use Chan-Vese to get the fine result. Compared the two experiments carried out in the second assignment (assignment deformable models), it is clear that "Crawling Amoeba" experiment shows better performance because the foreground is more salient in "Crawling Amoeba" dataset. So although the result from MRF is coarse, if it can make the contrast between foreground and background more clear, it can definitely help the Chan-Vese approach.
+			\item The geometric model (circle or ellipse) of nerves can be used as a penalty to constrain the shape of the curves and avoid cross-intersection between two close objects. As can be seen in those results, two close objects may pull the curve of the other to the wrong side. I think the ordinary shape of the curve can serve as a prior to suppressing this problem.
+			\item MRF can also benefit from the Chan-Vese method. We can use the Chan-Vese curves to dynamically adjust or automatically tune the mean intensities used for computing likelihood in MRF.
+		\end{enumerate}
+	\end{itemize}		
 	\end{enumerate}		
 	
 %https://youtu.be/KMWywGcNNjI	
 %https://youtu.be/_GslxUDEZzM
-
-%	Results are shown as follows:
-%		\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res1.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res2.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res3.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res4.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res5.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/res6.png}
-%	\caption{Blob detection result. Blobs are detected where the local maximas are detected.}
-%\end{figure}
-%
-%
-%	\begin{figure}[htbp]
-%		\centering
-%		\includegraphics[width=0.9\textwidth]{./figures/sift_matching.png}
-%		\caption{SIFT detection \& Matching Result.}
-%	\end{figure}
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/projection.png}
-%	\caption{Compute $2$D similarity transformation using \textsc{RANSAC}. After $s,\mathbf{R,t}$ is obtained, transform SIFT features in image $1$ to image $2$.}
-%	\end{figure}
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/blob_projection.png}
-%	\caption{Similar to previous image, but transform the blob detection results from image $1$ to image $2$. Red and blue circles denote the transformed and original detected blobs.}
-%\end{figure}
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/hist.png}
-%	\caption{Histogram of the absolute difference of diameters. The majortiy of the absolute differences are within $5$ pixels.}
-%\end{figure}
-%\begin{figure}
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/a7.png}
-%	\caption{Bacterial growth from movie frames. This is a snapshot of a single frame. See the complementary Gif for the animation.}
-%	\includegraphics[width=0.7\textwidth]{./figures/a72}
-%	\caption{Bacterial growth curve: assume one pixel equals to one bacteria.}
-%\end{figure}
-%\begin{figure}
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/a7.png}
-%	\caption{Bacterial growth from movie frames. This is a snapshot of a single frame. See the complementary Gif for the animation.}
-%	\includegraphics[width=0.7\textwidth]{./figures/a72}
-%	\caption{Bacterial growth curve: assume one pixel equals to one bacteria.}
-%\end{figure}
-%\begin{figure}
-%	\centering
-%	\includegraphics[width=0.9\textwidth]{./figures/a7.png}
-%	\caption{Bacterial growth from movie frames. This is a snapshot of a single frame. See the complementary Gif for the animation.}
-%	\includegraphics[width=0.7\textwidth]{./figures/a72}
-%	\caption{Bacterial growth curve: assume one pixel equals to one bacteria.}
-%\end{figure}
-%	\begin{table}
-%		\centering
-%		\caption{{Quantitative result of Assignment $3$}}
-%		\begin{tabular}{ccc}
-%			\hline
-%			\textbf{Image} &\textbf{Mean Diameters} & \textbf{Std of Diameters}  \\ \hline
-%			\textbf{CT\_lab\_high\_res} & $8.9411$ &   $6.8761$   \\ \hline
-%			\textbf{CT\_lab\_med\_res} & $7.6436$ &   $3.5724$  \\ \hline             
-%			\hline
-%		\end{tabular}
-%		\label{tb:mittest}
-%	\end{table}
 	
 	%\bibliography{PnPCites} 
 	%\bibliographystyle{ieeetr}
