@@ -15,3 +15,5 @@ sub/*
 notes/p3p.m
 
 notes/ex2.pdf
+
+*.m~
