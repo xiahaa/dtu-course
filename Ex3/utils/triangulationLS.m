@@ -1,4 +1,3 @@
-
 function P = triangulationLS(x1,P1,x2,P2,varargin)
 %Implementation of Linear-least-square triangulation method.
     if nargin > 4
