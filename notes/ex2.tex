@@ -30,8 +30,8 @@
 \begin{filecontents*}{box.m}
 clear
 close all
-Q=Box3D;
-plot3(Q(1,:),Q(2,:),Q(3,:),'.'),
+P=Box3D;
+plot3(P(1,:),P(2,:),P(3,:),'.'),
 axis equal
 axis([-1 1 -1 1 -1 5])
 xlabel('x')
@@ -158,7 +158,7 @@ In this exercise, you are asked to do the camera calibration for given images. T
 \end{figure*}
 \begin{enumerate}
 \item read relevant docs to learn how to use those toolboxes.
-\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration.
+\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration, use \textcolor{blue}{$112\ mm$} as the chessboard (or checkerboard) size.
 \item verify the calibrated results and interpret the results you get.
 \end{enumerate}
 \paragraph{Q4:} 
