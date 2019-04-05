@@ -30,8 +30,8 @@
 \begin{filecontents*}{box.m}
 clear
 close all
-Q=Box3D;
-plot3(Q(1,:),Q(2,:),Q(3,:),'.'),
+P=Box3D;
+plot3(P(1,:),P(2,:),P(3,:),'.'),
 axis equal
 axis([-1 1 -1 1 -1 5])
 xlabel('x')
@@ -143,7 +143,11 @@ r^2 &= \mathbf{x}''(1)^2+\mathbf{x}''(2)^2 \\
 
 \end{itemize}
 project the Box3D points and compare to the results from Question 1. Plot again and observe what has changed.
-
+\begin{figure*}[!b]
+\centering
+\includegraphics[scale=0.9]{figures/ex2_und}
+\caption{Illustration of the rectification process: the objective is to recover an undistorted image from a distorted image. Imaging we have an undistorted image, for every pixel $(x,y)$, if we apply the distortions, we will get its distorted position $(x_d,y_d)$ in the distorted image. Theoretically, we just need to copy the intensity of $(x_d,y_d)$ as the intensity of  $(x,y)$. However, $(x_d,y_d)$ may be float values which doesn't correspond to any integer pixels. Here we can simply choose the nearest neighbour and copy its intensity to the intensity of $(x,y)$. We do this for every pixel of the undistorted image. Note if one pixel, after applying distortion, is not within the distorted image, we simply skip this pixel and leave its intensity unchanged.}
+\end{figure*}
 \section{Camera Calibration}
 In this exercise, you are asked to do the camera calibration for given images. There are two calibration toolboxes that you can use:
 \begin{itemize}
@@ -158,7 +162,7 @@ In this exercise, you are asked to do the camera calibration for given images. T
 \end{figure*}
 \begin{enumerate}
 \item read relevant docs to learn how to use those toolboxes.
-\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration.
+\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration, the chessboard (or called checkerboard) square size is \textcolor{blue}{$112$ mm}.
 \item verify the calibrated results and interpret the results you get.
 \end{enumerate}
 \paragraph{Q4:} 
@@ -167,7 +171,7 @@ Use the previous calibrated parameters to rectify a distorted image \textbf{dist
 Recall that the distortion models are nonlinear, so it is not trivial to directly find the undistorted points from distorted points with known distorsion parameters. In stead, we can do it as follows:
 \begin{itemize}
 	\item Initialize a blank image.
-	\item For each pixel $(x,y)$, compute the so called normalized coordiante $(x',y')$ as $x'=\frac{x-p_x}{f_x},\ y'=\frac{y-p_y}{f_y}$.
+	\item For each pixel $(x,y)$, compute the so called normalized coordiante $(x',y')$ as $x'=\frac{x-p_x}{f_x},\ y'=\frac{y-p_y}{f_y}$, \textbf{$p_x,p_y$ are coordinate for principle point}.
 	\item Apply the radial and tangent distorsions to $(x',y')$ and denote the result as $(x_d,y_d)$ as
 	\begin{align*}
 		r^2 &= x'^2+y'^2 \\
@@ -176,7 +180,7 @@ Recall that the distortion models are nonlinear, so it is not trivial to directl
 		x_d &= f_xx''+p_x\\
 		y_d &=f_yy''+p_y
 	\end{align*}
-
+	\textbf{here, $a_1,a_2,a_3$ are radial distortion coefficients and $p_1,p_2$ are tangent distortion coefficients}. 
 	\item Find the nearest neighbor of $(x_d,y_d)$ in distorted image and copy the corresponding intensity (or RGB) for $(x,y)$. 
 \end{itemize}
 Better results can be obtained by applying bilinear interpolation.
