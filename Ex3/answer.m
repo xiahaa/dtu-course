@@ -2,8 +2,9 @@ clc;close all;clear all;
 
 addpath ./gui
 addpath ./utils
+addpath ./upload
 
-skip = [1 2 3 4];
+skip = [1 3 4];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %       first assignment: play with epipolar geometry
@@ -87,7 +88,7 @@ if sum((skip == 2)) == 0
     ptrue = p(:,in);
     q2 = uv2(:,in);
 
-    q1(1:2,:) = q1(1:2,:) + rand([2,size(q1,2)]);%*0.5-0.25;
+    q1(1:2,:) = q1(1:2,:);% + rand([2,size(q1,2)]);%*0.5-0.25;
     q2(1:2,:) = q2(1:2,:);% + rand([2,size(q2,2)]);
 
     % im = zeros(K(2,3)*2,K(1,3)*2);
@@ -101,7 +102,7 @@ if sum((skip == 2)) == 0
 
     precons = zeros(3,size(q1,2));
     for i = 1:size(q1,2)
-        precons(:,i) = triangulationMidpoint(q1(:,i),P1,q2(:,i),P2);
+        precons(:,i) = triangulationPoly(q1(:,i),P1,q2(:,i),P2);
     end
     figure
     plot3(ptrue(1,:),ptrue(2,:),ptrue(3,:),'ro','MarkerSize',8);hold on;
@@ -241,7 +242,7 @@ function [uv1, in] = proj(R, t, p, K)
 % Disclaimer: This code comes with no guarantee at all and its author
 %   is not liable for any damage that its utilization may cause.
     P1 = K*([R t]);
-    phomo = tohomogeneous(p);
+    phomo = tohomo(p);
     uv1 = P1*phomo;
     uv1 = uv1./uv1(3,:);
     in = uv1(1,:) > 0 & uv1(1,:) < K(1,3)*2 & uv1(2,:) > 0 & uv1(2,:) < K(2,3)*2;
