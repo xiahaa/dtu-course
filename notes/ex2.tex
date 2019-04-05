@@ -42,7 +42,7 @@ zlabel('z')
 x = 0:0.1:5;
 y = 0:0.1:5;
 pt = [x repmat(x(end), 1, numel(y)) fliplr(x) repmat(x(1), 1, numel(y)); repmat(y(1), 1, numel(y)) y repmat(y(end), 1, numel(y)) fliplr(y)];
-pt = [pt;ones(1,size(pt,2))];  
+pt = [pt;ones(1,size(pt,2))];
 \end{filecontents*}
 
 \begin{filecontents*}{ipm1.m}
@@ -103,8 +103,8 @@ In this exercise, we will work with a few assignments related to intrinsic and e
 \section{Intrinsics/Extrinsics}
 Here you should exercise in computing with the pinhole camera model. For you to have something to 'photograph'. a sample object is supplied in the accompanying file \textbf{Box3D.mat}. To see this box try the following script:
 \lstinputlisting{box.m}
-\paragraph{Q1:} 
-The intrinsics and extrinsics are given as: 
+\paragraph{Q1:}
+The intrinsics and extrinsics are given as:
 \begin{itemize}
 \item the rotation is given by the function $\mathbf{R}=$\textbf{Rxyz}(0.2,-0.3,0.1).
 \item $\mathbf{t}= \left[\begin{matrix}
@@ -117,11 +117,11 @@ $$
 \mathbf{x} \sim \mathbf{PX}=\mathbf{K}\left(\mathbf{R} | \mathbf{t}\right) \mathbf{X}
 $$
 where $\sim$ means there is an homogeneous-to-inhomogeneous transformation.
-Plot the image you get. 
-\paragraph{Q2:} 
+Plot the image you get.
+\paragraph{Q2:}
 Using the same pinhole camera as in Question 1, extend the model with radial distortion with $a_1 = -5e^{-1},\ a_2 = -3e^{-1},\ a_3 = -5e^{-2}$ and the radial distortion model as follows:
 \begin{itemize}
-\item apply extrinsics $$ \mathbf{x}' = \left(\mathbf{R} | \mathbf{t}\right) \mathbf{X} $$ 
+\item apply extrinsics $$ \mathbf{x}' = \left(\mathbf{R} | \mathbf{t}\right) \mathbf{X} $$
 \item to inhomogeneous coordinates
 $$
 \mathbf{x}''(1)=\frac{\mathbf{x}'(1)}{\mathbf{x}'(3)},\ \mathbf{x}''(2)=\frac{\mathbf{x}'(2)}{\mathbf{x}'(3)}
@@ -143,14 +143,18 @@ r^2 &= \mathbf{x}''(1)^2+\mathbf{x}''(2)^2 \\
 
 \end{itemize}
 project the Box3D points and compare to the results from Question 1. Plot again and observe what has changed.
-
+\begin{figure*}[!b]
+\centering
+\includegraphics[scale=0.9]{figures/ex2_und}
+\caption{Illustration of the rectification process: the objective is to recover an undistorted image from a distorted image. Imaging we have an undistorted image, for every pixel $(x,y)$, if we apply the distortions, we will get its distorted position $(x_d,y_d)$ in the distorted image. Theoretically, we just need to copy the intensity of $(x_d,y_d)$ as the intensity of  $(x,y)$. However, $(x_d,y_d)$ may be float values which doesn't correspond to any integer pixels. Here we can simply choose the nearest neighbour and copy its intensity to the intensity of $(x,y)$. We do this for every pixel of the undistorted image. Note if one pixel, after applying distortion, is not within the distorted image, we simply skip this pixel and leave its intensity unchanged.}
+\end{figure*}
 \section{Camera Calibration}
 In this exercise, you are asked to do the camera calibration for given images. There are two calibration toolboxes that you can use:
 \begin{itemize}
 \item \textbf{Camera Calibrator} from \textsc{Matlab} computer vision toolbox.
 \item \textbf{Camera Calibration Toolbox} for \textsc{Matlab} by Jean-Yves Bouguet\footnote{\url{http://www.vision.caltech.edu/bouguetj/calib_doc/}}: this toolbox is one of the earliest camera calibration toolbox.
 \end{itemize}
-\paragraph{Q3:} 
+\paragraph{Q3:}
 \begin{figure*}[!b]
 \centering
 \includegraphics[scale=0.2]{figures/rec.png}
@@ -158,16 +162,16 @@ In this exercise, you are asked to do the camera calibration for given images. T
 \end{figure*}
 \begin{enumerate}
 \item read relevant docs to learn how to use those toolboxes.
-\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration, use \textcolor{blue}{$112\ mm$} as the chessboard (or checkerboard) size.
+\item load images prepared in the sub-folder \textbf{calibration} and complete camera calibration, the chessboard (or called checkerboard) square size is \textcolor{blue}{$112$ mm}.
 \item verify the calibrated results and interpret the results you get.
 \end{enumerate}
-\paragraph{Q4:} 
-Use the previous calibrated parameters to rectify a distorted image \textbf{distort.bmp}. 
+\paragraph{Q4:}
+Use the previous calibrated parameters to rectify a distorted image \textbf{distort.bmp}.
 \textbf{Hints:}
 Recall that the distortion models are nonlinear, so it is not trivial to directly find the undistorted points from distorted points with known distorsion parameters. In stead, we can do it as follows:
 \begin{itemize}
 	\item Initialize a blank image.
-	\item For each pixel $(x,y)$, compute the so called normalized coordiante $(x',y')$ as $x'=\frac{x-p_x}{f_x},\ y'=\frac{y-p_y}{f_y}$.
+	\item For each pixel $(x,y)$, compute the so called normalized coordiante $(x',y')$ as $x'=\frac{x-p_x}{f_x},\ y'=\frac{y-p_y}{f_y}$, \textbf{$p_x,p_y$ are coordinate for principle point}.
 	\item Apply the radial and tangent distorsions to $(x',y')$ and denote the result as $(x_d,y_d)$ as
 	\begin{align*}
 		r^2 &= x'^2+y'^2 \\
@@ -176,8 +180,8 @@ Recall that the distortion models are nonlinear, so it is not trivial to directl
 		x_d &= f_xx''+p_x\\
 		y_d &=f_yy''+p_y
 	\end{align*}
-
-	\item Find the nearest neighbor of $(x_d,y_d)$ in distorted image and copy the corresponding intensity (or RGB) for $(x,y)$. 
+	\textbf{here, $a_1,a_2,a_3$ are radial distortion coefficients and $p_1,p_2$ are tangent distortion coefficients}.
+	\item Find the nearest neighbor of $(x_d,y_d)$ in distorted image and copy the corresponding intensity (or RGB) for $(x,y)$.
 \end{itemize}
 Better results can be obtained by applying bilinear interpolation.
 
@@ -230,8 +234,8 @@ Result obtained:
 %\end{figure*}
 
 
- 
-\bibliography{hand_eye_calibration} 
+
+\bibliography{hand_eye_calibration}
 \bibliographystyle{ieeetr}
 
 \end{document}
