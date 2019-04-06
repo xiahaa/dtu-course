@@ -1,0 +1,5 @@
+samples = 512
+lines   = 512
+bands   = 4
+data type = 1
+interleave = bsq
