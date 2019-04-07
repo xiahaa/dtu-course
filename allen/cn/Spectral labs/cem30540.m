@@ -1,4 +1,4 @@
-fid = fopen('C:\cygwin\home\image\images\hips\avirisBand','r');
+fid = fopen('avirisBand','r');
 X0 = fread(fid,'uint8');
 fclose(fid);
 
