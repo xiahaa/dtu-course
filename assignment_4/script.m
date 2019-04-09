@@ -5,8 +5,8 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 1;
-n = 200;
+type = 3;
+n = 300;
 
 %% input test
 data = dataCase(type, n);
@@ -14,7 +14,10 @@ figure
 plot(data(1,1:n),data(2,1:n),'r.');hold on;
 plot(data(1,n+1:2*n),data(2,n+1:2*n),'b.');
 
-label = [1.*ones(1,n),2.*ones(1,n)];
+labels{1} = [1.*ones(1,n),2.*ones(1,n)];
+labels{2} = [1.*ones(1,n),2.*ones(1,n)];
+labels{3} = [1.*ones(1,2*n),2.*ones(1,2*n)];
+label = labels{type}
 
 % data = dataCase(2, n);
 % figure
@@ -28,7 +31,7 @@ label = [1.*ones(1,n),2.*ones(1,n)];
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [4];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 15 20 30 40 10];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
@@ -80,7 +83,6 @@ epsilon1 = 1e-6;
 cyclic_id = 1;
 
 datalength = size(x,2);
-h = figure();
 iter = 0;
 losses = [];
 
@@ -93,7 +95,7 @@ while true
     [y,h,z] = forwardPropagation(nn,x,@ReLU);
     % compute loss
     newloss = loss(t,y);
-    if abs(newloss - oldloss) < 1e-5
+    if abs(newloss - oldloss) < 1e-6
         break;
     end
     oldloss = newloss;
@@ -104,14 +106,17 @@ while true
     % SDG: gradient descent
     nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
     
-    cyclic_id = cyclic_id + 1;if cyclic_id > datalength; cyclic_id = 1;end
+%     cyclic_id = cyclic_id + 1;if cyclic_id > datalength; cyclic_id = 1;end
+    cyclic_id = randperm(datalength,1);
     
     iter = iter + 1;
     losses(iter) = newloss;
-    
-    plot(losses);
-    pause(0.01);
 end
+
+figure
+plot(losses);
+grid on;
+title('Loss');
 
 [y,h,z] = forwardPropagation(nn,x,@ReLU);
 [val,id]=max(y);
@@ -128,7 +133,7 @@ title('Result: Random Wight')
 set(gca,'FontName','Arial','FontSize',15);
 
 function W = updateW(W,grad)
-    learning_rate = 1e-4;
+    learning_rate = 0.01;
     W = W-grad.*learning_rate;
 end
 
@@ -138,7 +143,7 @@ function data = dataCase(type, n)
         r = rand([1,n]).*5;
         theta = linspace(0,2*pi,n);
         pt = [r.*cos(theta);r.*sin(theta)];
-        d = 5;
+        d = 6;
         sx = d*cos(pi/4);sy = d*sin(pi/4);
         data = [pt+repmat([sx;sy],1,n) pt-repmat([sx;sy],1,n)];
     elseif type == 2
@@ -152,7 +157,7 @@ function data = dataCase(type, n)
         r = rand([1,n]).*5;
         theta = linspace(0,2*pi,n);
         pt = [r.*cos(theta);r.*sin(theta)];
-        d = 6.5;
+        d = 7;
         sx1 = d*cos(pi/4);sy1 = d*sin(pi/4);
         sx2 = d*cos(3*pi/4);sy2 = d*sin(3*pi/4);
         data = [pt+repmat([sx1;sy1],1,n) pt-repmat([sx1;sy1],1,n) pt+repmat([sx2;sy2],1,n) pt-repmat([sx2;sy2],1,n)];
@@ -164,7 +169,7 @@ function dn = normalizeData(d)
 % d is assume to be mxn, m is the dimention, n is the number
     dm = mean(d,2);
     dc = d - repmat(dm,1,size(d,2));
-    scale = sqrt(2 ./ mean(diag(dc'*dc)));
+    scale = sqrt(1 ./ mean(diag(dc'*dc)));
     dn = dc .* scale;
 end
 
@@ -188,7 +193,7 @@ end
 
 function hdz = ReLUDer(z)
     hdz = ones(numel(z),1);
-    hdz(z<=0) = 0;
+    hdz(z<0) = 0;
 end
 
 function L = loss(t,y)
