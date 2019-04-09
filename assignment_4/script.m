@@ -6,15 +6,15 @@ if(~isdeployed)
 end
 
 type = 1;
-n = 500;
+n = 200;
 
 %% input test
-data = dataCase(1, n);
+data = dataCase(type, n);
 figure
 plot(data(1,1:n),data(2,1:n),'r.');hold on;
 plot(data(1,n+1:2*n),data(2,n+1:2*n),'b.');
 
-t = [1.*ones(1,n),2.*ones(1,n)];
+label = [1.*ones(1,n),2.*ones(1,n)];
 
 % data = dataCase(2, n);
 % figure
@@ -31,6 +31,9 @@ t = [1.*ones(1,n),2.*ones(1,n)];
 num_of_hidden_units = [4];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
+
+htb = zeros(1,size(num_of_hidden_units,1)+1);
+ztb = zeros(1,size(num_of_hidden_units,1)+1);
 
 for i = 1:size(num_of_hidden_units,1)+1
     if i == 1 
@@ -49,16 +52,19 @@ for i = 1:size(num_of_hidden_units,1)+1
     w = initialization(column, row*column);
     A = reshape(w,row,column);
     nn{i} = A;
+    
+    htb(i) = column-1;
+    ztb(i) = row;
 end
 
 x = data;
 x = normalizeData(x);
-y = forwardPropagation(nn,x,@ReLU);
+[y,h,d] = forwardPropagation(nn,x,@ReLU);
 [val,id]=max(y);
 figure
 subplot(1,2,1)
-plot(data(1,t == 1),data(2,t == 1),'r.');hold on;
-plot(data(1,t == 2),data(2,t == 2),'b.');
+plot(data(1,label == 1),data(2,label == 1),'r.');hold on;
+plot(data(1,label == 2),data(2,label == 2),'b.');
 title('Truth');
 set(gca,'FontName','Arial','FontSize',15);
 subplot(1,2,2)
@@ -67,6 +73,64 @@ plot(data(1,id == 2),data(2,id == 2),'b.');
 title('Result: Random Wight')
 set(gca,'FontName','Arial','FontSize',15);
 
+%% training using SGD
+oldloss = -1e-6;
+epsilon1 = 1e-6;
+
+cyclic_id = 1;
+
+datalength = size(x,2);
+h = figure();
+iter = 0;
+losses = [];
+
+t = [ones(1,size(x,2));2.*ones(1,size(x,2))];
+id = (t(1,:)==label);t(1,id) = 1; t(1,~id) = 0; 
+t(2,:) = 1 - t(1,:);
+
+while true
+    % forward
+    [y,h,z] = forwardPropagation(nn,x,@ReLU);
+    % compute loss
+    newloss = loss(t,y);
+    if abs(newloss - oldloss) < 1e-5
+        break;
+    end
+    oldloss = newloss;
+    % SGD: backpropagation
+    hc = cell2mat(h);hc = hc(:,cyclic_id);hc = mat2cell(hc,htb);
+    zc = cell2mat(z);zc = zc(:,cyclic_id);zc = mat2cell(zc,ztb);
+    grad = backpropagation(nn,t(:,cyclic_id),y(:,cyclic_id),hc,zc,@ReLUDer);
+    % SDG: gradient descent
+    nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
+    
+    cyclic_id = cyclic_id + 1;if cyclic_id > datalength; cyclic_id = 1;end
+    
+    iter = iter + 1;
+    losses(iter) = newloss;
+    
+    plot(losses);
+    pause(0.01);
+end
+
+[y,h,z] = forwardPropagation(nn,x,@ReLU);
+[val,id]=max(y);
+figure
+subplot(1,2,1)
+plot(data(1,label == 1),data(2,label == 1),'r.');hold on;
+plot(data(1,label == 2),data(2,label == 2),'b.');
+title('Truth');
+set(gca,'FontName','Arial','FontSize',15);
+subplot(1,2,2)
+plot(data(1,id == 1),data(2,id == 1),'r.');hold on;
+plot(data(1,id == 2),data(2,id == 2),'b.');
+title('Result: Random Wight')
+set(gca,'FontName','Arial','FontSize',15);
+
+function W = updateW(W,grad)
+    learning_rate = 1e-4;
+    W = W-grad.*learning_rate;
+end
 
 function data = dataCase(type, n)
 % setting up data, 3 types. n is the number of points for each set.
@@ -129,7 +193,7 @@ end
 
 function L = loss(t,y)
 % summation of summation along each class. 
-    L = -sum(t.*log(y));
+    L = sum(-sum(t.*log(y)));
 end
 
 function [y,h,z] = forwardPropagation(W,x,f)
@@ -139,28 +203,35 @@ function [y,h,z] = forwardPropagation(W,x,f)
     z = cell(length(W),1);
     h = cell(length(W),1);
     
-    h{1} = [x;ones(1,size(x,2))];
-    
-    z = W{1}*;
-    z = f(z);
+    h{1} = [x];
+ 
     for i = 1:length(W)-1
         % layer to layer
-        z{i} = W{i}*[h{i};1];
+        z{i} = W{i}*[h{i};ones(1,size(h{i},2))];
         h{i+1} = f(z{i});
-        
-        znew = W{i}*[z;ones(1,size(z,2))];
-        z = f(znew);
     end
-    y = softMax(z);
+    % output layer
+    z{i+1} = W{i+1}*[h{i+1};ones(1,size(h{i+1},2))];
+    y = softMax(z{i+1});
 end
 
-function grad = backpropagation(W,t,y,fgrad)
+function grad = backpropagation(W,t,y,h,z,fgrad)
 % run backpropagation for gradient computation. W is assumed to be a cell.
     % first, take care of output
-    grad = cell(length(W),1);
-    delta =  y - t;
-    grad
-    
+    grad = cell(length(W),1)';
+    delta = cell(length(W),1)';
+    n = length(W);
+    delta{n} =  y - t;
+    A1 = repmat([h{n}' 1], numel(delta{n}), 1);
+    A2 = repmat(delta{n}, 1, size(h{n},1)+1);
+    grad{n} = A1.*A2;
+    for i = length(W)-1:1
+        d1 = W{i+1}'*delta{i+1};
+        delta{i} = fgrad(z{i}).*d1(1:end-1);
+        A1 = repmat([h{i}' 1], numel(delta{i}), 1);
+        A2 = repmat(delta{i}, 1, size(h{i},1)+1);
+        grad{i} = A1.*A2;
+    end
 end
 
 %% todo minibatch. Plan: 1. SGD; 2. Batch; 3. Minibatch
