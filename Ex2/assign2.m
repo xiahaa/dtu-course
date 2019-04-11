@@ -159,9 +159,9 @@ imshow(imc);
 clear all;
 load('p3p.mat');
 
-[Rc1,tc1] = p3p_fisch(p1(:,1:3), q1(:,1:3), K);
-[Rc2,tc2] = p3p_fisch(p2(:,1:3), q2(:,1:3), K);
-[Rc3,tc3] = p3p_fisch(p3(:,1:3), q3(:,1:3), K);
+[Rc1,tc1] = p3p_Grunert(p1(:,1:3), q1(:,1:3), K);
+[Rc2,tc2] = p3p_Grunert(p2(:,1:3), q2(:,1:3), K);
+[Rc3,tc3] = p3p_Grunert(p3(:,1:3), q3(:,1:3), K);
     
 [Rc1,tc1] = selectBestPose(Rc1,tc1,p1,q1,K);
 [Rc2,tc2] = selectBestPose(Rc2,tc2,p2,q2,K);
