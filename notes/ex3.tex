@@ -290,7 +290,7 @@ Implement the Eight-point algorithm use the provided data (\textbf{Fdata.mat}) a
 Once you have estimate $\mathbf{F}$, you can check your result visually. 
 
 \section{Triangulation}
-In this exercise, you need to implement the triangulation method you have learnt from the lecture. You start with simulated data and then work with real images.
+In this exercise, you need to implement the triangulation method (\textcolor{blue}{the SVD approach}) you have learnt from the lecture. You start with simulated data and then work with real images.
 \paragraph{Q3:} 
 Use the following code to generate simulated data for triangulation
 \lstinputlisting{tri1.m}
@@ -307,6 +307,16 @@ Now you will apply your triangulation code on real images\footnote{Data source: 
 \paragraph{Q5:}
 Triangulation can be made much easily if stereo vision system is used. In this exercise, you will implement the triangulation method for stereo vision. Stereo images\footnote{Source: "Mask" from \url{vision.middlebury.edu/stereo/data/2014/}} and the corresponding disparity are provided. The following code is provided for data parsing and visualization.
 \lstinputlisting{tri3.m}
+
+The equations for triangulate points using disparity are given as:
+\begin{align*}
+Z &= \frac{f*b}{d} \\
+X &= \frac{(x-p_x)Z}{f} \\ 
+Y &= \frac{(y-p_y)Z}{f}
+\end{align*}
+here, $p_x,p_y$ are the coordinates of the principal point, $f$ is the focus length, $b$ is the baseline.
+
+\textbf{Note: $p_x$ ($p_y$, resp) is given along the image width (height, resp) direction, while $(x,y)$ in \textsc{Matlab} corresponds to the point at $x^{th}$ row and $j^{th}$ column.} 
 
 \begin{figure*}[!b]
 \centering
