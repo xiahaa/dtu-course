@@ -195,7 +195,12 @@ Load the \textbf{p3p.mat} which contains:
 \end{itemize}
 The Perspective $3$ Point can be decoupled into $2$ steps
 \begin{enumerate}
-\item Recover the $3$D points in camera coordinate system (recall the lectures on cosine rule, fourth order polynomial, etc).
+\item Recover the $3$D points in camera coordinate system (recall the lectures on cosine rule, fourth order polynomial, etc). \textbf{Hints:} 
+\begin{itemize}
+	1. choose three points from $p_1$ and $q_1$, e.g. 
+\end{itemize}
+
+
 \item Use provided code \textbf{lssol.m} to recover the extrinsics.
 \end{enumerate}
 You should use $3$ points for the Perspective $3$ Point algorithm. Since multiple solutions may be obtained, you need at least a fourth point to choose the correct one. If you have more then $4$ points, you can select the best one by computing the re-projection errors for all points and select the one with the minimum re-projection error:
