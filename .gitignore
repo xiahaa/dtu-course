@@ -57,3 +57,5 @@ data/Ex_5_data/nerves/*.mat
 data/Ex_5_data/output_1/*.png
 data/Ex_5_data/output_mrf_1/*.png
 assignment_4/matconvnet-1.0-beta25/*
+data/Ex_6_data/histo_images.mat
+data/Ex_6_data/imagenet-vgg-f.mat
