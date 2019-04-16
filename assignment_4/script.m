@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 3;
+type = 1;
 n = 300;
 
 %% input test
@@ -17,7 +17,7 @@ plot(data(1,n+1:2*n),data(2,n+1:2*n),'b.');
 labels{1} = [1.*ones(1,n),2.*ones(1,n)];
 labels{2} = [1.*ones(1,n),2.*ones(1,n)];
 labels{3} = [1.*ones(1,2*n),2.*ones(1,2*n)];
-label = labels{type}
+label = labels{type};
 
 % data = dataCase(2, n);
 % figure
@@ -31,7 +31,7 @@ label = labels{type}
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [10 15 20 30 40 10];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 15 20];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
@@ -95,7 +95,7 @@ while true
     [y,h,z] = forwardPropagation(nn,x,@ReLU);
     % compute loss
     newloss = loss(t,y);
-    if abs(newloss - oldloss) < 1e-6
+    if abs(newloss - oldloss) < 1e-8
         break;
     end
     oldloss = newloss;
