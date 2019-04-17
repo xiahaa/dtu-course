@@ -127,14 +127,14 @@ else
         imdb.images.data = x;
         imdb.images.mean = zeros(size(x,1),size(x,2),size(x,3));% do not do normalization
         imdb.images.label = single(labels');
-        imdb.images.set = [ones(1,trainNum) 3*ones(1,round(size(x,4)*0.8)-trainNum)];% 90% as the training set, 10% as the validation set
+        imdb.images.set = [ones(1,trainNum) 3*ones(1,round(size(x,4)*0.6)-trainNum)];% 50% as the training set, 10% as the validation set
         imdb.meta.sets = {'train','val','test'};
 
         % initialize parameters
         opts.train.batchSize = 100;
         opts.train.numEpochs = 20;
 
-        opts.train.continue = true;
+        opts.train.continue = false;
         % use gpu
         opts.train.gpus = [];
 
@@ -193,7 +193,7 @@ else
 
         save('data/retraincnn_new.mat', '-struct', 'net') ;
     else
-        if 1
+        if 0
             net1 = load('data/retraincnn_new.mat');
             net2 = load(strcat(data_path,'imagenet-vgg-f.mat'));
 
