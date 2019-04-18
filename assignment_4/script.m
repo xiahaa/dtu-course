@@ -19,6 +19,8 @@ labels{2} = [1.*ones(1,n),2.*ones(1,n)];
 labels{3} = [1.*ones(1,2*n),2.*ones(1,2*n)];
 label = labels{type};
 
+
+
 % data = dataCase(2, n);
 % figure
 % plot(data(1,1:n),data(2,1:n),'r.');hold on;
@@ -31,7 +33,7 @@ label = labels{type};
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [10 20 10];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 20 2];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
@@ -80,8 +82,6 @@ set(gca,'FontName','Arial','FontSize',15);
 oldloss = -1e-6;
 epsilon1 = 1e-6;
 
-cyclic_id = 1;
-
 datalength = size(x,2);
 iter = 0;
 losses = [];
@@ -90,33 +90,39 @@ t = [ones(1,size(x,2));2.*ones(1,size(x,2))];
 id = (t(1,:)==label);t(1,id) = 1; t(1,~id) = 0; 
 t(2,:) = 1 - t(1,:);
 
-while iter < 1e4
-    % forward
-    [y,h,z] = forwardPropagation(nn,x,@ReLU);
+epoches = 200;
+batchSize = 100;
+
+dummy1 = 1:(batchSize):size(x,2);
+if dummy1(end) ~= size(x,2)
+    dummy1(end+1) = size(x,2);
+end
+batcheIndex = [[dummy1(1:end-1)]' [dummy1(2:end-1)'-1;dummy1(end)]];
+figure;grid on;hold on;
+for i = 1:epoches
+    rd = randperm(size(x,2),size(x,2));
+    for j = 1:size(batcheIndex,1)
+        id = rd(batcheIndex(j,1):batcheIndex(j,2));
+        xb = x(:,id);
+        tb = t(:,id);
+        % forward
+        [y,h,z] = forwardPropagation(nn,xb,@ReLU);
+        % SGD: backpropagation
+        grad = backpropagation(nn,tb,y,h,z,@ReLUDer);
+        % SDG: gradient descent
+        nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
+    end
     % compute loss
+    [y,~,~] = forwardPropagation(nn,x,@ReLU);
     newloss = loss(t,y);
-    if abs(newloss - oldloss) < 1e-10
+    if abs(newloss - oldloss) < 1e-6
         break;
     end
     disp(newloss);
     oldloss = newloss;
-    % SGD: backpropagation
-    hc = cell2mat(h);hc = hc(:,cyclic_id);hc = mat2cell(hc,htb);
-    zc = cell2mat(z);zc = zc(:,cyclic_id);zc = mat2cell(zc,ztb);
-    grad = backpropagation(nn,t(:,cyclic_id),y(:,cyclic_id),hc,zc,@ReLUDer);
-    % SDG: gradient descent
-    nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
-    
-%     cyclic_id = cyclic_id + 1;if cyclic_id > datalength; cyclic_id = 1;end
-    cyclic_id = randperm(datalength,1);
-    
-    iter = iter + 1;
-    losses(iter) = newloss;
+    losses(i) = newloss;
+    plot(losses);
 end
-
-figure
-plot(losses);
-grid on;
 title('Loss');
 
 [y,h,z] = forwardPropagation(nn,x,@ReLU);
@@ -134,7 +140,7 @@ title('Result: Random Wight')
 set(gca,'FontName','Arial','FontSize',15);
 
 function W = updateW(W,grad)
-    learning_rate = 0.01;
+    learning_rate = 0.1;
     W = W-grad.*learning_rate;
 end
 
@@ -193,7 +199,7 @@ function y = softMax(yhat)
 end
 
 function hdz = ReLUDer(z)
-    hdz = ones(numel(z),1);
+    hdz = ones(size(z));
     hdz(z<0) = 0;
 end
 
@@ -210,7 +216,6 @@ function [y,h,z] = forwardPropagation(W,x,f)
     h = cell(length(W),1);
     
     h{1} = [x];
- 
     for i = 1:length(W)-1
         % layer to layer
         z{i} = W{i}*[h{i};ones(1,size(h{i},2))];
@@ -226,16 +231,20 @@ function grad = backpropagation(W,t,y,h,z,fgrad)
     % first, take care of output
     grad = cell(length(W),1)';
     delta = cell(length(W),1)';
+    
+    miniBatchSize = size(y,2);
+    scale = 1./miniBatchSize;
+    
     n = length(W);
     delta{n} =  y - t;
     A1 = [h{n}' ones(size(y,2),1)];
     A2 = delta{n};
-    grad{n} = A1.*A2;
+    grad{n} = A2*A1;
+    grad{n} = scale .* grad{n};
     for i = length(W)-1:-1:1
         d1 = W{i+1}'*delta{i+1};
-        delta{i} = fgrad(z{i}).*d1(1:end-1);
-        grad{i} = [h{i}' 1].*delta{i};
+        delta{i} = fgrad(z{i}).*d1(1:end-1,:);
+        grad{i} = delta{i}*[h{i}' ones(size(h{i},2),1)];
+        grad{i} = scale .* grad{i};
     end
 end
-
-%% todo minibatch. Plan: 1. SGD; 2. Batch; 3. Minibatch
