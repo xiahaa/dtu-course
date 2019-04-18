@@ -5,19 +5,22 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 3;
-n = 300;
+type = 1;
+n = 1000;
 
 %% input test
 data = dataCase(type, n);
-figure
-plot(data(1,1:n),data(2,1:n),'ro');hold on;
-plot(data(1,n+1:2*n),data(2,n+1:2*n),'bo');
-
 labels{1} = [1.*ones(1,n),2.*ones(1,n)];
 labels{2} = [1.*ones(1,n),2.*ones(1,n)];
 labels{3} = [1.*ones(1,2*n),2.*ones(1,2*n)];
 label = labels{type};
+
+figure
+id = label == 1;
+plot(data(1,id),data(2,id),'ro');hold on;
+plot(data(1,~id),data(2,~id),'bo');
+
+
 
 
 
@@ -33,7 +36,7 @@ label = labels{type};
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [10 20 2];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 10 10];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
@@ -99,6 +102,7 @@ if dummy1(end) ~= size(x,2)
 end
 batcheIndex = [[dummy1(1:end-1)]' [dummy1(2:end-1)'-1;dummy1(end)]];
 figure;grid on;hold on;
+tic
 for i = 1:epoches
     rd = randperm(size(x,2),size(x,2));
     for j = 1:size(batcheIndex,1)
@@ -118,11 +122,12 @@ for i = 1:epoches
     if abs(newloss - oldloss) < 1e-6
         break;
     end
-    disp(newloss);
+    %disp(newloss);
     oldloss = newloss;
     losses(i) = newloss;
-    plot(losses);
 end
+toc
+plot(losses);
 title('Loss');
 
 [y,h,z] = forwardPropagation(nn,x,@ReLU);
