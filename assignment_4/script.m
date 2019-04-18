@@ -5,14 +5,14 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 1;
+type = 3;
 n = 300;
 
 %% input test
 data = dataCase(type, n);
 figure
-plot(data(1,1:n),data(2,1:n),'r.');hold on;
-plot(data(1,n+1:2*n),data(2,n+1:2*n),'b.');
+plot(data(1,1:n),data(2,1:n),'ro');hold on;
+plot(data(1,n+1:2*n),data(2,n+1:2*n),'bo');
 
 labels{1} = [1.*ones(1,n),2.*ones(1,n)];
 labels{2} = [1.*ones(1,n),2.*ones(1,n)];
@@ -31,19 +31,19 @@ label = labels{type};
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [10 15 20];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 20 10];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
 htb = zeros(1,size(num_of_hidden_units,1)+1);
 ztb = zeros(1,size(num_of_hidden_units,1)+1);
 
-for i = 1:size(num_of_hidden_units,1)+1
+for i = 1:length(num_of_hidden_units)+1
     if i == 1 
         % first layer: inputs+bias
         row = num_of_hidden_units(i);
         column = (num_inputs + 1);
-    elseif i < size(num_of_hidden_units,1)+1
+    elseif i < length(num_of_hidden_units)+1
         % intermediate layer: previous hidden units+bias
         row = num_of_hidden_units(i);
         column = (num_of_hidden_units(i-1) + 1);
@@ -90,14 +90,15 @@ t = [ones(1,size(x,2));2.*ones(1,size(x,2))];
 id = (t(1,:)==label);t(1,id) = 1; t(1,~id) = 0; 
 t(2,:) = 1 - t(1,:);
 
-while true
+while iter < 1e4
     % forward
     [y,h,z] = forwardPropagation(nn,x,@ReLU);
     % compute loss
     newloss = loss(t,y);
-    if abs(newloss - oldloss) < 1e-8
+    if abs(newloss - oldloss) < 1e-10
         break;
     end
+    disp(newloss);
     oldloss = newloss;
     % SGD: backpropagation
     hc = cell2mat(h);hc = hc(:,cyclic_id);hc = mat2cell(hc,htb);
@@ -227,15 +228,13 @@ function grad = backpropagation(W,t,y,h,z,fgrad)
     delta = cell(length(W),1)';
     n = length(W);
     delta{n} =  y - t;
-    A1 = repmat([h{n}' 1], numel(delta{n}), 1);
-    A2 = repmat(delta{n}, 1, size(h{n},1)+1);
+    A1 = [h{n}' ones(size(y,2),1)];
+    A2 = delta{n};
     grad{n} = A1.*A2;
-    for i = length(W)-1:1
+    for i = length(W)-1:-1:1
         d1 = W{i+1}'*delta{i+1};
         delta{i} = fgrad(z{i}).*d1(1:end-1);
-        A1 = repmat([h{i}' 1], numel(delta{i}), 1);
-        A2 = repmat(delta{i}, 1, size(h{i},1)+1);
-        grad{i} = A1.*A2;
+        grad{i} = [h{i}' 1].*delta{i};
     end
 end
 
