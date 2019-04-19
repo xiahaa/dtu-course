@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 1;
+type = 3;
 n = 1000;
 
 %% input test
@@ -95,6 +95,9 @@ t(2,:) = 1 - t(1,:);
 
 epoches = 200;
 batchSize = 100;
+learning_rate = 0.01;
+old_grad = {};
+momentum = 0.9;
 
 dummy1 = 1:(batchSize):size(x,2);
 if dummy1(end) ~= size(x,2)
@@ -114,7 +117,8 @@ for i = 1:epoches
         % SGD: backpropagation
         grad = backpropagation(nn,tb,y,h,z,@ReLUDer);
         % SDG: gradient descent
-        nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
+%       nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
+        [nn, old_grad] = updateSGD(nn, grad, learning_rate, momentum, old_grad);
     end
     % compute loss
     [y,~,~] = forwardPropagation(nn,x,@ReLU);
@@ -143,6 +147,21 @@ plot(data(1,id == 1),data(2,id == 1),'r.');hold on;
 plot(data(1,id == 2),data(2,id == 2),'b.');
 title('Result: Random Wight')
 set(gca,'FontName','Arial','FontSize',15);
+
+function [W,old_grad] = updateSGD(W, grad, learning_rate, momentum, old_grad)
+    if isempty(old_grad)
+        for i = 1:length(grad)
+            old_grad{i} = -grad{i}.*learning_rate;
+        end
+    else
+        for i = 1:length(grad)
+            old_grad{i} = old_grad{i}.*momentum - grad{i}.*learning_rate;
+        end
+    end
+    for i = 1:length(W)
+        W{i} = W{i}+old_grad{i};
+    end
+end
 
 function W = updateW(W,grad)
     learning_rate = 0.1;
@@ -190,7 +209,7 @@ function w = initialization(n, m)
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    w = rand([m,1]).*sqrt(2/n);
+    w = randn([m,1]).*sqrt(2/n);
 end
 
 function h = ReLU(z)
