@@ -5,98 +5,209 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-% load
-load('MNIST.mat');
-train_data = single(train_data);
-train_label = single(train_label);
+training = 0;
 
-% preparation, normalization and minus mean
-data = normalization(train_data);
+if training == 1
+    %% load data
+    load('MNIST.mat');
+    train_data = single(train_data);
+    train_label = single(train_label);
 
-% random sample train set and validaton set
-valID = randperm(size(data,1),10000);
-% loginal id
-id = zeros(1,size(data,1));
-id(valID) = 1;
-id = id == 1;
-% separate data to training and validation
-valData = data(id,:)';
-valLabel = train_label(id,:)';
-trainData = data(~id,:)';
-trainLabel = train_label(~id,:)';
+    %% data preprocessing
+    % preparation, normalization and minus mean
+    [data,mdata] = normalization(train_data);
+    % random sample train set and validaton set
+    valID = randperm(size(data,1),10000);
+    % loginal id
+    id = zeros(1,size(data,1));
+    id(valID) = 1;
+    id = id == 1;
+    % separate data to training and validation
+    valData = data(id,:)';
+    valLabel = train_label(id,:)';
+    trainData = data(~id,:)';
+    trainLabel = train_label(~id,:)';
 
-N = length(trainData);
+    N = length(trainData);
 
-% initialize parameters
-opts.train.batchSize = 200;
-opts.train.numEpochs = 20;
+    %% training parameters
+    % initialize parameters
+    opts.train.batchSize = 100;
+    opts.train.numEpochs = 500;
 
-% set learning rate
-opts.train.learningRate = 1;
-opts.train.weightDecay  = 1e-4;
-opts.train.momentum = 0.0;
-opts = genBatchIndex(N,opts);
-
-%% define forward neural network
-num_of_hidden_units = [1000 300 100];% mxn: m is the hidden units per layer, n - layer
-num_inputs = size(trainData,1);
-num_outputs = 10;
-
-for i = 1:size(num_of_hidden_units,1)+1
-    if i == 1 
-        % first layer: inputs+bias
-        row = num_of_hidden_units(i);
-        column = (num_inputs + 1);
-    elseif i < size(num_of_hidden_units,1)+1
-        % intermediate layer: previous hidden units+bias
-        row = num_of_hidden_units(i);
-        column = (num_of_hidden_units(i-1) + 1);
-    else
-        % output layer:
-        row = num_outputs;
-        column = (num_of_hidden_units(i-1) + 1);
-    end
-    w = initialization(column, row*column);
-    A = reshape(w,row,column);
-    nn{i} = A;
+    % set learning rate
+    opts.train.learningRate = 10;
+    opts.train.weightDecay  = 1e-4;
+    opts.train.momentum = 0.9;
+    opts = genBatchIndex(N,opts);
     
-    opts.train.v{i} = zeros(size(A));
-end
+    opts.earlyStopping.n = 1;
+    opts.earlyStopping.patience = 10;
+    opts.earlyStopping.num = 0;
+    opts.earlyStopping.bestValLoss = 1e8;
+    opts.earlyStopping.nn = {};
+    opts.earlyStopping.numEpoches = 0;
 
-figure;grid on;hold on;
+    %% define forward neural network
+    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer
+    num_inputs = size(trainData,1);
+    num_outputs = 10;
+    nn = cell(1,length(num_of_hidden_units)+1);
+    [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
 
-% per epoch
-for i = 1:opts.train.numEpochs    
-    % gen new batches
-    opts = getBatches(N, opts);
-    % per batch
-    for j = 1:opts.batchNum
-        id = opts.batches(j,:);
-        x = trainData(:,id);
-        t = trainLabel(:,id);
+
+    %% training
+    figure;
+    trainlosses = zeros(1,opts.train.numEpochs);
+    vallosses = zeros(1,opts.train.numEpochs);
+    % per epoch
+    for i = 1:opts.train.numEpochs    
+        % gen new batches
+        opts = getBatches(N, opts);
+        % per batch
+        for j = 1:opts.batchNum
+            id = opts.batches(j,:);
+            x = trainData(:,id);
+            t = trainLabel(:,id);
+            % forward
+            [y,h,z] = forwardPropagation(nn,x,@ReLU);
+
+            newloss = loss(t,y);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+
+            % backpropagation + Minibatch + SGD + Momentum 0.9
+            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+            % SDG: gradient descent
+    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
+            nn = updateW(nn,grad,opts);
+        end
         % forward
-        [y,h,z] = forwardPropagation(nn,x,@ReLU);
+        [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+        % compute loss
+        newloss = loss(trainLabel,y);
+        disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
         
-        newloss = loss(t,y);
-        disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+        % check validation error
+%         if mod(i,opts.earlyStopping.n) == 0
+            [yv,~,~] = forwardPropagation(nn,valData,@ReLU);
+            valLoss = loss(valLabel,yv);
+            disp(['Vlidation Loss: ', num2str(valLoss)]);
+            if valLoss < opts.earlyStopping.bestValLoss
+                opts.earlyStopping.num = 0;
+                opts.earlyStopping.bestValLoss = valLoss;
+                opts.earlyStopping.numEpoches = i;
+                opts.earlyStopping.nn = nn;
+            else
+                opts.earlyStopping.num = opts.earlyStopping.num + 1;
+            end
+            if opts.earlyStopping.num >= opts.earlyStopping.patience
+                break;
+            end
+            vallosses(i) = valLoss;
+            
+%         end
         
-        % backpropagation + Minibatch + SGD + Momentum 0.9
-        grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
-        % SDG: gradient descent
-%         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-        nn = updateW(nn,grad,opts);
+        trainlosses(i) = newloss;
+        plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+        plot(vallosses(1:i),'-o','LineWidth',1.5);
+        hold off;
+        pause(0.1);
     end
-    % forward
-    [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
-    % compute loss
-    newloss = loss(trainLabel,y);
-    disp(['Training Epoch ',num2str(i),':', num2str(newloss)]);
-    losses(i) = newloss;
-    plot(losses,'LineWidth',1.5);
-    pause(0.1);
+    
+    %     nn = opts.earlyStopping.nn;
+    
+    %% combine train data and validation data, re-start a training using found epoches
+    trainData = cat(2,trainData,valData);
+    trainLabel = cat(2,trainLabel,valLabel);
+    N = length(trainData);
+    opts = genBatchIndex(N,opts);
+    [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
+    opts.train.numEpochs = opts.earlyStopping.numEpoches;
+
+    %% retraining
+    figure;
+    trainlosses = zeros(1,opts.train.numEpochs);
+    % per epoch
+    for i = 1:opts.train.numEpochs    
+        % gen new batches
+        opts = getBatches(N, opts);
+        % per batch
+        for j = 1:opts.batchNum
+            id = opts.batches(j,:);
+            x = trainData(:,id);
+            t = trainLabel(:,id);
+            % forward
+            [y,h,z] = forwardPropagation(nn,x,@ReLU);
+
+            newloss = loss(t,y);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+
+            % backpropagation + Minibatch + SGD + Momentum 0.9
+            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+            % SDG: gradient descent
+    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
+            nn = updateW(nn,grad,opts);
+        end
+        % forward
+        [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+        % compute loss
+        newloss = loss(trainLabel,y);
+        disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
+        trainlosses(i) = newloss;
+        plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+        hold off;
+        pause(0.1);
+    end  
+    
+    net.nn = nn;
+    net.meandata = mdata;
+    
+    files = dir(fullfile('./mnist_train/', '*.mat'));
+    netcnt = length(files) + 1;
+    save(strcat('./mnist_train/net',num2str(netcnt),'.mat'),'net');
+    
+else
+    %% load data
+    load('MNIST.mat');
+    
+    files = dir(fullfile('./mnist_train/', '*.mat'));
+    load(strcat('./mnist_train/',files(end).name));
+    test_data = single(test_data)';
+    test_label = single(test_label)';
+    
+    test_data = test_data - repmat(net.meandata',1,size(test_data,2));
+%     data = normalization(test_data);
+    
+    [y,~,~] = forwardPropagation(net.nn,test_data,@ReLU);
+    [~,id1]=max(y);
+    [~,id2]=max(test_label);
+    disp(sum(id1==id2)/length(id2));
+    
 end
 
 
+function [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts)
+    for i = 1:length(num_of_hidden_units)+1
+        if i == 1 
+            % first layer: inputs+bias
+            row = num_of_hidden_units(i);
+            column = (num_inputs + 1);
+        elseif i < length(num_of_hidden_units)+1
+            % intermediate layer: previous hidden units+bias
+            row = num_of_hidden_units(i);
+            column = (num_of_hidden_units(i-1) + 1);
+        else
+            % output layer:
+            row = num_outputs;
+            column = (num_of_hidden_units(i-1) + 1);
+        end
+        w = initialization(column, row*column);
+        A = reshape(w,row,column);
+        nn{i} = A;
+
+        opts.train.v{i} = zeros(size(A));
+    end
+end
 
 function opts = genBatchIndex(n,opts)
 % run once, generate bacth index.
@@ -132,9 +243,10 @@ function res = fvecnorm(x,p,dir)
     end
 end
 
-function datan = normalization(data)
+function [datan,m] = normalization(data)
 % normalization for MNIST
-    datan = data ./ fvecnorm(data,2,2);
+    %datan = data ./ fvecnorm(data,2,2);
+    datan = data;
     m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
 end
@@ -143,7 +255,7 @@ function W = updateW(W,grad,opts)
     % update velocity
     v = cell(length(W),1);
     for i = 1:length(W)
-        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;
+        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate.*(1-opts.train.momentum);
         W{i} = W{i} + v{i};
         opts.train.v{i} = v{i};
     end
@@ -154,7 +266,7 @@ function w = initialization(n, m)
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    w = rand([m,1]).*sqrt(2/n);
+    w = randn([m,1]).*sqrt(2/n);
 end
 
 function h = ReLU(z)
@@ -164,7 +276,7 @@ end
 
 function y = softMax(yhat)
     ey = exp(yhat);
-    y = ey ./ sum(ey);
+    y = ey ./ (sum(ey)+1e-8);
 end
 
 function hdz = ReLUDer(z)
