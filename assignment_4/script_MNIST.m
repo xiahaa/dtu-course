@@ -28,23 +28,19 @@ trainLabel = train_label(~id,:)';
 N = length(trainData);
 
 % initialize parameters
-opts.train.batchSize = 100;
+opts.train.batchSize = 200;
 opts.train.numEpochs = 20;
 
 % set learning rate
-opts.train.learningRate = 1e-3;
+opts.train.learningRate = 1;
 opts.train.weightDecay  = 1e-4;
-opts.train.momentum = 0.9;
-opts.train.v = 0;
+opts.train.momentum = 0.0;
 opts = genBatchIndex(N,opts);
 
 %% define forward neural network
-num_of_hidden_units = [1000 300];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [1000 300 100];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(trainData,1);
 num_outputs = 10;
-
-htb = zeros(1,size(num_of_hidden_units,1)+1);
-ztb = zeros(1,size(num_of_hidden_units,1)+1);
 
 for i = 1:size(num_of_hidden_units,1)+1
     if i == 1 
@@ -64,15 +60,15 @@ for i = 1:size(num_of_hidden_units,1)+1
     A = reshape(w,row,column);
     nn{i} = A;
     
-    htb(i) = column-1;
-    ztb(i) = row;
+    opts.train.v{i} = zeros(size(A));
 end
+
+figure;grid on;hold on;
 
 % per epoch
 for i = 1:opts.train.numEpochs    
     % gen new batches
     opts = getBatches(N, opts);
-    
     % per batch
     for j = 1:opts.batchNum
         id = opts.batches(j,:);
@@ -80,28 +76,24 @@ for i = 1:opts.train.numEpochs
         t = trainLabel(:,id);
         % forward
         [y,h,z] = forwardPropagation(nn,x,@ReLU);
-        % compute loss
-        newloss = loss(t,y);
-        % SGD: backpropagation
-        hc = cell2mat(h);
-        zc = cell2mat(z);
-        grad = cell(opts.train.batchSize,1)';
-        for k = 1:size(y,2)
-            hk = mat2cell(hc(:,k),htb);
-            zk = mat2cell(zc(:,k),ztb);
-            grad{k} = backpropagation(nn,t(:,k),y(:,k),hk,zk,@ReLUDer);
-        end
         
+        newloss = loss(t,y);
+        disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+        
+        % backpropagation + Minibatch + SGD + Momentum 0.9
+        grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
         % SDG: gradient descent
-        nn = cellfun(@updateW,nn,grad,'UniformOutput', false);
-
-    %     cyclic_id = cyclic_id + 1;if cyclic_id > datalength; cyclic_id = 1;end
-        cyclic_id = randperm(datalength,1);
-
-        iter = iter + 1;
-        losses(iter) = newloss;
+%         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
+        nn = updateW(nn,grad,opts);
     end
-    
+    % forward
+    [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+    % compute loss
+    newloss = loss(trainLabel,y);
+    disp(['Training Epoch ',num2str(i),':', num2str(newloss)]);
+    losses(i) = newloss;
+    plot(losses,'LineWidth',1.5);
+    pause(0.1);
 end
 
 
@@ -130,17 +122,31 @@ function opts = getBatches(n, opts)
     end
 end
 
+function res = fvecnorm(x,p,dir)
+    if dir == 1
+        x = x';
+    end
+    res = zeros(size(x,1),1);
+    for i = 1:size(x,1)
+        res(i) = norm(x(1,:),p);
+    end
+end
+
 function datan = normalization(data)
 % normalization for MNIST
-    datan = data ./ vecnorm(data,2,2);
-    m = mean(data);
+    datan = data ./ fvecnorm(data,2,2);
+    m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
 end
 
 function W = updateW(W,grad,opts)
     % update velocity
-    v = opts.train.v.*opts.train.momentum - grad.*opts.train.learningRate;
-    W = W + v;
+    v = cell(length(W),1);
+    for i = 1:length(W)
+        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;
+        W{i} = W{i} + v{i};
+        opts.train.v{i} = v{i};
+    end
 end
 
 function w = initialization(n, m)
@@ -162,7 +168,7 @@ function y = softMax(yhat)
 end
 
 function hdz = ReLUDer(z)
-    hdz = ones(numel(z),1);
+    hdz = ones(size(z));
     hdz(z<0) = 0;
 end
 
@@ -179,7 +185,6 @@ function [y,h,z] = forwardPropagation(W,x,f)
     h = cell(length(W),1);
     
     h{1} = [x];
- 
     for i = 1:length(W)-1
         % layer to layer
         z{i} = W{i}*[h{i};ones(1,size(h{i},2))];
@@ -195,17 +200,21 @@ function grad = backpropagation(W,t,y,h,z,fgrad)
     % first, take care of output
     grad = cell(length(W),1)';
     delta = cell(length(W),1)';
+    
+    miniBatchSize = size(y,2);
+    scale = 1./miniBatchSize;
+    
     n = length(W);
     delta{n} =  y - t;
-    A1 = repmat([h{n}' 1], numel(delta{n}), 1);
-    A2 = repmat(delta{n}, 1, size(h{n},1)+1);
-    grad{n} = A1.*A2;
-    for i = length(W)-1:1
+    A1 = [h{n}' ones(size(y,2),1)];
+    A2 = delta{n};
+    grad{n} = A2*A1;
+    grad{n} = scale .* grad{n};
+    for i = length(W)-1:-1:1
         d1 = W{i+1}'*delta{i+1};
-        delta{i} = fgrad(z{i}).*d1(1:end-1);
-        A1 = repmat([h{i}' 1], numel(delta{i}), 1);
-        A2 = repmat(delta{i}, 1, size(h{i},1)+1);
-        grad{i} = A1.*A2;
+        delta{i} = fgrad(z{i}).*d1(1:end-1,:);
+        grad{i} = delta{i}*[h{i}' ones(size(h{i},2),1)];
+        grad{i} = scale .* grad{i};
     end
 end
 
