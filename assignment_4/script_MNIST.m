@@ -15,7 +15,7 @@ if training == 1
 
     %% data preprocessing
     % preparation, normalization and minus mean
-    [data,mdata] = normalization(train_data);
+    [data,mdata,scale] = normalization(train_data);
     % random sample train set and validaton set
     valID = randperm(size(data,1),10000);
     % loginal id
@@ -36,7 +36,7 @@ if training == 1
     opts.train.numEpochs = 500;
 
     % set learning rate
-    opts.train.learningRate = 10;
+    opts.train.learningRate = 0.1;
     opts.train.weightDecay  = 1e-4;
     opts.train.momentum = 0.9;
     opts = genBatchIndex(N,opts);
@@ -49,7 +49,7 @@ if training == 1
     opts.earlyStopping.numEpoches = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer
+    num_of_hidden_units = [1000 1000];% mxn: m is the hidden units per layer, n - layer 500
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
@@ -99,6 +99,10 @@ if training == 1
                 opts.earlyStopping.nn = nn;
             else
                 opts.earlyStopping.num = opts.earlyStopping.num + 1;
+                opts.train.learningRate = opts.train.learningRate * 0.5;
+                if opts.train.learningRate < 0.001
+                    opts.train.learningRate = 0.001;
+                end
             end
             if opts.earlyStopping.num >= opts.earlyStopping.patience
                 break;
@@ -123,7 +127,8 @@ if training == 1
     opts = genBatchIndex(N,opts);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
     opts.train.numEpochs = opts.earlyStopping.numEpoches;
-
+    opts.train.learningRate = 0.1;
+    
     %% retraining
     figure;
     trainlosses = zeros(1,opts.train.numEpochs);
@@ -161,7 +166,7 @@ if training == 1
     
     net.nn = nn;
     net.meandata = mdata;
-    
+    net.scale = scale;
     files = dir(fullfile('./mnist_train/', '*.mat'));
     netcnt = length(files) + 1;
     save(strcat('./mnist_train/net',num2str(netcnt),'.mat'),'net');
@@ -174,8 +179,8 @@ else
     load(strcat('./mnist_train/',files(end).name));
     test_data = single(test_data)';
     test_label = single(test_label)';
-    
     test_data = test_data - repmat(net.meandata',1,size(test_data,2));
+    test_data = test_data.*net.scale;
 %     data = normalization(test_data);
     
     [y,~,~] = forwardPropagation(net.nn,test_data,@ReLU);
@@ -243,19 +248,22 @@ function res = fvecnorm(x,p,dir)
     end
 end
 
-function [datan,m] = normalization(data)
+function [datan,m,scale] = normalization(data)
 % normalization for MNIST
-    %datan = data ./ fvecnorm(data,2,2);
+%     datan = data ./ fvecnorm(data,2,2);
     datan = data;
     m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
+    
+    scale = 1;%sqrt(1 ./ mean(diag(datan'*datan)));
+    datan = datan .* scale;
 end
 
 function W = updateW(W,grad,opts)
     % update velocity
     v = cell(length(W),1);
     for i = 1:length(W)
-        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate.*(1-opts.train.momentum);
+        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
         W{i} = W{i} + v{i};
         opts.train.v{i} = v{i};
     end
