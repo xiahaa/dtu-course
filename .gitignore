@@ -63,3 +63,17 @@ data/Ex_6_data/imagenet-vgg-f.mat
 Course note/deformable model/amyn.ppt
 assignment_4/data/retraincnn_new.mat
 assignment_4/data/retraincnn.mat
+
+aug*.mat
+
+assignment_4/mnist_train/net1.mat
+
+assignment_4/mnist_train/net11.mat
+
+assignment_4/mnist_train/net12.mat
+
+assignment_4/mnist_train/net13.mat
+
+assignment_4/mnist_train/net14.mat
+
+assignment_4/mnist_train/net15.mat
