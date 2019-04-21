@@ -25,14 +25,16 @@ lbns = [];
 for i = 1:10
     id = find(labels == i);
     % 
-    idn = round(length(id) * 0.8);
+    idn = round(length(id) * 0.25);
     ids = id(randperm(length(id),idn));
     
-    imn = zeros(28,28,1,length(ids)*2);
+    imn = zeros(28,28,1,length(ids)*4);
     
     for j = 1:1:length(ids)
-        imn(:,:,:,(j-1)*2+1) = randomNoise(im(:,:,:,ids(j)),0.3);
-        imn(:,:,:,(j-1)*2+2) = rescaling(im(:,:,:,ids(j)));
+        imn(:,:,:,(j-1)*4+1) = randomNoise(im(:,:,:,ids(j)),0.3);
+        imn(:,:,:,(j-1)*4+2) = rescaling(im(:,:,:,ids(j)));
+        imn(:,:,:,(j-1)*4+3) = randomRot(im(:,:,:,ids(j)),10);
+        imn(:,:,:,(j-1)*4+4) = randomTrans(im(:,:,:,ids(j)),5);
     end
     imns = cat(4,imns,imn);
     lb = single(zeros(10,size(imn,4)));
@@ -44,7 +46,7 @@ save('aug3.mat','imns','lbns');
 
 function imt = randomRot(im,maxdeg)
 % max 10, ok
-    ang = maxdeg * pi / 180.0;%(rand(1)*2 - 1)*
+    ang = (rand(1)*2 - 1) * pi / 180.0;%(rand(1)*2 - 1)*
     tform = affine2d([cos(ang) sin(ang) 0;-sin(ang) cos(ang) 0;0 0 1]');
     R = imref2d(size(im));
     imt = imwarp(im,tform,'InterpolationMethod','bilinear','OutputView',R);
@@ -52,7 +54,7 @@ end
 
 function imt = randomTrans(im,maxT)
 % max 5, ok
-    t = [1;1].*maxT;%(rand(2,1).*2-1).*
+    t = (rand(2,1).*2-1).*maxT;%
     tform = affine2d([1 0 t(1);0 1 t(2);0 0 1]');
     R = imref2d(size(im));
     imt = imwarp(im,tform,'InterpolationMethod','bilinear','OutputView',R);
