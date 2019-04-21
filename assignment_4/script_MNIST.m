@@ -41,23 +41,32 @@ if training == 1
     %% training parameters
     % initialize parameters
     opts.train.batchSize = 100;
-    opts.train.numEpochs = 500;
+    opts.train.numEpochs = 100;
 
+    lrinit = 0.01;
+    
     % set learning rate
-    opts.train.learningRate = 0.1;
+    opts.train.learningRate = lrinit;
     opts.train.weightDecay  = 1e-4;
     opts.train.momentum = 0.9;
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
-    opts.earlyStopping.patience = 10;
+    opts.earlyStopping.patience = 20;
     opts.earlyStopping.num = 0;
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
     opts.earlyStopping.numEpoches = 0;
+    
+    %% Adam parameters, if not Adam, then useless
+    opts.train.Adam.eps = 0.001;
+    opts.train.Adam.rho1 = 0.9;
+    opts.train.Adam.rho2 = 0.999;
+    opts.train.Adam.delta = 1e-8;
+    opts.train.Adam.t = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer 500
+    num_of_hidden_units = [2000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
@@ -69,6 +78,7 @@ if training == 1
     trainlosses = zeros(1,opts.train.numEpochs);
     vallosses = zeros(1,opts.train.numEpochs);
     % per epoch
+    opts.train.Adam.t = opts.train.Adam.t + 1;
     for i = 1:opts.train.numEpochs    
         % gen new batches
         opts = getBatches(N, opts);
@@ -87,8 +97,12 @@ if training == 1
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            nn = updateW(nn,grad,opts);
+%             [nn,opts] = updateW(nn,grad,opts);
+            
+            % use Adam
+            [nn,opts] = updateWAdam(nn,grad,opts);
         end
+        
         % forward
 %         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
         % compute loss
@@ -129,48 +143,52 @@ if training == 1
     nn = opts.earlyStopping.nn;
     
     %% combine train data and validation data, re-start a training using found epoches
-%     trainData = cat(2,trainData,valData);
-%     trainLabel = cat(2,trainLabel,valLabel);
-%     N = length(trainData);
-%     opts = genBatchIndex(N,opts);
-%     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
-%     opts.train.numEpochs = opts.earlyStopping.numEpoches;
-%     opts.train.learningRate = 0.1;
-%     
-%     %% retraining
-%     figure;
-%     trainlosses = zeros(1,opts.train.numEpochs);
-%     % per epoch
-%     for i = 1:opts.train.numEpochs    
-%         % gen new batches
-%         opts = getBatches(N, opts);
-%         % per batch
-%         for j = 1:opts.batchNum
-%             id = opts.batches(j,:);
-%             x = trainData(:,id);
-%             t = trainLabel(:,id);
-%             % forward
-%             [y,h,z] = forwardPropagation(nn,x,@ReLU);
-% 
-%             newloss = loss(t,y);
-%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
-% 
-%             % backpropagation + Minibatch + SGD + Momentum 0.9
-%             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
-%             % SDG: gradient descent
-%     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-%             nn = updateW(nn,grad,opts);
-%         end
-%         % forward
-%         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
-%         % compute loss
-%         newloss = loss(trainLabel,y);
-%         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
-%         trainlosses(i) = newloss;
-% %         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
-% %         hold off;
-% %         pause(0.1);
-%     end  
+    trainData = cat(2,trainData,valData);
+    trainLabel = cat(2,trainLabel,valLabel);
+    N = length(trainData);
+    opts = genBatchIndex(N,opts);
+    [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
+    opts.train.numEpochs = opts.earlyStopping.numEpoches;
+    opts.train.learningRate = lrinit;
+    
+    opts.train.Adam.t = 0;
+    
+    %% retraining
+    figure;
+    trainlosses = zeros(1,opts.train.numEpochs);
+    % per epoch
+    for i = 1:opts.train.numEpochs*2
+        % gen new batches
+        opts = getBatches(N, opts);
+        % per batch
+        opts.train.Adam.t = opts.train.Adam.t + 1;
+        for j = 1:opts.batchNum
+            id = opts.batches(j,:);
+            x = trainData(:,id);
+            t = trainLabel(:,id);
+            % forward
+            [y,h,z] = forwardPropagation(nn,x,@ReLU);
+
+            newloss = loss(t,y);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newloss)]);
+
+            % backpropagation + Minibatch + SGD + Momentum 0.9
+            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+            % SDG: gradient descent
+    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
+%             [nn,opts] = updateW(nn,grad,opts);
+            [nn,opts] = updateWAdam(nn,grad,opts);
+        end
+        % forward
+        [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+        % compute loss
+        newloss = loss(trainLabel,y);
+        disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
+        trainlosses(i) = newloss;
+        plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+        hold off;
+        pause(0.1);
+    end  
     
     net.nn = nn;
     net.meandata = mdata;
@@ -184,11 +202,11 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/net15.mat'));
+    load(strcat('./mnist_train/','net30.mat'));
     test_data = single(test_data);
     test_label = single(test_label)';
     
-    test_data = test_data ./ fvecnorm(test_data,2,2);
+%     test_data = test_data ./ fvecnorm(test_data,2,2);
     test_data = test_data';
     test_data = test_data - repmat(net.meandata',1,size(test_data,2));
     test_data = test_data.*net.scale;
@@ -217,11 +235,12 @@ function [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn
             row = num_outputs;
             column = (num_of_hidden_units(i-1) + 1);
         end
-        w = initialization(column, row*column);
+        w = initialization(row, column, row*column);
         A = reshape(w,row,column);
         nn{i} = A;
 
-        opts.train.v{i} = zeros(size(A));
+        opts.train.s{i} = zeros(size(A));
+        opts.train.r{i} = zeros(size(A));
     end
 end
 
@@ -274,22 +293,36 @@ function [datan,m,scale] = normalization(data)
     datan = datan .* scale;
 end
 
-function W = updateW(W,grad,opts)
+function [W,opts] = updateW(W,grad,opts)
     % update velocity
     v = cell(length(W),1);
     for i = 1:length(W)
-        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
+        v{i} = opts.train.s{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
         W{i} = W{i} + v{i};
-        opts.train.v{i} = v{i};
+        opts.train.s{i} = v{i};
     end
 end
 
-function w = initialization(n, m)
+function [W,opts] = updateWAdam(W,grad,opts)
+    c1 = 1 / (1-opts.train.Adam.rho1^opts.train.Adam.t);
+    c2 = 1 / (1-opts.train.Adam.rho2^opts.train.Adam.t);
+    for i = 1:length(W)
+        opts.train.s{i} = opts.train.s{i}.*opts.train.Adam.rho1 + (1-opts.train.Adam.rho1).*grad{i};
+        opts.train.r{i} = opts.train.r{i}.*opts.train.Adam.rho2 + (1-opts.train.Adam.rho2).*(grad{i}.*grad{i});
+        sb = opts.train.s{i}.*c1;
+        rb = opts.train.r{i}.*c2;
+        deltaW = -opts.train.Adam.eps.*(sb./(sqrt(rb)+opts.train.Adam.delta));
+        W{i} = W{i} + deltaW;
+    end
+end
+
+function w = initialization(m, n, mn)
 % n is assumed to be the number of data. m is assumed to be the number of
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    w = randn([m,1]).*sqrt(2/n);
+    % w = randn([mn,1]).*sqrt(2/m);% inilization 1
+    w = (rand([mn,1]).*2 - 1).*sqrt(6/(m+n));
 end
 
 function h = ReLU(z)
@@ -298,8 +331,9 @@ function h = ReLU(z)
 end
 
 function y = softMax(yhat)
-    ey = exp(yhat);
-    y = ey ./ (sum(ey)+1e-8);
+    ey = exp(double(yhat));
+    y = ey ./ (sum(ey)+1e-20);
+    y = y + 1e-20;
 end
 
 function hdz = ReLUDer(z)
