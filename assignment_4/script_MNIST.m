@@ -33,9 +33,9 @@ if training == 1
     %% training parameters
     % initialize parameters
     opts.train.batchSize = 100;
-    opts.train.numEpochs = 20;
+    opts.train.numEpochs = 100;
 
-    lrinit = 0.1;
+    lrinit = 0.01;
     
     % set learning rate
     opts.train.learningRate = lrinit;
@@ -70,6 +70,7 @@ if training == 1
     trainlosses = zeros(1,opts.train.numEpochs);
     vallosses = zeros(1,opts.train.numEpochs);
     % per epoch
+    opts.train.Adam.t = opts.train.Adam.t + 1;
     for i = 1:opts.train.numEpochs    
         % gen new batches
         opts = getBatches(N, opts);
@@ -88,11 +89,12 @@ if training == 1
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            [nn,opts] = updateW(nn,grad,opts);
+%             [nn,opts] = updateW(nn,grad,opts);
             
             % use Adam
-            opts.train.Adam.t = opts.train.Adam.t + 1;
+            [nn,opts] = updateWAdam(nn,grad,opts);
         end
+        
         % forward
         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
         % compute loss
@@ -141,6 +143,8 @@ if training == 1
     opts.train.numEpochs = opts.earlyStopping.numEpoches;
     opts.train.learningRate = lrinit;
     
+    opts.train.Adam.t = 0;
+    
     %% retraining
     figure;
     trainlosses = zeros(1,opts.train.numEpochs);
@@ -149,6 +153,7 @@ if training == 1
         % gen new batches
         opts = getBatches(N, opts);
         % per batch
+        opts.train.Adam.t = opts.train.Adam.t + 1;
         for j = 1:opts.batchNum
             id = opts.batches(j,:);
             x = trainData(:,id);
@@ -157,13 +162,14 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newloss = loss(t,y);
-            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newloss)]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            [nn,opts] = updateW(nn,grad,opts);
+%             [nn,opts] = updateW(nn,grad,opts);
+            [nn,opts] = updateWAdam(nn,grad,opts);
         end
         % forward
         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
@@ -188,7 +194,7 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/','net26.mat'));
+    load(strcat('./mnist_train/','net30.mat'));
     test_data = single(test_data);
     test_label = single(test_label)';
     
@@ -285,15 +291,18 @@ function [W,opts] = updateW(W,grad,opts)
     end
 end
 
-% function W = updateWAdam(W,grad,opts)
-%     % update velocity
-%     v = cell(length(W),1);
-%     for i = 1:length(W)
-%         v{i} = opts.train.s{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
-%         W{i} = W{i} + v{i};
-%         opts.train.s{i} = v{i};
-%     end
-% end
+function [W,opts] = updateWAdam(W,grad,opts)
+    c1 = 1 / (1-opts.train.Adam.rho1^opts.train.Adam.t);
+    c2 = 1 / (1-opts.train.Adam.rho2^opts.train.Adam.t);
+    for i = 1:length(W)
+        opts.train.s{i} = opts.train.s{i}.*opts.train.Adam.rho1 + (1-opts.train.Adam.rho1).*grad{i};
+        opts.train.r{i} = opts.train.r{i}.*opts.train.Adam.rho2 + (1-opts.train.Adam.rho2).*(grad{i}.*grad{i});
+        sb = opts.train.s{i}.*c1;
+        rb = opts.train.r{i}.*c2;
+        deltaW = -opts.train.Adam.eps.*(sb./(sqrt(rb)+opts.train.Adam.delta));
+        W{i} = W{i} + deltaW;
+    end
+end
 
 function w = initialization(m, n, mn)
 % n is assumed to be the number of data. m is assumed to be the number of
