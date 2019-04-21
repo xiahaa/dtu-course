@@ -12,12 +12,20 @@ if training == 1
     load('MNIST.mat');
     train_data = single(train_data);
     train_label = single(train_label);
+    
+    load('aug3.mat');
+    aug_data = single(imns);
+    aug_label = single(lbns);
+    train_data = cat(1,train_data,aug_data);
+    train_label = cat(1,train_label,aug_label');
+    
+    Nt = size(train_data,1);
 
     %% data preprocessing
     % preparation, normalization and minus mean
     [data,mdata,scale] = normalization(train_data);
     % random sample train set and validaton set
-    valID = randperm(size(data,1),10000);
+    valID = randperm(size(data,1),round(Nt*0.1));%% 10% as the validation set
     % loginal id
     id = zeros(1,size(data,1));
     id(valID) = 1;
@@ -49,7 +57,7 @@ if training == 1
     opts.earlyStopping.numEpoches = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 1000];% mxn: m is the hidden units per layer, n - layer 500
+    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer 500
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
@@ -73,7 +81,7 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newloss = loss(t,y);
-            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newloss)]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
@@ -82,10 +90,10 @@ if training == 1
             nn = updateW(nn,grad,opts);
         end
         % forward
-        [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+%         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
         % compute loss
-        newloss = loss(trainLabel,y);
-        disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
+%         newloss = loss(trainLabel,y);
+%         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
         
         % check validation error
 %         if mod(i,opts.earlyStopping.n) == 0
@@ -99,10 +107,10 @@ if training == 1
                 opts.earlyStopping.nn = nn;
             else
                 opts.earlyStopping.num = opts.earlyStopping.num + 1;
-                opts.train.learningRate = opts.train.learningRate * 0.5;
-                if opts.train.learningRate < 0.001
-                    opts.train.learningRate = 0.001;
-                end
+%                 opts.train.learningRate = opts.train.learningRate * 0.5;
+%                 if opts.train.learningRate < 0.001
+%                     opts.train.learningRate = 0.001;
+%                 end
             end
             if opts.earlyStopping.num >= opts.earlyStopping.patience
                 break;
@@ -112,57 +120,57 @@ if training == 1
 %         end
         
         trainlosses(i) = newloss;
-        plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
-        plot(vallosses(1:i),'-o','LineWidth',1.5);
-        hold off;
-        pause(0.1);
+%         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+%         plot(vallosses(1:i),'-o','LineWidth',1.5);
+%         hold off;
+%         pause(0.1);
     end
     
-    %     nn = opts.earlyStopping.nn;
+    nn = opts.earlyStopping.nn;
     
     %% combine train data and validation data, re-start a training using found epoches
-    trainData = cat(2,trainData,valData);
-    trainLabel = cat(2,trainLabel,valLabel);
-    N = length(trainData);
-    opts = genBatchIndex(N,opts);
-    [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
-    opts.train.numEpochs = opts.earlyStopping.numEpoches;
-    opts.train.learningRate = 0.1;
-    
-    %% retraining
-    figure;
-    trainlosses = zeros(1,opts.train.numEpochs);
-    % per epoch
-    for i = 1:opts.train.numEpochs    
-        % gen new batches
-        opts = getBatches(N, opts);
-        % per batch
-        for j = 1:opts.batchNum
-            id = opts.batches(j,:);
-            x = trainData(:,id);
-            t = trainLabel(:,id);
-            % forward
-            [y,h,z] = forwardPropagation(nn,x,@ReLU);
-
-            newloss = loss(t,y);
-            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
-
-            % backpropagation + Minibatch + SGD + Momentum 0.9
-            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
-            % SDG: gradient descent
-    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            nn = updateW(nn,grad,opts);
-        end
-        % forward
-        [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
-        % compute loss
-        newloss = loss(trainLabel,y);
-        disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
-        trainlosses(i) = newloss;
-        plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
-        hold off;
-        pause(0.1);
-    end  
+%     trainData = cat(2,trainData,valData);
+%     trainLabel = cat(2,trainLabel,valLabel);
+%     N = length(trainData);
+%     opts = genBatchIndex(N,opts);
+%     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
+%     opts.train.numEpochs = opts.earlyStopping.numEpoches;
+%     opts.train.learningRate = 0.1;
+%     
+%     %% retraining
+%     figure;
+%     trainlosses = zeros(1,opts.train.numEpochs);
+%     % per epoch
+%     for i = 1:opts.train.numEpochs    
+%         % gen new batches
+%         opts = getBatches(N, opts);
+%         % per batch
+%         for j = 1:opts.batchNum
+%             id = opts.batches(j,:);
+%             x = trainData(:,id);
+%             t = trainLabel(:,id);
+%             % forward
+%             [y,h,z] = forwardPropagation(nn,x,@ReLU);
+% 
+%             newloss = loss(t,y);
+%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),':', num2str(newloss)]);
+% 
+%             % backpropagation + Minibatch + SGD + Momentum 0.9
+%             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+%             % SDG: gradient descent
+%     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
+%             nn = updateW(nn,grad,opts);
+%         end
+%         % forward
+%         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
+%         % compute loss
+%         newloss = loss(trainLabel,y);
+%         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss)]);
+%         trainlosses(i) = newloss;
+% %         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+% %         hold off;
+% %         pause(0.1);
+%     end  
     
     net.nn = nn;
     net.meandata = mdata;
@@ -175,10 +183,13 @@ else
     %% load data
     load('MNIST.mat');
     
-    files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/',files(end).name));
-    test_data = single(test_data)';
+%     files = dir(fullfile('./mnist_train/', '*.mat'));
+    load(strcat('./mnist_train/net15.mat'));
+    test_data = single(test_data);
     test_label = single(test_label)';
+    
+    test_data = test_data ./ fvecnorm(test_data,2,2);
+    test_data = test_data';
     test_data = test_data - repmat(net.meandata',1,size(test_data,2));
     test_data = test_data.*net.scale;
 %     data = normalization(test_data);
@@ -221,6 +232,9 @@ function opts = genBatchIndex(n,opts)
     opts.batchIndex = zeros(floor(n/opts.train.batchSize)+1,opts.train.batchSize);
     while startIndex <= n
         endIndex = min((startIndex+opts.train.batchSize-1),n);
+        if (endIndex - startIndex + 1) ~= opts.train.batchSize
+            break;
+        end
         opts.batchIndex(i,:) = startIndex:endIndex;
         i = i + 1;
         startIndex = endIndex + 1;
@@ -250,8 +264,9 @@ end
 
 function [datan,m,scale] = normalization(data)
 % normalization for MNIST
-%     datan = data ./ fvecnorm(data,2,2);
-    datan = data;
+    datan = data ./ fvecnorm(data,2,2);
+%     datan = data;
+
     m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
     
