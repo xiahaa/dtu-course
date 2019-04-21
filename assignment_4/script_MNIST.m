@@ -33,23 +33,25 @@ if training == 1
     %% training parameters
     % initialize parameters
     opts.train.batchSize = 100;
-    opts.train.numEpochs = 500;
+    opts.train.numEpochs = 20;
 
+    lrinit = 2;
+    
     % set learning rate
-    opts.train.learningRate = 0.1;
+    opts.train.learningRate = lrinit;
     opts.train.weightDecay  = 1e-4;
     opts.train.momentum = 0.9;
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
-    opts.earlyStopping.patience = 10;
+    opts.earlyStopping.patience = 20;
     opts.earlyStopping.num = 0;
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
     opts.earlyStopping.numEpoches = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 1000];% mxn: m is the hidden units per layer, n - layer 500
+    num_of_hidden_units = [2000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
@@ -99,10 +101,10 @@ if training == 1
                 opts.earlyStopping.nn = nn;
             else
                 opts.earlyStopping.num = opts.earlyStopping.num + 1;
-                opts.train.learningRate = opts.train.learningRate * 0.5;
-                if opts.train.learningRate < 0.001
-                    opts.train.learningRate = 0.001;
-                end
+%                 opts.train.learningRate = opts.train.learningRate * 0.5;
+%                 if opts.train.learningRate < 0.001
+%                     opts.train.learningRate = 0.001;
+%                 end
             end
             if opts.earlyStopping.num >= opts.earlyStopping.patience
                 break;
@@ -127,13 +129,13 @@ if training == 1
     opts = genBatchIndex(N,opts);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
     opts.train.numEpochs = opts.earlyStopping.numEpoches;
-    opts.train.learningRate = 0.1;
+    opts.train.learningRate = lrinit;
     
     %% retraining
     figure;
     trainlosses = zeros(1,opts.train.numEpochs);
     % per epoch
-    for i = 1:opts.train.numEpochs    
+    for i = 1:opts.train.numEpochs*3
         % gen new batches
         opts = getBatches(N, opts);
         % per batch
@@ -175,10 +177,13 @@ else
     %% load data
     load('MNIST.mat');
     
-    files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/',files(end).name));
-    test_data = single(test_data)';
+%     files = dir(fullfile('./mnist_train/', '*.mat'));
+    load(strcat('./mnist_train/','net23.mat'));
+    test_data = single(test_data);
     test_label = single(test_label)';
+    
+%     test_data = test_data ./ fvecnorm(test_data,2,2);
+    test_data = test_data';
     test_data = test_data - repmat(net.meandata',1,size(test_data,2));
     test_data = test_data.*net.scale;
 %     data = normalization(test_data);
@@ -274,7 +279,7 @@ function w = initialization(n, m)
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    w = randn([m,1]).*sqrt(2/n);
+    w = randn([m,1]).*sqrt(2/m);
 end
 
 function h = ReLU(z)
@@ -283,8 +288,9 @@ function h = ReLU(z)
 end
 
 function y = softMax(yhat)
-    ey = exp(yhat);
-    y = ey ./ (sum(ey)+1e-8);
+    ey = exp(double(yhat));
+    y = ey ./ (sum(ey)+1e-20);
+    y = y + 1e-20;
 end
 
 function hdz = ReLUDer(z)
