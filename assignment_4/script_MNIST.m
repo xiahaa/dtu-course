@@ -35,7 +35,7 @@ if training == 1
     opts.train.batchSize = 100;
     opts.train.numEpochs = 20;
 
-    lrinit = 2;
+    lrinit = 0.1;
     
     % set learning rate
     opts.train.learningRate = lrinit;
@@ -49,6 +49,13 @@ if training == 1
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
     opts.earlyStopping.numEpoches = 0;
+    
+    %% Adam parameters, if not Adam, then useless
+    opts.train.Adam.eps = 0.001;
+    opts.train.Adam.rho1 = 0.9;
+    opts.train.Adam.rho2 = 0.999;
+    opts.train.Adam.delta = 1e-8;
+    opts.train.Adam.t = 0;
 
     %% define forward neural network
     num_of_hidden_units = [2000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
@@ -81,7 +88,10 @@ if training == 1
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            nn = updateW(nn,grad,opts);
+            [nn,opts] = updateW(nn,grad,opts);
+            
+            % use Adam
+            opts.train.Adam.t = opts.train.Adam.t + 1;
         end
         % forward
         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
@@ -135,7 +145,7 @@ if training == 1
     figure;
     trainlosses = zeros(1,opts.train.numEpochs);
     % per epoch
-    for i = 1:opts.train.numEpochs*3
+    for i = 1:opts.train.numEpochs*2
         % gen new batches
         opts = getBatches(N, opts);
         % per batch
@@ -153,7 +163,7 @@ if training == 1
             grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
-            nn = updateW(nn,grad,opts);
+            [nn,opts] = updateW(nn,grad,opts);
         end
         % forward
         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
@@ -178,7 +188,7 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/','net23.mat'));
+    load(strcat('./mnist_train/','net26.mat'));
     test_data = single(test_data);
     test_label = single(test_label)';
     
@@ -211,11 +221,12 @@ function [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn
             row = num_outputs;
             column = (num_of_hidden_units(i-1) + 1);
         end
-        w = initialization(column, row*column);
+        w = initialization(row, column, row*column);
         A = reshape(w,row,column);
         nn{i} = A;
 
-        opts.train.v{i} = zeros(size(A));
+        opts.train.s{i} = zeros(size(A));
+        opts.train.r{i} = zeros(size(A));
     end
 end
 
@@ -264,22 +275,33 @@ function [datan,m,scale] = normalization(data)
     datan = datan .* scale;
 end
 
-function W = updateW(W,grad,opts)
+function [W,opts] = updateW(W,grad,opts)
     % update velocity
     v = cell(length(W),1);
     for i = 1:length(W)
-        v{i} = opts.train.v{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
+        v{i} = opts.train.s{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
         W{i} = W{i} + v{i};
-        opts.train.v{i} = v{i};
+        opts.train.s{i} = v{i};
     end
 end
 
-function w = initialization(n, m)
+% function W = updateWAdam(W,grad,opts)
+%     % update velocity
+%     v = cell(length(W),1);
+%     for i = 1:length(W)
+%         v{i} = opts.train.s{i}.*opts.train.momentum - grad{i}.*opts.train.learningRate;%.*(1-opts.train.momentum);
+%         W{i} = W{i} + v{i};
+%         opts.train.s{i} = v{i};
+%     end
+% end
+
+function w = initialization(m, n, mn)
 % n is assumed to be the number of data. m is assumed to be the number of
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    w = randn([m,1]).*sqrt(2/m);
+    % w = randn([mn,1]).*sqrt(2/m);% inilization 1
+    w = (rand([mn,1]).*2 - 1).*sqrt(6/(m+n));
 end
 
 function h = ReLU(z)
