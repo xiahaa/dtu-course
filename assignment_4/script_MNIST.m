@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-training = 1;
+training = 0;
 
 if training == 1
     %% load data
@@ -26,7 +26,7 @@ if training == 1
     % preparation, normalization and minus mean
     [data,mdata,scale] = normalization(train_data);
     % random sample train set and validaton set
-    valID = randperm(size(data,1),round(Nt*0.2));%% 10% as the validation set
+    valID = randperm(size(data,1),round(Nt*0.1));%% 10% as the validation set
     % loginal id
     id = zeros(1,size(data,1));
     id(valID) = 1;
@@ -53,7 +53,7 @@ if training == 1
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
-    opts.earlyStopping.patience = 20;
+    opts.earlyStopping.patience = 5;
     opts.earlyStopping.num = 0;
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
@@ -151,7 +151,7 @@ if training == 1
     N = length(trainData);
     opts = genBatchIndex(N,opts);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
-    opts.train.numEpochs = 50;%opts.earlyStopping.numEpoches;
+    opts.train.numEpochs = opts.earlyStopping.numEpoches;
     opts.train.learningRate = lrinit;
     
     opts.train.Adam.t = 0;
@@ -208,7 +208,7 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/','net31.mat'));
+    load(strcat('./mnist_train/','net32.mat'));
     test_data = single(test_data);
     test_label = single(test_label)';
     
