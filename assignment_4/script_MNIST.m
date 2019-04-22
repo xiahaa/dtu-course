@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-training = 1;
+training = 0;
 
 if training == 1
     %% load data
@@ -13,12 +13,12 @@ if training == 1
     train_data = single(train_data);
     train_label = single(train_label);
     
-    load('aug3.mat');
-    shuffle_id = randperm(size(imns,1),size(imns,1));
-    aug_data = single(imns(shuffle_id,:));
-    aug_label = single(lbns(:,shuffle_id));
-    train_data = cat(1,train_data,aug_data);
-    train_label = cat(1,train_label,aug_label');
+%     load('aug3.mat');
+%     shuffle_id = randperm(size(imns,1),round(0.5*size(imns,1)));
+%     aug_data = single(imns(shuffle_id,:));
+%     aug_label = single(lbns(:,shuffle_id));
+%     train_data = cat(1,train_data,aug_data);
+%     train_label = cat(1,train_label,aug_label');
     
     Nt = size(train_data,1);
 
@@ -37,6 +37,10 @@ if training == 1
     trainData = data(~id,:)';
     trainLabel = train_label(~id,:)';
 
+    % just for debugging
+    trainData = cat(2,trainData,valData);
+    trainLabel = cat(2,trainLabel,valLabel);
+    
     N = length(trainData);
 
     %% training parameters
@@ -44,16 +48,16 @@ if training == 1
     opts.train.batchSize = 100;
     opts.train.numEpochs = 100;
 
-    lrinit = 0.001;
+    lrinit = 1;
     
     % set learning rate
     opts.train.learningRate = lrinit;
     opts.train.weightDecay  = 1e-4;
-    opts.train.momentum = 0.9;
+    opts.train.momentum = 0.0;
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
-    opts.earlyStopping.patience = 20;
+    opts.earlyStopping.patience = 5;
     opts.earlyStopping.num = 0;
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
@@ -67,17 +71,24 @@ if training == 1
     opts.train.Adam.t = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 300];% mxn: m is the hidden units per layer, n - layer 1000 300 best
+    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer 1000 300 best
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
 
-
+    %% just for showing test error
+    test_data = single(test_data);
+    test_label = single(test_label)';
+    test_data = test_data';
+    test_data = test_data - repmat(mdata',1,size(test_data,2));
+    test_data = test_data.*scale;
+    
     %% training
     figure;
     trainlosses = zeros(1,opts.train.numEpochs);
     vallosses = zeros(1,opts.train.numEpochs);
+    testlosses = zeros(1,opts.train.numEpochs);
     % per epoch
     
     for i = 1:opts.train.numEpochs    
@@ -134,11 +145,18 @@ if training == 1
             end
             vallosses(i) = valLoss/length(valLabel);
             
+            [yt,~,~] = forwardPropagation(nn,test_data,@ReLU);
+            testLoss = loss(test_label,yt);
+            [~,id1]=max(yt);
+            [~,id2]=max(test_label);
+            disp(['test accuracy: ', num2str(sum(id1==id2)/length(id2))]);
+            testlosses(i) = testLoss/length(yt);
 %         end
         
         trainlosses(i) = newloss/N;
         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
         plot(vallosses(1:i),'-o','LineWidth',1.5);
+        plot(testlosses(1:i),'-o','LineWidth',1.5);
         hold off;
         pause(0.1);
     end
@@ -151,7 +169,7 @@ if training == 1
     N = length(trainData);
     opts = genBatchIndex(N,opts);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
-    opts.train.numEpochs = 50;%opts.earlyStopping.numEpoches;
+    opts.train.numEpochs = opts.earlyStopping.numEpoches;
     opts.train.learningRate = lrinit;
     
     opts.train.Adam.t = 0;
@@ -208,7 +226,7 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/','net31.mat'));
+    load(strcat('./mnist_train/','net17.mat'));
     test_data = single(test_data);
     test_label = single(test_label)';
     
@@ -357,11 +375,14 @@ function [y,h,z] = forwardPropagation(W,x,f)
     z = cell(length(W),1);
     h = cell(length(W),1);
     
+    sigma = 0.1;
     h{1} = [x];
+    h{1} = h{1} + randn([size(h{1})]).*sigma;
     for i = 1:length(W)-1
         % layer to layer
         z{i} = W{i}*[h{i};ones(1,size(h{i},2))];
         h{i+1} = f(z{i});
+        h{i+1} = h{i+1} + randn([size(h{i+1})]).*sigma;
     end
     % output layer
     z{i+1} = W{i+1}*[h{i+1};ones(1,size(h{i+1},2))];
