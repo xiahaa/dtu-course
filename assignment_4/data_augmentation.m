@@ -13,36 +13,74 @@ train_label = single(train_label);
 test_data = single(test_data);
 test_label = single(test_label);
 
+% load('imdb.mat');
+
 %%
 im = reshape(train_data',28,28,1,[]);
 % im = permute(im,[2,1,3,4]);
 
-[~,labels] = max(train_label');
+useBuiltinFunc = true;
 
-%%%%%%%%%%%%%%%%%%%%%%% injecting noise %%%%%%%%%%%%%%%%%%%%%%%%%%
-imns = [];
-lbns = [];
-for i = 1:10
-    id = find(labels == i);
-    % 
-    idn = round(length(id) * 0.25);
-    ids = id(randperm(length(id),idn));
-    
-    imn = zeros(28,28,1,length(ids)*4);
-    
-    for j = 1:1:length(ids)
-        imn(:,:,:,(j-1)*4+1) = randomNoise(im(:,:,:,ids(j)),0.3);
-        imn(:,:,:,(j-1)*4+2) = rescaling(im(:,:,:,ids(j)));
-        imn(:,:,:,(j-1)*4+3) = randomRot(im(:,:,:,ids(j)),10);
-        imn(:,:,:,(j-1)*4+4) = randomTrans(im(:,:,:,ids(j)),5);
+%%%%%%%%%%%%%%%%%%%%%%% injecting noise, scaling, rotation and translation %%%%%%%%%%%%%%%%%%%%%%%%%%
+if useBuiltinFunc == false
+    [~,labels] = max(train_label');
+    imns = [];
+    lbns = [];
+    for i = 1:10
+        id = find(labels == i);
+        % 
+        idn = round(length(id) * 0.25);
+        ids = id(randperm(length(id),idn));
+
+        imn = zeros(28,28,1,length(ids)*4);
+
+        for j = 1:1:length(ids)
+            imn(:,:,:,(j-1)*4+1) = randomNoise(im(:,:,:,ids(j)),0.3);
+            imn(:,:,:,(j-1)*4+2) = rescaling(im(:,:,:,ids(j)));
+            imn(:,:,:,(j-1)*4+3) = randomRot(im(:,:,:,ids(j)),10);
+            imn(:,:,:,(j-1)*4+4) = randomTrans(im(:,:,:,ids(j)),5);
+        end
+        imns = cat(4,imns,imn);
+        lb = single(zeros(10,size(imn,4)));
+        lb(i,:) = 1;
+        lbns = cat(2,lbns,lb);
     end
-    imns = cat(4,imns,imn);
-    lb = single(zeros(10,size(imn,4)));
-    lb(i,:) = 1;
-    lbns = cat(2,lbns,lb);
+    imns = reshape(imns,28*28,[])';
+    save('aug3.mat','imns','lbns');
+else
+    images = reshape(train_data',28,28,1,[]);
+    [~,labels] = max(train_label');
+    
+    augmenter = imageDataAugmenter( ...
+                                    'RandRotation',[-20 20], ...
+                                    'RandXScale',[0.6 1.1], ...
+                                    'RandYScale',[0.6 1.1], ...
+                                    'RandXTranslation',[-3 3], ...
+                                    'RandYTranslation',[-3 3]);
+                                
+    imageSize = [28 28 1];
+    augimds = augmentedImageDatastore(imageSize,images,labels(:),'DataAugmentation',augmenter);
+    
+    num = floor(length(labels)/128);
+    
+    aug_labels = zeros(num*128,10);
+    for i = 1:num
+        minibatch = augimds.read();
+        montage(minibatch.input);
+        pause(0.1);
+        images = cat(4,images,minibatch.input{:});
+        for j = 1:length(minibatch.response)
+            aug_labels((i-1)*128+j, minibatch.response{j}) = 1; 
+        end
+    end
+    
+    aug_data = reshape(images,784,[])';
+    aug_label = cat(1,train_label,aug_labels);
+%     minibatch = preview(augimds);
+%     montage(minibatch.input);
+%     
+    save('aug_data4.mat','aug_data','aug_label');
 end
-imns = reshape(imns,28*28,[])';
-save('aug3.mat','imns','lbns');
 
 function imt = randomRot(im,maxdeg)
 % max 10, ok

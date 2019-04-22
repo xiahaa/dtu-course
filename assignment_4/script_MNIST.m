@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-training = 0;
+training = 1;
 
 if training == 1
     %% load data
@@ -38,8 +38,8 @@ if training == 1
     trainLabel = train_label(~id,:)';
 
     % just for debugging
-    trainData = cat(2,trainData,valData);
-    trainLabel = cat(2,trainLabel,valLabel);
+%     trainData = cat(2,trainData,valData);
+%     trainLabel = cat(2,trainLabel,valLabel);
     
     N = length(trainData);
 
@@ -48,12 +48,12 @@ if training == 1
     opts.train.batchSize = 100;
     opts.train.numEpochs = 100;
 
-    lrinit = 1;
+    lrinit = 0.1;
     
     % set learning rate
     opts.train.learningRate = lrinit;
-    opts.train.weightDecay  = 1e-4;
-    opts.train.momentum = 0.0;
+    opts.train.weightDecay  = 0;%1e-4;
+    opts.train.momentum = 0.9;
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
@@ -64,19 +64,19 @@ if training == 1
     opts.earlyStopping.numEpoches = 0;
     
     %% Adam parameters, if not Adam, then useless
-    opts.train.Adam.eps = 0.001;
+    opts.train.Adam.eps = 0.0001;
     opts.train.Adam.rho1 = 0.9;
     opts.train.Adam.rho2 = 0.999;
     opts.train.Adam.delta = 1e-8;
     opts.train.Adam.t = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [1000 500];% mxn: m is the hidden units per layer, n - layer 1000 300 best
+    num_of_hidden_units = [2000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
-
+    
     %% just for showing test error
     test_data = single(test_data);
     test_label = single(test_label)';
@@ -107,7 +107,7 @@ if training == 1
             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
-            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+            grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
             [nn,opts] = updateW(nn,grad,opts);
@@ -194,7 +194,7 @@ if training == 1
             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
-            grad = backpropagation(nn,t,y,h,z,@ReLUDer);        
+            grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
             % SDG: gradient descent
     %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
             [nn,opts] = updateW(nn,grad,opts);
@@ -207,9 +207,17 @@ if training == 1
 %         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
         % compute loss
 %         newloss = loss(trainLabel,y);
+        [yt,~,~] = forwardPropagation(nn,test_data,@ReLU);
+        testLoss = loss(test_label,yt);
+        [~,id1]=max(yt);
+        [~,id2]=max(test_label);
+        disp(['test accuracy: ', num2str(sum(id1==id2)/length(id2))]);
+        testlosses(i) = testLoss/length(yt);
+
         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss/N)]);
         trainlosses(i) = newloss/N;
         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
+        plot(testlosses(1:i),'-o','LineWidth',1.5);
         hold off;
         pause(0.1);
     end  
@@ -227,7 +235,7 @@ else
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
 
-    load(strcat('./mnist_train/','net32.mat'));
+    load(strcat('./mnist_train/','net33.mat'));
 
     test_data = single(test_data);
     test_label = single(test_label)';
@@ -345,7 +353,7 @@ function w = initialization(m, n, mn)
 % weights for the forward neural network
 
     % draw from a gaussian with sqrt(2/n) as the standard deviation
-    % w = randn([mn,1]).*sqrt(2/m);% inilization 1
+%     w = randn([mn,1]).*sqrt(2/mn);% inilization 1
     w = (rand([mn,1]).*2 - 1).*sqrt(6/(m+n));
 end
 
@@ -377,7 +385,7 @@ function [y,h,z] = forwardPropagation(W,x,f)
     z = cell(length(W),1);
     h = cell(length(W),1);
     
-    sigma = 0.1;
+    sigma = 0;
     h{1} = [x];
     h{1} = h{1} + randn([size(h{1})]).*sigma;
     for i = 1:length(W)-1
@@ -391,7 +399,7 @@ function [y,h,z] = forwardPropagation(W,x,f)
     y = softMax(z{i+1});
 end
 
-function grad = backpropagation(W,t,y,h,z,fgrad)
+function grad = backpropagation(W,t,y,h,z,fgrad,weightDecay)
 % run backpropagation for gradient computation. W is assumed to be a cell.
     % first, take care of output
     grad = cell(length(W),1)';
@@ -404,12 +412,12 @@ function grad = backpropagation(W,t,y,h,z,fgrad)
     delta{n} =  y - t;
     A1 = [h{n}' ones(size(y,2),1)];
     A2 = delta{n};
-    grad{n} = A2*A1;
+    grad{n} = A2*A1 + weightDecay.*W{n};
     grad{n} = scale .* grad{n};
     for i = length(W)-1:-1:1
         d1 = W{i+1}'*delta{i+1};
         delta{i} = fgrad(z{i}).*d1(1:end-1,:);
-        grad{i} = delta{i}*[h{i}' ones(size(h{i},2),1)];
+        grad{i} = delta{i}*[h{i}' ones(size(h{i},2),1)] + weightDecay.*W{i};
         grad{i} = scale .* grad{i};
     end
 end
