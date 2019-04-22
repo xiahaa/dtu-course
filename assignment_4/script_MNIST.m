@@ -10,15 +10,21 @@ training = 1;
 if training == 1
     %% load data
     load('MNIST.mat');
-    train_data = single(train_data);
-    train_label = single(train_label);
+    useAugData = true;
     
-%     load('aug3.mat');
-%     shuffle_id = randperm(size(imns,1),round(0.5*size(imns,1)));
-%     aug_data = single(imns(shuffle_id,:));
-%     aug_label = single(lbns(:,shuffle_id));
-%     train_data = cat(1,train_data,aug_data);
-%     train_label = cat(1,train_label,aug_label');
+    if useAugData == false
+        train_data = single(train_data);
+        train_label = single(train_label);
+    else
+        load('aug_data8.mat');
+    %     shuffle_id = randperm(size(imns,1),round(0.5*size(imns,1)));
+    %     aug_data = single(imns(shuffle_id,:));
+    %     aug_label = single(lbns(:,shuffle_id));
+    %     train_data = cat(1,train_data,aug_data);
+    %     train_label = cat(1,train_label,aug_label');
+        train_data = single(aug_data);
+        train_label = single(aug_label);
+    end
     
     Nt = size(train_data,1);
 
@@ -48,7 +54,7 @@ if training == 1
     opts.train.batchSize = 100;
     opts.train.numEpochs = 100;
 
-    lrinit = 0.1;
+    lrinit = 0.001;
     
     % set learning rate
     opts.train.learningRate = lrinit;
@@ -57,21 +63,21 @@ if training == 1
     opts = genBatchIndex(N,opts);
     
     opts.earlyStopping.n = 1;
-    opts.earlyStopping.patience = 5;
+    opts.earlyStopping.patience = 20;
     opts.earlyStopping.num = 0;
     opts.earlyStopping.bestValLoss = 1e8;
     opts.earlyStopping.nn = {};
     opts.earlyStopping.numEpoches = 0;
     
     %% Adam parameters, if not Adam, then useless
-    opts.train.Adam.eps = 0.0001;
+    opts.train.Adam.eps = 0.001;
     opts.train.Adam.rho1 = 0.9;
     opts.train.Adam.rho2 = 0.999;
     opts.train.Adam.delta = 1e-8;
     opts.train.Adam.t = 0;
 
     %% define forward neural network
-    num_of_hidden_units = [2000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
+    num_of_hidden_units = [1000];% mxn: m is the hidden units per layer, n - layer 1000 300 best
     num_inputs = size(trainData,1);
     num_outputs = 10;
     nn = cell(1,length(num_of_hidden_units)+1);
@@ -104,7 +110,7 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newlossminibatch = loss(t,y);
-            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
+%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
@@ -161,7 +167,7 @@ if training == 1
         pause(0.1);
     end
     
-    %     nn = opts.earlyStopping.nn;
+    bestnn = opts.earlyStopping.nn;
     
     %% combine train data and validation data, re-start a training using found epoches
     trainData = cat(2,trainData,valData);
@@ -191,7 +197,7 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newlossminibatch = loss(t,y);
-            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
+%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
@@ -235,7 +241,7 @@ else
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
 
-    load(strcat('./mnist_train/','net33.mat'));
+    load(strcat('./mnist_train/','net36.mat'));
 
     test_data = single(test_data);
     test_label = single(test_label)';
@@ -250,6 +256,13 @@ else
     [~,id1]=max(y);
     [~,id2]=max(test_label);
     disp(sum(id1==id2)/length(id2));
+    
+    id = id1 ~= id2;
+    falseData = test_data(:,id);
+    falseData = falseData + repmat(net.meandata',1,size(falseData,2));
+    falseImages = reshape(falseData,28,28,[]);
+    falseImages = permute(falseImages,[2,1,3]);
+    montage(falseImages);
     
 end
 
@@ -318,6 +331,9 @@ function [datan,m,scale] = normalization(data)
 % normalization for MNIST
 %     datan = data ./ fvecnorm(data,2,2);
     datan = data;
+    
+%     datan = datan.*2-1;
+    
     m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
     
