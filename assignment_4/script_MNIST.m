@@ -26,7 +26,7 @@ if training == 1
     % preparation, normalization and minus mean
     [data,mdata,scale] = normalization(train_data);
     % random sample train set and validaton set
-    valID = randperm(size(data,1),round(Nt*0.2));%% 10% as the validation set
+    valID = randperm(size(data,1),round(Nt*0.1));%% 10% as the validation set
     % loginal id
     id = zeros(1,size(data,1));
     id(valID) = 1;
@@ -226,7 +226,9 @@ else
     load('MNIST.mat');
     
 %     files = dir(fullfile('./mnist_train/', '*.mat'));
-    load(strcat('./mnist_train/','net17.mat'));
+
+    load(strcat('./mnist_train/','net32.mat'));
+
     test_data = single(test_data);
     test_label = single(test_label)';
     
