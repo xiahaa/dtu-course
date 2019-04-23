@@ -5,39 +5,29 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 1;
+% test case
+type = 3;
+
+% number of points
 n = 1000;
 
-%% input test
+%% generate input and label
 data = dataCase(type, n);
 labels{1} = [1.*ones(1,n),2.*ones(1,n)];
 labels{2} = [1.*ones(1,n),2.*ones(1,n)];
 labels{3} = [1.*ones(1,2*n),2.*ones(1,2*n)];
 label = labels{type};
 
+% show
 figure
 id = label == 1;
 plot(data(1,id),data(2,id),'ro');hold on;
 plot(data(1,~id),data(2,~id),'bo');
 
-% data = dataCase(2, n);
-% figure
-% plot(data(1,1:n),data(2,1:n),'r.');hold on;
-% plot(data(1,n+1:2*n),data(2,n+1:2*n),'b.');
-% 
-% data = dataCase(3, n);
-% figure
-% plot(data(1,1:2*n),data(2,1:2*n),'r.');hold on;
-% plot(data(1,2*n+1:4*n),data(2,2*n+1:4*n),'b.');
-
-
 %% Q1 test with random weights
 num_of_hidden_units = [10 10];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
-
-htb = zeros(1,size(num_of_hidden_units,1)+1);
-ztb = zeros(1,size(num_of_hidden_units,1)+1);
 
 for i = 1:length(num_of_hidden_units)+1
     if i == 1 
@@ -55,16 +45,17 @@ for i = 1:length(num_of_hidden_units)+1
     end
     w = initialization(column, row*column);
     A = reshape(w,row,column);
-    nn{i} = A;
-    
-    htb(i) = column-1;
-    ztb(i) = row;
+    nn{i} = A;% network
 end
 
 x = data;
+% normalize
 [x,xm,xscale] = normalizeData(x);
-[y,h,d] = forwardPropagation(nn,x,@ReLU);
-[val,id]=max(y);
+% forward propagation
+[y,~,~] = forwardPropagation(nn,x,@ReLU);
+% get class
+[~,id]=max(y);
+% show 
 figure
 subplot(1,2,1)
 plot(data(1,label == 1),data(2,label == 1),'r.');hold on;
@@ -89,6 +80,7 @@ t = [ones(1,size(x,2));2.*ones(1,size(x,2))];
 id = (t(1,:)==label);t(1,id) = 1; t(1,~id) = 0; 
 t(2,:) = 1 - t(1,:);
 
+% use minibatch
 epoches = 200;
 batchSize = 100;
 learning_rate = 0.01;
@@ -132,8 +124,9 @@ title('Loss');
 xlabel('Epoches');
 ylabel('Loss');
 
-[y,h,z] = forwardPropagation(nn,x,@ReLU);
-[val,id]=max(y);
+% final result
+[y,~,~] = forwardPropagation(nn,x,@ReLU);
+[~,id]=max(y);
 figure
 subplot(1,2,1)
 plot(data(1,label == 1),data(2,label == 1),'r.');hold on;
@@ -196,6 +189,7 @@ figure;imshow(imc);
 
 
 function [W,old_grad] = updateSGD(W, grad, learning_rate, momentum, old_grad)
+% SGD
     if isempty(old_grad)
         for i = 1:length(grad)
             old_grad{i} = -grad{i}.*learning_rate;
