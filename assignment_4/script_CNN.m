@@ -14,10 +14,10 @@ load(strcat(data_path,'histo_images.mat'));
 % visualization
 num = size(histo_images,4);
 
-UseCNN = 0;
-trainCNN = 1;
+UseCNN = 0;% do CNN forward propagation to get those features
+trainCNN = 1;% retrain CNN
 
-id = [16 18 20 21];
+id = [16 18 20 21];% interesting layer id
 nnnum = 1:20;% test nearest neightbors
 
 if UseCNN == 1
@@ -33,39 +33,20 @@ if UseCNN == 1
     % Show the classification result, just debug
     scores = squeeze(gather(res(end).x)) ;
     [bestScore, best] = max(scores) ;
-
-    % for i = 1:num
-    %     im = histo_images(:,:,:,i);
-    %     im_ = single(im);
-    %     % preprocessing
-    %     im_ = imresize(im_,net.meta.normalization.imageSize(1:2));
-    %     im_ = im_ - net.meta.normalization.averageImage;
-    %     
-    %     % Run the CNN.
-    %     res = vl_simplenn(net, im_) ;
-    %     
-    %     % Show the classification result.
-    %     scores = squeeze(gather(res(end).x)) ;
-    %     [bestScore, best] = max(scores) ;
-    %     figure(1) ; clf ; imagesc(im) ; 
-    %     title(sprintf('%s (%d), score %.3f',...
-    %     net.meta.classes.description{best}, best, bestScore)) ;    
-    %     pause(0.1);
-    % end
     
     % layers id
     for i = 1:length(id)
         eval(['features' num2str(id(i)) '= squeeze(gather(res(id(i)+1).x));']);
-        save(['features' num2str(id(i)) '.mat'],['features' num2str(id(i))]);
+        save(['cnn_breast/features' num2str(id(i)) '.mat'],['features' num2str(id(i))]);
     end
 elseif trainCNN == 0
     %% only use the extracted features for classification
-    doTraining = 0;
+    doTraining = 0;% do KNN training by varing k from 1 to 20
     
     if doTraining == 1
         for i = 1:length(id)
             % load features
-            f1 = load(['features' num2str(id(i)) '.mat']);
+            f1 = load(['cnn_breast/features' num2str(id(i)) '.mat']);
             % get structure fields
             fields = fieldnames(f1);
             % rename to a uniform name
@@ -81,9 +62,9 @@ elseif trainCNN == 0
                 errors(i,j) = trainKNN(fea, nnnum(j), labels);
             end
         end
-        save('errors.mat','errors');
+        save('cnn_breast/errors.mat','errors');
     else
-        load('errors.mat');
+        load('cnn_breast/errors.mat');
     end
     
     % plot
@@ -116,11 +97,12 @@ elseif trainCNN == 0
     ylabel('Best accuracy');
     set(gca,'FontName','Arial','FontSize',15);
 else
+    % retrain CNN, retrain once, save the net
     training = 0;
     
     if training == 1
         %% here, I tried to train only the last several layers of the pretrained mode to fit new data
-        load('features15.mat');
+        load('cnn_breast/features15.mat');
 
         trainNum = round(size(x,4) * 0.5);
 
@@ -190,10 +172,11 @@ else
         if numel(opts.train.gpus) > 0
             net = vl_simplenn_move(net, 'cpu') ;
         end
-
+        
         save('data/retraincnn_new.mat', '-struct', 'net') ;
     else
         if 0
+            % load two net and connect them
             net1 = load('data/retraincnn_new.mat');
             net2 = load(strcat(data_path,'imagenet-vgg-f.mat'));
 
@@ -216,17 +199,17 @@ else
             scores = squeeze(gather(res(end).x)) ;
             [bestScore, best] = max(scores) ;
 
-            % save result
-            save('cnnres.mat','best');
+            % save retrained result
+            save('cnn_breast/cnnres.mat','best');
         end
         
         %% finanlly, compare CNN with KNN
-        load('errors.mat');
+        load('cnn_breast/errors.mat');
         % best per feature
         [bestScores,maxid] = max(errors,[],2);
         
-        % CNN
-        load('cnnres.mat');
+        % CNN result
+        load('cnn_breast/cnnres.mat');
         correctAns = sum(uint8(best') == labels)/length(labels);
         
         figure;
