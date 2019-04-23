@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-type = 3;
+type = 1;
 n = 1000;
 
 %% input test
@@ -20,10 +20,6 @@ id = label == 1;
 plot(data(1,id),data(2,id),'ro');hold on;
 plot(data(1,~id),data(2,~id),'bo');
 
-
-
-
-
 % data = dataCase(2, n);
 % figure
 % plot(data(1,1:n),data(2,1:n),'r.');hold on;
@@ -36,7 +32,7 @@ plot(data(1,~id),data(2,~id),'bo');
 
 
 %% Q1 test with random weights
-num_of_hidden_units = [10 10 10];% mxn: m is the hidden units per layer, n - layer
+num_of_hidden_units = [10 10];% mxn: m is the hidden units per layer, n - layer
 num_inputs = size(data,1);
 num_outputs = 2;
 
@@ -66,7 +62,7 @@ for i = 1:length(num_of_hidden_units)+1
 end
 
 x = data;
-x = normalizeData(x);
+[x,xm,xscale] = normalizeData(x);
 [y,h,d] = forwardPropagation(nn,x,@ReLU);
 [val,id]=max(y);
 figure
@@ -133,6 +129,8 @@ end
 toc
 plot(losses);
 title('Loss');
+xlabel('Epoches');
+ylabel('Loss');
 
 [y,h,z] = forwardPropagation(nn,x,@ReLU);
 [val,id]=max(y);
@@ -147,6 +145,55 @@ plot(data(1,id == 1),data(2,id == 1),'r.');hold on;
 plot(data(1,id == 2),data(2,id == 2),'b.');
 title('Result: Random Wight')
 set(gca,'FontName','Arial','FontSize',15);
+
+%% for all region
+xmin = floor(min(data(1,:)));
+xmax = round(max(data(1,:)));
+ymin = floor(min(data(2,:)));
+ymax = round(max(data(2,:)));
+
+xx = xmin:0.1:xmax;
+yy = ymin:0.1:ymax;
+
+[xg,yg] = meshgrid(xx,yy);
+xg = xg(:);
+yg = yg(:);
+xgg = cat(1,xg',yg');
+xgg = xgg - repmat(xm,1,size(xgg,2));
+xgg = xgg .* xscale;
+
+[ygg,~,~] = forwardPropagation(nn,xgg,@ReLU);
+[val,id]=max(ygg);
+im = zeros(length(xx),length(yy));
+im(id == 1) = 0.4;
+im(id == 2) = 0.8;
+imc = cat(3,im,im,im);
+
+data1 = data(:,label==1);
+xdiff = abs(repmat(data1(1,:),length(xx),1)-repmat(xx',1,size(data1,2)));
+[~,id1] = min(xdiff);
+ydiff = abs(repmat(data1(2,:),length(yy),1)-repmat(yy',1,size(data1,2)));
+[~,id2] = min(ydiff);
+id = (id2-1).*length(xx)+id1;
+imr = imc(:,:,1);imr(id) = 1;
+img = imc(:,:,2);img(id) = 0;
+imb = imc(:,:,3);imb(id) = 0;
+imc = cat(3,imr,img,imb);
+
+data2 = data(:,label==2);
+xdiff = abs(repmat(data2(1,:),length(xx),1)-repmat(xx',1,size(data2,2)));
+[~,id1] = min(xdiff);
+ydiff = abs(repmat(data2(2,:),length(yy),1)-repmat(yy',1,size(data2,2)));
+[~,id2] = min(ydiff);
+id = (id2-1).*length(xx)+id1;
+imr = imc(:,:,1);imr(id) = 0;
+img = imc(:,:,2);img(id) = 0;
+imb = imc(:,:,3);imb(id) = 1;
+
+imc = cat(3,imr,img,imb);
+imc = flipud(imc);
+figure;imshow(imc);
+
 
 function [W,old_grad] = updateSGD(W, grad, learning_rate, momentum, old_grad)
     if isempty(old_grad)
@@ -196,7 +243,7 @@ function data = dataCase(type, n)
 end
 
 
-function dn = normalizeData(d)
+function [dn,dm,scale] = normalizeData(d)
 % d is assume to be mxn, m is the dimention, n is the number
     dm = mean(d,2);
     dc = d - repmat(dm,1,size(d,2));
