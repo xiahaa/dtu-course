@@ -37,7 +37,7 @@
 \usepackage{charter} % serif
 
 \usetheme[department=space]{DTU}
-\useoutertheme[subsection=false]{miniframes}
+%\useoutertheme[subsection=false]{miniframes}
 %\useoutertheme{split}
 \setbeamercovered{transparent}
 %\setcounter{currentslide}{\the\beamer@slideinframe}
@@ -67,6 +67,78 @@
 	\subsection{Feature Detection}
 	\frame{
 		\frametitle{Feature Definition} 
+		Features are recognizable structures of elements in the environment and serve as more compact and robust description of the environment.
+		\begin{itemize}
+		\item low-level features (geometric primitives): lines, \textcolor{red}{points}, blobs, circles or polygons.
+		\item high-level features (sematic objects): signs, etc.
+		\end{itemize}
+	}
+	\frame{
+		\frametitle{Low-level features: edges}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=0.9\textwidth]{figures/edge.jpg}
+		\end{figure}	
+	}
+	\frame{
+		\frametitle{Low-level features: \textcolor{red}{points}}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=0.6\textwidth]{figures/xiaohan_harris.jpg}
+		\end{figure}	
+	}	
+	\frame{
+		\frametitle{Low-level features: circles}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=0.9\textwidth]{figures/conic.png}
+			\caption{Conic detection from \cite{c16}}
+		\end{figure}	
+	}	
+	\frame{
+		\frametitle{High-level features: sign}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=0.7\textwidth]{figures/sign.png}
+			\caption{Sign detection from \cite{c15}}
+		\end{figure}	
+	}	
+	\frame{
+		\frametitle{High-level features: road}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=1\textwidth]{figures/road.png}
+			\caption{Sign detection from \cite{c14}}
+		\end{figure}	
+	}	
+
+	\frame{
+		\frametitle{Application of Point features: Visual odometry}
+			\begin{figure}
+				\centering
+				\begin{minipage}{1\textwidth}
+					\centering
+					%			\includegraphics[width=7cm, height=4cm]{figures/viso}
+					%			\caption{Feature based visual odometry.}
+					%\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/vo/vo-}{0}{289}
+				\end{minipage}%
+			\end{figure}
+	}	
+	
+	\frame{
+		\frametitle{Application of Point features: Mosaicing}
+			\begin{figure}
+				\centering
+				\begin{minipage}{1\textwidth}
+					\centering
+%					\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/map2dfusion/img}{0}{289}
+				\includegraphics[width=0.6\textwidth]{figures/pano1.png}
+				\end{minipage}%
+			\end{figure}
+	}	
+	
+	\frame{
+		\frametitle{Feature Definition} 
 		Features are recognizable structures of elements in the environment: 
 		\begin{itemize}
 		\item low-level features (geometric primitives): lines, \textcolor{red}{points}, blobs, circles or polygons.
@@ -79,7 +151,7 @@
 			\includegraphics[width=0.6\textwidth]{figures/edge.jpg}
 			\includegraphics[width=0.3\textwidth]{figures/xiaohan_harris.jpg}
 		\end{figure}
-	}
+	}	
 
 	\frame{
 		\frametitle{Feature Detection:  Keypoint Detectors}
@@ -123,6 +195,17 @@ Squared Differences (SSD).
 			$$
 			The Harris detector analyses the eigenvalues of to verify whether currecnt point is a corner or not.
 		}
+
+	\frame{
+		\frametitle{Corner detector: Harris}
+			Now we know what's inside the sliding window:
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.8\textwidth]{figures/ssd.png}
+			%\caption{.%}
+		\end{figure}
+		}		
+		
 	\frame{
 		\frametitle{Corner detector: Harris}
 			\begin{columns}
@@ -136,7 +219,7 @@ Stephens\cite{c6}.}
 			\column[c]{.5\textwidth}
 			For easy computation, the following “cornerness function” is actually used:
 			$$
-			C = \lambda_1\lambda_2-k(\lambda_1+\lambda_2)^2=\text{det}(\mathbf{M})-k\cdot \text{trace}(\mathbf{M})
+			C = \lambda_1\lambda_2-k(\lambda_1+\lambda_2)^2=\text{det}(\mathbf{M})-k\cdot \text{trace}(\mathbf{M})^2
 			$$
 			Harris corner point is then found as the local maximum by using nonmaxima suppression. 
 			
@@ -170,6 +253,14 @@ Stephens\cite{c6}.}
 		Blob is an pattern which differs from its immediate neighborhood in terms of
 		intensity, color, and texture. 
 		
+		\begin{figure}
+		\centering
+		\includegraphics[width=0.5\textwidth]{figures/ex26.png}
+		\caption{Blobs.}
+		\end{figure}		
+	}
+	\frame{		
+		\frametitle{SIFT}
 		Scale Invariant Feature Transform(SIFT)\cite{c4} is the most popular blob feature detector, which is widly used in mapping and navigation, etc thanks to its robustness to rotation and small changes of illumination, scale.
 		
 		Main steps of the SIFT algorithm:
@@ -240,10 +331,18 @@ Stephens\cite{c6}.}
 
 	\subsection{Feature Description}
 	\frame{
+	\frametitle{Why descriptor}
+		Keypoints alone are difficult to match, only $(u,v)$ and scale. 
+		
+		Just like human being, we need the name, CPR-number, student-id, etc. to match the corresponding data or affairs belonging to you.
+		
+		Feature descriptor serves as the CPR-number for keypoint. For feature matching, we actually match their descriptors. 
+	}
+	\frame{
 	\frametitle{Descriptor}
 	\begin{columns}
 		\column[c]{.5\textwidth}
-		Keypoint needs a descriptor in order to perform feature matching:
+		Descriptor is often computed from the neighbours of the keypoint. Normally the neighbouring information is utilized in the following ways:
 		\begin{itemize}
 			\item Histogram of Gradients (HoG) descriptors, like SIFT.
 			\item Binary descriptors, like BRIEF\cite{c8}.
@@ -252,7 +351,7 @@ Stephens\cite{c6}.}
 		\begin{figure}
 			\centering
 			\includegraphics[scale=0.35]{figures/desp1.png} \\
-			\includegraphics[scale=0.13]{figures/desp2.png}
+			\includegraphics[scale=0.12]{figures/desp2.png}
 			\caption{Histogram of Gradients (HoG) descriptor and Binary descriptor.}
 		\end{figure}
 		\end{columns}
@@ -277,7 +376,7 @@ Stephens\cite{c6}.}
 		\begin{figure}
 			\centering
 			\includegraphics[width=1\textwidth]{figures/lift2.png}
-			\caption{Comparison of Superpoint, LIFT, SIFT, and ORB.\cite{c10}.}
+			\caption{Comparison of Superpoint, LIFT, SIFT, and ORB\cite{c10}.}
 		\end{figure}
 	}
 	\section{Feature Matching}
@@ -363,9 +462,11 @@ Stephens\cite{c6}.}
 			\column[c]{.5\textwidth}
 			\textbf{Why need RANSAC?}
 			
-			Feature matching result often contains a certain amount of false matches (Outliers). Outlier will severally deteriorate the estimation result.
-			
-			RANSAC provides a good estimate despite the presence of a large amount outliers.
+			Feature matching result often contains a certain amount of false matches (\textbf{Outliers}). Outlier will severally deteriorate the estimation result.
+						
+			Generally speaking, \textbf{RANdom SAmple Consensus (RANSAC)\cite{c13} is an iterative method for estimating model parameters from observations containing outliers}.
+
+			The model could be a line, a parabola, an ellipse, etc.			
 			
 			\column[c]{.5\textwidth}
 			\begin{figure}
@@ -373,114 +474,96 @@ Stephens\cite{c6}.}
 				\includegraphics[width=1.\textwidth]{figures/ransac1.png}
 				\caption{Line estimation results.}
 			\end{figure}
-		\end{columns}		
-		
-		
+		\end{columns}			
 	}
-	
-	
-	\subsection{Recent Work}	
-
-	
-		\frame{
-			\frametitle{Optimization on Lie Group  for Pose Estimation}
-			\only<1>{				
-					\begin{figure}
-					%	\includegraphics[scale=0.6]{figures/ipinmm}
-						\caption{IEEE IPIN18~\cite{c2}.}
-					\end{figure}
-			}
-			\only<2>{
-				\vspace{0cm}
-				\begin{columns}
-					\column[c]{\textwidth}
-						\centering
-					%	\includegraphics[width=0.66\textwidth]{figures/res1}
-				\end{columns}
-			}
-			\only<3>{
-				\vspace{-0.2cm}
-				\begin{columns}
-					\column[c]{.5\textwidth}
-					\begin{figure}
-					%	\hspace*{-0.9cm}\includegraphics[width=7cm, height=6cm]{figures/poseest_t}
-						\caption{Translation.}
-					\end{figure}
-					%			\vspace{-1cm}
-					\column[c]{.5\textwidth}
-					\begin{figure}
-					%	\hspace*{-0.9cm}\includegraphics[width=7cm, height=6cm]{figures/poseest_r}	
-						\caption{Rotation.}
-					\end{figure}
-				\end{columns}
-			}	
-		}
-%
-%\frame{
-%	\frametitle{Optimization on Lie Group  for Extrinsic Calibration}
-%	\only<1>{
-%		\begin{block}{Result}
-%			\begin{minipage}{.49\textwidth}
-%				\centering
-%				\includegraphics[width=1\textwidth]{figures/results/Er} 
-%			\end{minipage}
-%			\begin{minipage}{.49\textwidth}
-%				\centering
-%				\includegraphics[width=1\textwidth]{figures/results/Et}
-%			\end{minipage}
-%		\end{block}
-%	}
-%	\only<2>{
-%		\begin{block}{Result}
-%			\begin{columns}
-%				\column[c]{.5\textwidth}
-%				\centering
-%				\begin{figure}
-%					\includegraphics[width=0.8\textwidth]{figures/results/runtime_num} 
-%				\end{figure}
-%				\column[c]{.5\textwidth}
-%				\centering
-%				\begin{figure}
-%					\includegraphics[width=0.9\textwidth]{figures/results/runtime_std}
-%				\end{figure}
-%			\end{columns}
-%		\end{block}
-%	}
-%}
-
-
-\frame{
-	\frametitle{Trajectory Generation using SDP}
-	\only<1>{
-	\vspace{0cm}
-	\begin{minipage}{\textwidth}
-			\begin{minipage}{.325\textwidth}
-				\centering
-
-			\end{minipage}
-			\begin{minipage}{.325\textwidth}
-				\centering
-
-			\end{minipage}
-			\begin{minipage}{.325\textwidth}
-				\centering
-
-			\end{minipage}
-	\end{minipage}
-	}
-	\only<2>{
+	\frame{
+		\frametitle{RANSAC Pipeline}
 		\begin{columns}
-			\column{.3\textwidth}
-		Alternating optimization on time allocation and polynomial coefficients:
-		\begin{itemize}
-			\item Relax dynamics constraints, fix $t$, optimize $\mathbf{p}$ using QP;
-			\item fix $\mathbf{p}$, optimize $t$ using SDR and SDP;
-		\end{itemize}
-		\column{.7\textwidth}
-			\centering
-		\end{columns}
+			\column[c]{.5\textwidth}
+			\begin{itemize}
+				\item Randomly select $n$ samples from observations, $n$ is the minimum number of samples needed for model estimation, e.g. $n=2$ for 2D line, $n=3$ for 3D plane, etc.						\item Model estimation, could be LS, SVD, etc.
+				\item Compute Consensus: apply a model-specific loss function to each observation and the model obtained, the response could serve as the consensus, e.g. point-line distance, point-plane distance.
+				\item Classifier inliers and outliers using a predefined threshold and log the model with the maximum number of inliers.
+				\item Iterate.
+			\end{itemize}
+			\column[c]{.5\textwidth}
+			\begin{figure}
+				\centering
+				\includegraphics[width=0.8\textwidth]{figures/ransac7.png}
+				\caption{RANSAC Procedure.}
+			\end{figure}
+		\end{columns}			
 	}
-}
+	\frame{
+		\frametitle{How many iterations to choose}
+		Let $p_{out}$ be the probability that one point is an outlier, $n$ be the minimum number of samples for model estimation, $N$ be the number of iterations, $p$ be the desired probability that we get a good sample:
+		$$
+		p=1-({1-(1-p_{out})^n})^N
+		$$
+		\begin{itemize}
+		\item $1-p_{out}$: Probability of an inlier.
+		\item $(1-p_{out})^n$: Probability of choosing $n$ inliers.
+		\item $({1-(1-p_{out})^n})$: Probability of at least one items in the sample being outliers for one iteration.
+		\item $({1-(1-p_{out})^n})^N$: Probability that $N$ iterations are contaminated.
+		\item $1-({1-(1-p_{out})^n})^N$: Probability that at least one iteration is not
+contaminated.
+		\end{itemize}
+		Usually, we set $p$ and then compute $N$ backwardly as $N = \frac{\log(1-p)}{\log(1-(1-p_{out})^n)}$.
+	}
+	\frame{
+		\frametitle{How many iterations to choose}
+		A look-up table for $N$ when $p$ i set to $0.99$.
+		\begin{table}
+    	\begin{tabular}{|llllllll|}
+        \hline
+        ~ & ~ & ~ & ~ & $p_{out}$ & ~ & ~ & ~ \\ \hline
+        n & $5\%$ & $10\%$ & $20\%$ & $25\%$ & $30\%$ & $40\%$ & $50\%$ \\ 
+        2 & 2 & 3 & 5 & 6 & 7 & 11 & 17 \\ 
+        3 & 3 & 4 & 7 & 9 & 11 & 19 & 35 \\ 
+        4 & 3 & 5 & 9 & 13 & 17 & 34 & 72 \\ 
+        5 & 4 & 6 & 12 & 17 & 26 & 57 & 146 \\ 
+        6 & 4 & 7 & 16 & 24 & 37 & 97 & 293 \\ 
+        7 & 4 & 8 & 20 & 33 & 54 & 163 & 588 \\ 
+        8 & 5 & 9 & 26 & 44 & 78 & 272 & 1177 \\
+        \hline
+    	\end{tabular}
+		\end{table}
+	}
+	\frame{
+		\frametitle{Example of RANSAC}
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.8\textwidth]{figures/ransac8.png}
+			\caption{Feature matching before applying RANSAC.}
+		\end{figure}		
+		As you can see, false matches get hypothesized.Let's apply RANSAC $+$ epipolar constraint.
+	}
+	\frame{
+		\frametitle{Example of RANSAC}
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.8\textwidth]{figures/ransac9.png}
+			\caption{Feature matching after applying RANSAC.}
+		\end{figure}		
+		As you can see, false matches are removed.
+	}
+
+%	\begin{minipage}{\textwidth}
+%			\begin{minipage}{.325\textwidth}
+%				\centering
+%
+%			\end{minipage}
+%			\begin{minipage}{.325\textwidth}
+%				\centering
+%
+%			\end{minipage}
+%			\begin{minipage}{.325\textwidth}
+%				\centering
+%
+%			\end{minipage}
+%	\end{minipage}
+%	}
+
 	\section{Reference}
 	\subsection{Ending}
 	\frame{
@@ -489,7 +572,6 @@ Stephens\cite{c6}.}
 		}
 	}
 	
-	\section{Reading Material}
 	\begin{thebibliography}{00}
 %		\bibitem{c3} S. {Hadfield} and K. {Lebeda} and R. {Bowden}, ``HARD-PnP: PnP Optimization Using a Hybrid Approximate Representation,`` IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 41. pp.  768-774, 2019.
 	\bibitem{c1} \url{https://en.wikipedia.org/wiki/Mars_Exploration_Rover}.
@@ -504,6 +586,10 @@ Stephens\cite{c6}.}
 	\bibitem{c10} DeTone, Daniel, Tomasz Malisiewicz, and Andrew Rabinovich. "Superpoint: Self-supervised interest point detection and description." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops. 2018.
 	\bibitem{c11} \url{ https://www.uio.no/studier/emner/matnat/its/UNIK4690/v16/forelesninger/lecture_4_2_feature_matching.pdf}
 	\bibitem{c12} \url{https://www.cs.ubc.ca/~nando/nipsfast/slides/fast04.pdf}
+	\bibitem{c13} Fischler, Martin A., and Robert C. Bolles. "Random sample consensus: a paradigm for model fitting with applications to image analysis and automated cartography." Communications of the ACM 24.6 (1981): 381-395.
+	\bibitem{c14} Mendes, Caio César Teodoro, Vincent Frémont, and Denis Fernando Wolf. "Exploiting fully convolutional neural networks for fast road detection." 2016 IEEE International Conference on Robotics and Automation (ICRA). IEEE, 2016.
+	\bibitem{c15} Wang, Bihao, et al. "Landmarks based human-like guidance for driving navigation in an urban environment." 2017 IEEE 20th International Conference on Intelligent Transportation Systems (ITSC). IEEE, 2017.
+	\bibitem{c16} Hua, Minh-Duc, et al. "Explicit complementary observer design on Special Linear Group SL (3) for homography estimation using conic correspondences." 2017 IEEE 56th Annual Conference on Decision and Control (CDC). IEEE, 2017.
 	\end{thebibliography}	
 	
 \end{document}
