@@ -54,7 +54,7 @@ if training == 1
     opts.train.batchSize = 100;
     opts.train.numEpochs = 100;
 
-    lrinit = 0.001;
+    lrinit = 0.01;
     
     % set learning rate
     opts.train.learningRate = lrinit;
