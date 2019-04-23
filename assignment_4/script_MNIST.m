@@ -243,7 +243,7 @@ else
     falseData = test_data(:,id);
     falseData = falseData + repmat(net.meandata',1,size(falseData,2));
     falseImages = reshape(falseData,28,28,[]);
-    falseImages = permute(falseImages,[2,1,3]);
+    falseImages = permute(falseImages,[2,1,4,3]);
     montage(falseImages);
 end
 
