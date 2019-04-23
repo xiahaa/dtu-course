@@ -143,11 +143,27 @@ For this I used a feed forward neural network with two layers:
 	\item Perform softmax to get the probability of each category.
 \end{itemize}
 
+The following strategies have been implemented and tried:
+\begin{itemize}
+	\item SGD+Momentum:  faster convergence.
+	\item Adam:  faster convergence but showed no improvement on the final accuracy.
+	\item Minibatch: more stable gradient.
+	\item Initialization from uniform distribution V.S. Gaussian distribution: initialization from uniform distribution showed better performance.
+	\item Weight decay or L$_2$ regularization: no improvement on the final accuracy.
+	\item Early stopping: helpful for avoiding overfitting.
+	\item Data augmentation: random rotation $[-20^{\cdot},+20^{\cdot}]$, random translation $[-3,+3]$, random scaling $[0.8,1.1]$, random shearing $[-30^{\cdot},+30^{\cdot}]$, random image morphing (dilate or erode depends on a toss). Data augmentation is helpful with around 0.5\% improvement of the accuracy.
+\end{itemize}
 
+The best net was trained with the following options:
+\begin{itemize}
+	\item  Optimization: SGD (0.01) +Momentum (0.9).
+	\item Minibatch: 100.
+	\item Initialization from uniform distribution.
+	\item Early stopping: tolerance is 10.
+	\item Data augmentation.
+\end{itemize}
+The best net can achieve an accuracy of 98.85\%. Training is performed on a MacBook Pro with 2.6 GHz Intel Core i5 and 8 GB 1600 MHz DDR3 as the RAM. GPU was not used. Training could be finished within 10-30 minutes depending on the learning rate.
 
-we used Keras since we have extensive knowledge of DL and therefore it seemed redundant to sit
-and program everything from scratch. This is thus not a "valid" competition attempt, but it shows the power
-of leveraging a good framework to achieve an accuracy of 99.4%
 
 %	\begin{figure}[htbp]
 %	\centering
