@@ -13,8 +13,6 @@ train_label = single(train_label);
 test_data = single(test_data);
 test_label = single(test_label);
 
-% load('imdb.mat');
-
 %%
 im = reshape(train_data',28,28,1,[]);
 % im = permute(im,[2,1,3,4]);
