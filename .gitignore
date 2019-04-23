@@ -25,3 +25,17 @@ notes/tri2.m
 notes/tri1.m
 
 notes/fdata.m
+
+*.aux
+
+*.log
+
+*.nav
+
+*.out
+
+photogrammetry/document.pdf
+
+*.snm
+
+photogrammetry/document.toc
