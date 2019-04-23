@@ -362,22 +362,20 @@ Stephens\cite{c6}.}
 		\begin{columns}
 			\column[c]{.5\textwidth}
 			\textbf{Why need RANSAC?}
+			
 			Feature matching result often contains a certain amount of false matches (Outliers). Outlier will severally deteriorate the estimation result.
 			
-			The resulting set of point pairs typically
-contains several wrong correspondences
+			RANSAC provides a good estimate despite the presence of a large amount outliers.
+			
 			\column[c]{.5\textwidth}
 			\begin{figure}
 				\centering
-				\includegraphics[width=1.\textwidth]{figures/sift.png}
-				\caption{SIFT matching with ratio test.}
+				\includegraphics[width=1.\textwidth]{figures/ransac1.png}
+				\caption{Line estimation results.}
 			\end{figure}
 		\end{columns}		
 		
 		
-	A robust estimation method provides a good
-estimate of 2 despite the presence of
-erroneous correspondences (outliers)
 	}
 	
 	
