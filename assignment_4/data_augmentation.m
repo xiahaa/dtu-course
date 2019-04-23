@@ -48,38 +48,92 @@ if useBuiltinFunc == false
     imns = reshape(imns,28*28,[])';
     save('aug3.mat','imns','lbns');
 else
+    regen = false;
     images = reshape(train_data',28,28,1,[]);
     [~,labels] = max(train_label');
-    
-    augmenter = imageDataAugmenter( ...
-                                    'RandRotation',[-20 20], ...
-                                    'RandXScale',[0.6 1.1], ...
-                                    'RandYScale',[0.6 1.1], ...
-                                    'RandXTranslation',[-3 3], ...
-                                    'RandYTranslation',[-3 3]);
-                                
-    imageSize = [28 28 1];
-    augimds = augmentedImageDatastore(imageSize,images,labels(:),'DataAugmentation',augmenter);
-    
-    num = floor(length(labels)/128);
-    
-    aug_labels = zeros(num*128,10);
-    for i = 1:num
-        minibatch = augimds.read();
-        montage(minibatch.input);
-        pause(0.1);
-        images = cat(4,images,minibatch.input{:});
-        for j = 1:length(minibatch.response)
-            aug_labels((i-1)*128+j, minibatch.response{j}) = 1; 
+        
+    if regen == true
+        augmenter = imageDataAugmenter( ...
+                                        'RandRotation',[-20 20], ...
+                                        'RandXTranslation',[-3 3], ...
+                                        'RandYTranslation',[-3 3]);
+    %                                     'RandXShear',[-30 30], ...
+    %                                     'RandYShear',[-30 30], ...
+    %      'RandXScale',[0.8 1.1], ...
+    %                                     'RandYScale',[0.8 1.1], ...
+
+        imageSize = [28 28 1];
+        augimds = augmentedImageDatastore(imageSize,images,labels(:),'DataAugmentation',augmenter);
+        augimds2 = augimds.shuffle();
+
+        num = floor(length(labels)/128);
+
+        aug_labels = zeros(num*128,10);
+        for i = 1:num
+            minibatch = augimds2.read();
+    %         montage(minibatch.input);
+    %         pause(0.1);
+            images = cat(4,images,minibatch.input{:});
+            for j = 1:length(minibatch.response)
+                aug_labels((i-1)*128+j, minibatch.response{j}) = 1; 
+            end
         end
+        aug_data = reshape(images,784,[])';
+        aug_label = cat(1,train_label,aug_labels);
+    else
+        load('aug_data7.mat');
+%         shuffleid = randperm(size(aug_data,1),round(0.5*size(aug_data,1)));
+%         aug_data = aug_data(shuffleid,:);
+%         aug_label = aug_label(shuffleid,:);
     end
     
-    aug_data = reshape(images,784,[])';
-    aug_label = cat(1,train_label,aug_labels);
+    %% morph
+    imns = [];
+    lbns = [];
+    for i = 1:10
+        id = find(labels == i);
+        % 
+        idn = round(length(id) * 0.5);
+        ids = id(randperm(length(id),idn));
+
+        imn = zeros(28,28,1,length(ids));
+
+        for j = 1:1:length(ids)
+            imn(:,:,:,(j-1)+1) = randomMorph(im(:,:,:,ids(j)));
+        end
+        
+%         for k = 1:5:length(ids); imshow(imn(:,:,:,(k-1)*4+1)); end
+        
+        imns = cat(4,imns,imn);
+        lb = single(zeros(10,size(imn,4)));
+        lb(i,:) = 1;
+        lbns = cat(2,lbns,lb);
+    end
+    imns = reshape(imns,28*28,[])';
+    lbns = lbns';
+    shuffleid = randperm(size(imns,1),size(imns,1));
+    imnsperm = imns(shuffleid,:);
+    lbns = lbns(shuffleid,:);
+    
+    aug_data = cat(1,aug_data,imnsperm);
+    aug_label = cat(1,aug_label,lbns);
+    
 %     minibatch = preview(augimds);
 %     montage(minibatch.input);
 %     
-    save('aug_data4.mat','aug_data','aug_label');
+    save('aug_data8.mat','aug_data','aug_label');
+end
+
+function imt = randomMorph(im)
+    p = rand();
+    se3 = strel('square', 2);
+    if p > 0.5
+        % do dilate
+        imt = imdilate(im,se3);
+    else
+        % do erosion
+        imt = imerode(im,se3);
+    end
 end
 
 function imt = randomRot(im,maxdeg)
