@@ -8,6 +8,7 @@
 \usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix}
 \pgfplotsset{compat=1.8}
 \usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{graphicx}%<----remove demo in your file
 \usepackage{epsfig} % for postscript graphics files
 \usepackage[colorlinks=true,citecolor=green]{hyperref}
 \usepackage{cite}
@@ -36,28 +37,118 @@
 	\maketitle
 	\thispagestyle{empty}
 	\section{Feed Forward Neural Network}
-	\begin{figure*}[htbp]
+	Neural network used in this exercise is shown in Figure~\ref{fig1}:
+	\begin{figure*}[thtbp]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/nn1.png}
+	}} 
+	\label{fig1}
+	\caption{$3$ layers neural network used in the first exercise.}
+\end{figure*}
+	\begin{figure*}[thtbp]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
 	\centering
-	\includegraphics[width=0.45\textwidth]{./figures/ex2_1.png}
-	\includegraphics[width=0.45\textwidth]{./figures/ex2_2.png}
-	\includegraphics[width=0.45\textwidth]{./figures/ex2_3.png}
-	\includegraphics[width=0.45\textwidth]{./figures/ex2_4.png}
-    \caption{$3$ layers neural network: 2x10x10x2.}
+	\includegraphics[scale=0.4]{figures/ex2_1.png}
+	\includegraphics[scale=0.4]{figures/ex2_2.png}
+	}} 
+    \caption{Point cloud segmentation results: left image shows the segmentation result after initialization using random wieghts, while right image shows the final segmentation result.}
+\end{figure*}
+  \begin{figure*}[thpb]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/ex2_3.png}
+			\hspace{10mm}
+			\includegraphics[scale=0.3]{figures/ex2_4.png}
+	}} 
+	\caption{Left image shows the training loss variations with epochs. Right image shows the segmentation boundary.}
+\end{figure*}
+	\begin{figure*}[thtbp]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/ex1_1.png}
+			\includegraphics[scale=0.4]{figures/ex1_2.png}
+	}} 
+	\caption{Point cloud segmentation results: left image shows the segmentation result after initialization using random wieghts, while right image shows the final segmentation result.}
+\end{figure*}
+\begin{figure*}[thpb]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/ex1_3.png}
+			\hspace{10mm}
+			\includegraphics[scale=0.3]{figures/ex1_4.png}
+	}} 
+	\caption{Left image shows the training loss variations with epochs. Right image shows the segmentation boundary.}
+\end{figure*}
+	\begin{figure*}[thtbp]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/ex3_1.png}
+			\includegraphics[scale=0.4]{figures/ex3_2.png}
+	}} 
+	\caption{Point cloud segmentation results: left image shows the segmentation result after initialization using random wieghts, while right image shows the final segmentation result.}
+\end{figure*}
+\begin{figure*}[thpb]
+	\setlength{\fboxrule}{0.0pt}      
+	\framebox{\parbox{6.5in}{
+			\centering
+			\includegraphics[scale=0.4]{figures/ex3_3.png}
+			\hspace{10mm}
+			\includegraphics[scale=0.3]{figures/ex3_4.png}
+	}} 
+	\caption{Left image shows the training loss variations with epochs. Right image shows the segmentation boundary.}
 \end{figure*}
 
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.6\textwidth]{./figures/cmp1.png}
-%	\includegraphics[width=0.38\textwidth]{./figures/cmp2.png}
-%    \caption{Comparison of using MRF with different optimization approaches. Visually speaking, ICM, Simulated Annealing, and Graph Cut give better performance than the Gibbs Sampling method. The right image shows the cost of the four optimization approaches. It is clear that ICM, SA, and Graph Cut all achieves the ground truth. However, local optimization method like ICM cannot always guarantee to achieve the global minimum. SA, however, is probabilistic optimum. So with the iteration increasing, its probability of achieving global optimum will increase up to 1. Graph cut is a globally optimal method for binary label segmentation.}
-%\end{figure}
-%
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.5\textwidth]{./figures/cmp.png}
-%    \caption{Iteration comparison: SA will use more iteration to converge because it needs the temperature to be cooled down. Faster convergence can be achieved by make temperature cool down faster at the expense of increasing the possibility of being trapped in a local minimum. ICM and Gibbs sampling methods can converge rapidly compared with SA.}
-%\end{figure}
-%
+	\section{Convolutional Neural Network on breast cancer images}
+	In this exercise, the pretrained convolutional neural network-VGG19 is used. VGG19 contains $21$ layers which are trained on the ImageNet. The shallow layers will give responses such as lines, edges, circles, etc. The deep layers will give more abstract and sematic features like eyes, noses on the imageNet dataset. For our task, we are interested in features produced by deep layers. Consequently, the following layers are investigated:
+	\begin{itemize}
+		\item Layer-$16$: fully connected layer.
+		\item Layer-$18$: fully connected layer.
+		\item Layer-$20$: fully connected layer.
+		\item Layer-$21$: softmax layer.
+	\end{itemize}
+	A KNN is fitted to these features with $k$ varing from $1$ to $20$. The accuracy test is shown in Figure~\ref{figknn}.
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[width=.9\textwidth]{figures/ex5_1.png}
+		\caption{Performance of KNN classifier for each feature (layer) by varing $k$ from $1$ to $20$.}
+		\label{figknn}
+	\end{figure}
+	By choosing the best KNN classifier for each layer, a further comparison is given in Figure~\ref{figknn2}.
+	\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.5\textwidth]{figures/ex5_2.png}
+	\caption{Comparion of the best KNN classifiers for each feature (layer). Clearly, choosing features from layer $16$ and setting $k=3$ will give the best result ($88.21\%$).}
+	\label{figknn2}
+\end{figure}
+A further investigation is done by retraining the last $6$ layers of VGG19 using the CAMELYON17 dataset. The result is shown in Figure~\ref{figknn3}.
+	\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.5\textwidth]{figures/ex5_3.png}
+	\caption{Comparion of the best KNN classifiers for each feature (layer) and retrained CNN. Clearly, retrained CNN shows the best result ($92.04\%$). However, it could be tricky since CNN is retrained using the same dataset, so for sure the retrained CNN will show very good result. The real performance needs to be checked with more data.}
+	\label{figknn3}
+\end{figure}
+
+\section{MNIST}
+For this I used a feed forward neural network with two layers:
+\begin{itemize}
+	\item First layer: inputs $784$ $+$ $1$ bias fully connected to $1000$ hidden neurons.
+	\item Second layer: $1000$ hidden neurons $+$ $1$ bias fully connected to $10$ output neurons.
+	\item Perform softmax to get the probability of each category.
+\end{itemize}
+
+
+
+we used Keras since we have extensive knowledge of DL and therefore it seemed redundant to sit
+and program everything from scratch. This is thus not a "valid" competition attempt, but it shows the power
+of leveraging a good framework to achieve an accuracy of 99.4%
+
 %	\begin{figure}[htbp]
 %	\centering
 %	\includegraphics[width=0.5\textwidth]{./figures/assign2_raw.png}
@@ -65,38 +156,6 @@
 %	\includegraphics[width=0.5\textwidth]{./figures/assign2_mseg.png}
 %    \caption{Middle image shows the segmentation of bone (bright) and air (dark). The bottom image shows the segmentation of bone (yellow), cartilage (light blue), and air (dark blue).}
 %\end{figure}
-%	\section{Deformable Models}
-%	\begin{figure}[htbp]
-%	\centering
-%	\includegraphics[width=0.45\textwidth]{./figures/defom1.png}
-%	\includegraphics[width=0.45\textwidth]{./figures/defom2.png}
-%	\includegraphics[width=0.45\textwidth]{./figures/defom148.png}
-%	\includegraphics[width=0.45\textwidth]{./figures/defom186.png}
-%	\caption{Deformable models: top-left is the initial curve, the other three shows the intermediate results.}
-%\end{figure}
-%	\section{Geometric Priors}
-%	Several approaches have been applied for myelinated nerves segmentation, including:
-%	\begin{enumerate}
-%	\item Perform MRF segmentation slice by slice. This is done by firstly investigating the histogram of several sample images, and then perform MRF for binary segmentation. Parameters need to be finely tuned in order to have very good results. A snapshot of the final result is shown in Figure~\ref{final1}.
-%	\begin{figure}[!b]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/1.png}
-%	\includegraphics[width=0.8\textwidth]{./figures/final_res1.png}
-%    \caption{Top image is a snapshot of the slice-by-slice MRF segmentation of nerves image. The bottom image shows the 3D visualization of the segmented nerves.}
-%	\label{final1}
-%\end{figure}
-%	
-%	\item Perform MRF by considering smoothness among consecutive frames. Theoretically, it is possible to create a full 3D segmentation by stacking all images together. However, because of the memory constraint as well as for saving time, what I did in this assignment is to do the 3D segmentation using $100$ continuous images, i.e. $1-100$ as a batch, $101-200$ as the second batch. A snapshot of the final result is shown in Figure~\ref{final2}.
-%	
-%	\begin{figure}[!b]
-%	\centering
-%	\includegraphics[width=0.8\textwidth]{./figures/2.png}
-%	\includegraphics[width=0.8\textwidth]{./figures/final_res2.png}
-%    \caption{Top image is a snapshot of the $3$D MRF segmentation of nerves image. Bottom image shows the 3D visualization of the segmented nerves (using $1-300$ frames).}
-%\label{final2}
-%\end{figure}    
-	
-
 
 
 	
