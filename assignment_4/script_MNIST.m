@@ -5,7 +5,7 @@ if(~isdeployed)
   cd(fileparts(which(mfilename)));
 end
 
-training = 1;
+training = 0;
 
 if training == 1
     %% load data
@@ -17,11 +17,6 @@ if training == 1
         train_label = single(train_label);
     else
         load('aug_data8.mat');
-    %     shuffle_id = randperm(size(imns,1),round(0.5*size(imns,1)));
-    %     aug_data = single(imns(shuffle_id,:));
-    %     aug_label = single(lbns(:,shuffle_id));
-    %     train_data = cat(1,train_data,aug_data);
-    %     train_label = cat(1,train_label,aug_label');
         train_data = single(aug_data);
         train_label = single(aug_label);
     end
@@ -42,10 +37,6 @@ if training == 1
     valLabel = train_label(id,:)';
     trainData = data(~id,:)';
     trainLabel = train_label(~id,:)';
-
-    % just for debugging
-%     trainData = cat(2,trainData,valData);
-%     trainLabel = cat(2,trainLabel,valLabel);
     
     N = length(trainData);
 
@@ -96,7 +87,6 @@ if training == 1
     vallosses = zeros(1,opts.train.numEpochs);
     testlosses = zeros(1,opts.train.numEpochs);
     % per epoch
-    
     for i = 1:opts.train.numEpochs    
         % gen new batches
         opts = getBatches(N, opts);
@@ -110,55 +100,46 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newlossminibatch = loss(t,y);
-%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
             % SDG: gradient descent
-    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
             [nn,opts] = updateW(nn,grad,opts);
-            newloss = newloss + newlossminibatch;
             % use Adam
 %             opts.train.Adam.t = opts.train.Adam.t + 1;
 %             [nn,opts] = updateWAdam(nn,grad,opts);
+            newloss = newloss + newlossminibatch;
         end
         
-        % forward
-%         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
-        % compute loss
-%         newloss = loss(trainLabel,y);
         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss/N)]);
         
         % check validation error
-%         if mod(i,opts.earlyStopping.n) == 0
-            [yv,~,~] = forwardPropagation(nn,valData,@ReLU);
-            valLoss = loss(valLabel,yv);
-            disp(['Vlidation Loss: ', num2str(valLoss/length(valLabel))]);
-            if valLoss < opts.earlyStopping.bestValLoss
-                opts.earlyStopping.num = 0;
-                opts.earlyStopping.bestValLoss = valLoss;
-                opts.earlyStopping.numEpoches = i;
-                opts.earlyStopping.nn = nn;
-            else
-                opts.earlyStopping.num = opts.earlyStopping.num + 1;
-%                 opts.train.learningRate = opts.train.learningRate * 0.5;
-%                 if opts.train.learningRate < 0.001
-%                     opts.train.learningRate = 0.001;
-%                 end
-            end
-            if opts.earlyStopping.num >= opts.earlyStopping.patience
-                break;
-            end
-            vallosses(i) = valLoss/length(valLabel);
-            
-            [yt,~,~] = forwardPropagation(nn,test_data,@ReLU);
-            testLoss = loss(test_label,yt);
-            [~,id1]=max(yt);
-            [~,id2]=max(test_label);
-            disp(['test accuracy: ', num2str(sum(id1==id2)/length(id2))]);
-            testlosses(i) = testLoss/length(yt);
-%         end
+        [yv,~,~] = forwardPropagation(nn,valData,@ReLU);
+        valLoss = loss(valLabel,yv);
+        disp(['Vlidation Loss: ', num2str(valLoss/length(valLabel))]);
+        if valLoss < opts.earlyStopping.bestValLoss
+            opts.earlyStopping.num = 0;
+            opts.earlyStopping.bestValLoss = valLoss;
+            opts.earlyStopping.numEpoches = i;
+            opts.earlyStopping.nn = nn;
+        else
+            opts.earlyStopping.num = opts.earlyStopping.num + 1;
+        end
+        if opts.earlyStopping.num >= opts.earlyStopping.patience
+            break;
+        end
+        vallosses(i) = valLoss/length(valLabel);
         
+        % check test accuracy
+        [yt,~,~] = forwardPropagation(nn,test_data,@ReLU);
+        testLoss = loss(test_label,yt);
+        [~,id1]=max(yt);
+        [~,id2]=max(test_label);
+        disp(['test accuracy: ', num2str(sum(id1==id2)/length(id2))]);
+        testlosses(i) = testLoss/length(yt);
+        
+        % plot
         trainlosses(i) = newloss/N;
         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
         plot(vallosses(1:i),'-o','LineWidth',1.5);
@@ -177,7 +158,6 @@ if training == 1
     [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts);
     opts.train.numEpochs = opts.earlyStopping.numEpoches;
     opts.train.learningRate = lrinit;
-    
     opts.train.Adam.t = 0;
     
     %% retraining
@@ -197,22 +177,20 @@ if training == 1
             [y,h,z] = forwardPropagation(nn,x,@ReLU);
 
             newlossminibatch = loss(t,y);
-%             disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
+            
+            disp(['Training Epoch ',num2str(i),'--|--batch ',num2str(j),': ', num2str(newlossminibatch/length(t))]);
 
             % backpropagation + Minibatch + SGD + Momentum 0.9
             grad = backpropagation(nn,t,y,h,z,@ReLUDer,opts.train.weightDecay);        
             % SDG: gradient descent
-    %         nn = cellfun(@updateW,nn,grad,opts,'UniformOutput', false);
             [nn,opts] = updateW(nn,grad,opts);
 %             opts.train.Adam.t = opts.train.Adam.t + 1;
 %             [nn,opts] = updateWAdam(nn,grad,opts);
             
             newloss = newloss + newlossminibatch;
         end
-        % forward
-%         [y,~,~] = forwardPropagation(nn,trainData,@ReLU);
-        % compute loss
-%         newloss = loss(trainLabel,y);
+        
+        % check test accuracy
         [yt,~,~] = forwardPropagation(nn,test_data,@ReLU);
         testLoss = loss(test_label,yt);
         [~,id1]=max(yt);
@@ -220,6 +198,7 @@ if training == 1
         disp(['test accuracy: ', num2str(sum(id1==id2)/length(id2))]);
         testlosses(i) = testLoss/length(yt);
 
+        % plot
         disp(['Training Loss Epoch ',num2str(i),': ', num2str(newloss/N)]);
         trainlosses(i) = newloss/N;
         plot(trainlosses(1:i),'-o','LineWidth',1.5);hold on;grid on;
@@ -228,6 +207,7 @@ if training == 1
         pause(0.1);
     end  
     
+    % save net work
     net.nn = nn;
     net.meandata = mdata;
     net.scale = scale;
@@ -239,31 +219,32 @@ else
     %% load data
     load('MNIST.mat');
     
-%     files = dir(fullfile('./mnist_train/', '*.mat'));
-
+    %% load net
     load(strcat('./mnist_train/','net36.mat'));
-
+    
+    %% preprocessing
     test_data = single(test_data);
     test_label = single(test_label)';
     
-%     test_data = test_data ./ fvecnorm(test_data,2,2);
     test_data = test_data';
     test_data = test_data - repmat(net.meandata',1,size(test_data,2));
     test_data = test_data.*net.scale;
-%     data = normalization(test_data);
-    
+
+    % apply net on test data
     [y,~,~] = forwardPropagation(net.nn,test_data,@ReLU);
     [~,id1]=max(y);
     [~,id2]=max(test_label);
+    
+    % compute accuracy
     disp(sum(id1==id2)/length(id2));
     
+    % show false classified samples
     id = id1 ~= id2;
     falseData = test_data(:,id);
     falseData = falseData + repmat(net.meandata',1,size(falseData,2));
     falseImages = reshape(falseData,28,28,[]);
     falseImages = permute(falseImages,[2,1,3]);
     montage(falseImages);
-    
 end
 
 function [nn, opts] = initializeNN(num_of_hidden_units,num_inputs,num_outputs,nn,opts)
@@ -331,17 +312,15 @@ function [datan,m,scale] = normalization(data)
 % normalization for MNIST
 %     datan = data ./ fvecnorm(data,2,2);
     datan = data;
-    
 %     datan = datan.*2-1;
-    
     m = mean(datan);
     datan = datan - repmat(m,size(data,1),1);
-    
     scale = 1;%sqrt(1 ./ mean(diag(datan'*datan)));
     datan = datan .* scale;
 end
 
 function [W,opts] = updateW(W,grad,opts)
+% SGD with momentum
     % update velocity
     v = cell(length(W),1);
     for i = 1:length(W)
@@ -352,6 +331,7 @@ function [W,opts] = updateW(W,grad,opts)
 end
 
 function [W,opts] = updateWAdam(W,grad,opts)
+% Adam optimization
     c1 = 1 / (1-opts.train.Adam.rho1^opts.train.Adam.t);
     c2 = 1 / (1-opts.train.Adam.rho2^opts.train.Adam.t);
     for i = 1:length(W)
@@ -368,9 +348,8 @@ function w = initialization(m, n, mn)
 % n is assumed to be the number of data. m is assumed to be the number of
 % weights for the forward neural network
 
-    % draw from a gaussian with sqrt(2/n) as the standard deviation
-%     w = randn([mn,1]).*sqrt(2/mn);% inilization 1
-    w = (rand([mn,1]).*2 - 1).*sqrt(6/(m+n));
+%     w = randn([mn,1]).*sqrt(2/mn);% draw from a gaussian with sqrt(2/n) as the standard deviation
+    w = (rand([mn,1]).*2 - 1).*sqrt(6/(m+n));% draw from uniform distribution
 end
 
 function h = ReLU(z)
@@ -436,8 +415,4 @@ function grad = backpropagation(W,t,y,h,z,fgrad,weightDecay)
         grad{i} = delta{i}*[h{i}' ones(size(h{i},2),1)] + weightDecay.*W{i};
         grad{i} = scale .* grad{i};
     end
-end
-
-function flag = isEarlyStopping(trnErrs, valErrs)
-% TODO: implementation the early stopping for the NN.
 end
