@@ -120,7 +120,7 @@
 					\centering
 					%			\includegraphics[width=7cm, height=4cm]{figures/viso}
 					%			\caption{Feature based visual odometry.}
-					%\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/vo/vo-}{0}{289}
+					\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/vo/vo-}{0}{289}
 				\end{minipage}%
 			\end{figure}
 	}	
@@ -136,6 +136,17 @@
 				\end{minipage}%
 			\end{figure}
 	}	
+
+	\frame{
+	\frametitle{Application of Point features: 2D Mapping with Aerial images}
+	\begin{figure}
+		\centering
+		\begin{minipage}{1\textwidth}
+			\centering				\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/map2dfusion/map2d-}{0}{260}
+			%\includegraphics[width=0.6\textwidth]{figures/pano1.png}
+		\end{minipage}%
+	\end{figure}
+}	
 	
 	\frame{
 		\frametitle{Feature Definition} 
@@ -350,8 +361,8 @@ Stephens\cite{c6}.}
 			\column[c]{.5\textwidth}
 		\begin{figure}
 			\centering
-			\includegraphics[scale=0.35]{figures/desp1.png} \\
-			\includegraphics[scale=0.12]{figures/desp2.png}
+			\includegraphics[scale=0.3]{figures/desp1.png} \\
+			\includegraphics[scale=0.1]{figures/desp2.png}
 			\caption{Histogram of Gradients (HoG) descriptor and Binary descriptor.}
 		\end{figure}
 		\end{columns}
@@ -362,7 +373,7 @@ Stephens\cite{c6}.}
 		\frametitle{Summary}
 		\begin{figure}
 			\centering
-			\includegraphics[width=0.7\textwidth]{figures/desp3.png}
+			\includegraphics[width=0.6\textwidth]{figures/desp3.png}
 			\caption{Comparison of feature detectors: properties and performance\cite{c6}.}
 		\end{figure}
 	}
@@ -410,7 +421,7 @@ Stephens\cite{c6}.}
 	\frame{
 	\frametitle{Matching strategy}
 		\begin{columns}
-			\column[c]{.5\textwidth}
+			\column[c]{.65\textwidth}
 			Comparing strategy:
 			\begin{itemize}
 				\item Brute-force matching: for $a$ in image $1$, compare all $b$ in image $2$.
@@ -427,10 +438,10 @@ Stephens\cite{c6}.}
 						$\tau$ is usually set to $0.7$.
 				\item Cross-check: $f_b$ is the best match for $f_a$ in image $2$ and $f_a$ is the best match for $f_b$ in image $1$.
 			\end{itemize}
-			\column[c]{.5\textwidth}
+			\column[c]{.35\textwidth}
 			\begin{figure}
 				\centering
-				\includegraphics[width=0.8\textwidth]{figures/matching2.png}
+				\includegraphics[width=0.9\textwidth]{figures/matching2.png}
 				\caption{Feature matching using Kd tree\cite{c12}.}
 			\end{figure}
 		\end{columns}
@@ -489,7 +500,7 @@ Stephens\cite{c6}.}
 			\column[c]{.5\textwidth}
 			\begin{figure}
 				\centering
-				\includegraphics[width=0.8\textwidth]{figures/ransac7.png}
+				\includegraphics[width=0.7\textwidth]{figures/ransac7.png}
 				\caption{RANSAC Procedure.}
 			\end{figure}
 		\end{columns}			
