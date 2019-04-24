@@ -1,5 +1,52 @@
 clc;close all;clear all;
 
+%% Harris corner detector
+imColor=imread('./data/library2.jpg');
+figure
+imshow(imColor)
+if size(imColor,3) == 3
+    imGray=rgb2gray(imColor);
+else
+    imGray = imColor;
+end
+im = im2double(imGray);
+
+% gradient
+Ix = edge(im,'Sobel',[],'horizontal');
+Iy = edge(im,'Sobel',[],'vertical');
+figure;
+subplot(1,2,1);imshow(Ix);
+subplot(1,2,2);imshow(Iy);
+
+Ixx = Ix.*Ix;
+Iyy = Iy.*Iy;
+Ixy = Ix.*Iy;
+g = fspecial('gaussian', 3, 1);% try play with this two values to see what will hapen
+Ixx = imfilter(Ixx,g,'replicate');
+Iyy = imfilter(Iyy,g,'replicate');
+Ixy = imfilter(Ixy,g,'replicate');
+figure;
+subplot(1,3,1);imshow(Ixx);
+subplot(1,3,2);imshow(Iyy);
+subplot(1,3,3);imshow(Ixy);
+
+C = Ixx.*Iyy - Ixy.^2 - 0.04.*(Ixx+Iyy).^2;
+
+threshold = 0.3*max(C(:));
+C(C(:)<threshold) = 0;
+figure;
+imshow(C);
+ 
+[row,col] = nonmaxsuppts(C,'radius', 2, 'N', 1000);
+
+figure
+img=imshow(imColor),title('my-Harris'),
+hold on
+plot(col,row, 'ro','MarkerSize',10),
+hold off
+%% this ends the Harris part
+
+%% RANSAC part
 [X, lineTrue] = gen_line_data(500);
 
 ph = tohomo(X);

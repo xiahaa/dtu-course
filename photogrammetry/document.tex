@@ -73,11 +73,21 @@
 		\item high-level features (sematic objects): signs, etc.
 		\end{itemize}
 	}
+
 	\frame{
 		\frametitle{Low-level features: edges}
 		 \begin{figure}
 			\centering
-			\includegraphics[width=0.9\textwidth]{figures/edge.jpg}
+			\includegraphics[width=0.4\textwidth]{figures/edge1.png}
+			\caption{Illustration from\cite{c17}.}
+		\end{figure}	
+	}	
+	
+	\frame{
+		\frametitle{Low-level features: edges}
+		 \begin{figure}
+			\centering
+			\includegraphics[width=1\textwidth]{figures/edge.png}
 		\end{figure}	
 	}
 	\frame{
@@ -118,9 +128,7 @@
 				\centering
 				\begin{minipage}{1\textwidth}
 					\centering
-					%			\includegraphics[width=7cm, height=4cm]{figures/viso}
-					%			\caption{Feature based visual odometry.}
-					\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/vo/vo-}{0}{289}
+			\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/vo/vo-}{0}{289}
 				\end{minipage}%
 			\end{figure}
 	}	
@@ -131,22 +139,21 @@
 				\centering
 				\begin{minipage}{1\textwidth}
 					\centering
-%					\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/map2dfusion/img}{0}{289}
 				\includegraphics[width=0.6\textwidth]{figures/pano1.png}
 				\end{minipage}%
 			\end{figure}
 	}	
-
+	
 	\frame{
 	\frametitle{Application of Point features: 2D Mapping with Aerial images}
 	\begin{figure}
 		\centering
 		\begin{minipage}{1\textwidth}
-			\centering				\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/map2dfusion/map2d-}{0}{260}
-			%\includegraphics[width=0.6\textwidth]{figures/pano1.png}
+			\centering				
+			\animategraphics[loop,controls,width=0.65\linewidth]{10}{figures/map2dfusion/map2d-}{0}{260}
 		\end{minipage}%
 	\end{figure}
-}	
+}		
 	
 	\frame{
 		\frametitle{Feature Definition} 
@@ -159,7 +166,7 @@
 
 		\begin{figure}
 			\centering
-			\includegraphics[width=0.6\textwidth]{figures/edge.jpg}
+			%\includegraphics[width=0.6\textwidth]{figures/edge.jpg}
 			\includegraphics[width=0.3\textwidth]{figures/xiaohan_harris.jpg}
 		\end{figure}
 	}	
@@ -179,14 +186,23 @@
 			\item Blob feature detectors: SIFT\cite{c4}, etc.
 		\end{enumerate}
 	}
+	\frame{
+		\frametitle{Corner detector: Harris}
+		A corner in an image can be defined as the intersection of two or more edges.
+		\begin{figure}
+			\centering
+			\includegraphics[width=0.45\textwidth]{figures/corner5.png}
+			\caption{Illustration of Corner keypoint\cite{c18}.}
+		\end{figure}
+		}
 
 	\frame{
 		\frametitle{Corner detector: Harris}
 		A corner in an image can be defined as the intersection of two or more edges.
 		\begin{figure}
 			\centering
-			\includegraphics[width=0.8\textwidth]{figures/corner1.png}
-			\caption{Illustration of Corner keypoint\cite{c5}.}
+			\includegraphics[width=0.6\textwidth]{figures/corner0.png}
+			\caption{Illustration of Corner keypoint\cite{c18}.}
 		\end{figure}
 		What should be inside the sliding window $\to$ the partial derivatives of the Sum of
 Squared Differences (SSD).
@@ -223,7 +239,7 @@ Squared Differences (SSD).
 			\column[c]{.5\textwidth}
 			\begin{figure}
 				\centering
-				\includegraphics[width=1\textwidth]{figures/corner2.png}
+				\includegraphics[width=1.1\textwidth]{figures/corner2.png}
 				\caption{The classification of corner and edges according to Harris and
 Stephens\cite{c6}.}
 			\end{figure}
@@ -273,6 +289,37 @@ Stephens\cite{c6}.}
 	\frame{		
 		\frametitle{SIFT}
 		Scale Invariant Feature Transform(SIFT)\cite{c4} is the most popular blob feature detector, which is widly used in mapping and navigation, etc thanks to its robustness to rotation and small changes of illumination, scale.
+		
+%		Main steps of the SIFT algorithm:
+%		\begin{itemize}
+%			\item find keypoint location and scale.
+%			\item find dominant orientation.
+%			\item generate keypoint descriptor.
+%		\end{itemize}
+%		So, SIFT $=$ keypoint $+$ descriptor.
+	}
+
+	\frame{
+	\frametitle{Comparison: SIFT V.S. Harris+BRIEF}
+	\begin{minipage}{0.5\textwidth}
+	\begin{figure}
+			\centering				
+			\animategraphics[loop,controls,width=1\linewidth]{6}{figures/harrisbrief/harrisbrief-}{1}{36}
+	\end{figure}
+	\end{minipage}%
+	\begin{minipage}{0.5\textwidth}
+	\begin{figure}
+		\centering				
+		\animategraphics[loop,controls,width=1\linewidth]{6}{figures/sift/sift-}{1}{36}
+	\end{figure}
+	\end{minipage}%
+
+}	
+
+
+	\frame{		
+		\frametitle{SIFT}
+%		Scale Invariant Feature Transform(SIFT)\cite{c4} is the most popular blob feature detector, which is widly used in mapping and navigation, etc thanks to its robustness to rotation and small changes of illumination, scale.
 		
 		Main steps of the SIFT algorithm:
 		\begin{itemize}
@@ -601,6 +648,9 @@ contaminated.
 	\bibitem{c14} Mendes, Caio César Teodoro, Vincent Frémont, and Denis Fernando Wolf. "Exploiting fully convolutional neural networks for fast road detection." 2016 IEEE International Conference on Robotics and Automation (ICRA). IEEE, 2016.
 	\bibitem{c15} Wang, Bihao, et al. "Landmarks based human-like guidance for driving navigation in an urban environment." 2017 IEEE 20th International Conference on Intelligent Transportation Systems (ITSC). IEEE, 2017.
 	\bibitem{c16} Hua, Minh-Duc, et al. "Explicit complementary observer design on Special Linear Group SL (3) for homography estimation using conic correspondences." 2017 IEEE 56th Annual Conference on Decision and Control (CDC). IEEE, 2017.
+	\bibitem{c17} F\"orstner, Scriptum Photogrammetry I, Chapter “Kantenextraktion".
+	\bibitem{c18} Robert Collins, CSE486, Penn State, Lecture 06: Harris Corner Detector.
+
 	\end{thebibliography}	
 	
 \end{document}
