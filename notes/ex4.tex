@@ -56,12 +56,15 @@
 
 \begin{filecontents*}{ransac.m}
    clc;close all;clear all;
-
+	
+	% generate 500 points
    [X, lineTrue] = gen_line_data(500);
-
+	
+	% inhomogeneous to homogeneous
    ph = tohomo(X);
 
-   % your code starts here, do RANSAC line fitting
+   % your code starts here, do RANSAC line fitting, 
+   % the result is the parameters of the fitted line, i.e. params(1)*x+params(2)*y+params(3)=0
    params = xxxx(ph);
    
    % Results Visualization
@@ -97,17 +100,17 @@ In this exercise, you will work on Harris corner detector. You could do as follo
 \item Smooth them ($I_x^2$, $I_{xy}$, $I_y^2$) with the Gaussian template.Useful \textsc{Matlab} functions: \textbf{fspecial, imfilter}.  
 \item Recall that $\mathbf{M}=\left[\begin{matrix}
 I_x^2 & I_{xy} \\ I_{xy} & I_y^2
-\end{matrix}\right]$ and $\mathbf{C}=\text{det}(\mathbf{M})-k\text{trace}(\mathbf{M})^2$, now you need to compute the response (score) of the corner detector at each pixel. \textbf{Hint}: you do not need to form $\mathbf{M}$ explicitly since the determinant and trace of a $2\times 2$ matrix are:
+\end{matrix}\right]$ and $\mathbf{C}=\text{det}(\mathbf{M})-k\text{trace}(\mathbf{M})^2$, now you need to compute the response (score) of the corner detector at each pixel. \textbf{Hint}: you do not need to form $\mathbf{M}$ explicitly since the determinant and trace of a $2\times 2$ matrix 
 $\left[\begin{matrix}
 a & b \\ c & d 
-\end{matrix}\right]$ is $ab-cd$ and $a+d$, respectively. Thus, $$\mathbf{C}=I_x^2.*I_y^2-I_{xy}^2-k.*\text{trace}(I_x^2+I_y^2).^2$$
+\end{matrix}\right]$ are $ab-cd$ and $a+d$, respectively. Thus, $$\mathbf{C}=I_x^2.*I_y^2-I_{xy}^2-k.*(I_x^2+I_y^2).^2$$
 Here, $.*, .^2$ are per-element operations. $k$ is usually set to $0.04-0.06$.
 \item Threshold $\mathbf{C}$ as
 $$
 \mathbf{C}(\mathbf{C}<\tau)=0
 $$
-Typical values for $\tau$ range from 0.1 to 0.8 times the maximum value of $\mathbf{C}$.
-\item Apply Non-maxima suppression (code is provided), e.g. \textbf{[row,col] = nonmaxsuppts(C,`radius', 2, `N', 1000)}.
+Typical value for $\tau$ ranges from 0.1 to 0.8 times the maximum value of $\mathbf{C}$.
+\item Apply Non-maxima suppression (code is provided), e.g. \textbf{[row,col] = nonmaxsuppts(C,`radius', 2)}.
 \end{enumerate}
 Images can be found in a folder called \textbf{data}. You can use the sample code listed above.
 \begin{figure*}[thpb]
