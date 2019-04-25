@@ -103,7 +103,7 @@ I_x^2 & I_{xy} \\ I_{xy} & I_y^2
 \end{matrix}\right]$ and $\mathbf{C}=\text{det}(\mathbf{M})-k\text{trace}(\mathbf{M})^2$, now you need to compute the response (score) of the corner detector at each pixel. \textbf{Hint}: you do not need to form $\mathbf{M}$ explicitly since the determinant and trace of a $2\times 2$ matrix 
 $\left[\begin{matrix}
 a & b \\ c & d 
-\end{matrix}\right]$ are $ab-cd$ and $a+d$, respectively. Thus, $$\mathbf{C}=I_x^2.*I_y^2-I_{xy}^2-k.*(I_x^2+I_y^2).^2$$
+\end{matrix}\right]$ are $ad-bc$ and $a+d$, respectively. Thus, $$\mathbf{C}=I_x^2.*I_y^2-I_{xy}^2-k.*(I_x^2+I_y^2).^2$$
 Here, $.*, .^2$ are per-element operations. $k$ is usually set to $0.04-0.06$.
 \item Threshold $\mathbf{C}$ as
 $$
