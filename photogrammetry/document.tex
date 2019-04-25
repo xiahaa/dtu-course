@@ -43,8 +43,8 @@
 %\setcounter{currentslide}{\the\beamer@slideinframe}
 
 \title{Photogrammetry (30540)}
-\subtitle{Feature Detection, Matching, RANSAC \& Bundle Adjustment}
-\author{\textbf{Instructor}: Daniel Olesen$^1$ \\
+\subtitle{Feature Detection, Matching \& RANSAC}
+\author{\textbf{Instructor}: Daniel Olesen$^1$ Xiao Hu$^2$\\
 	\textbf{TA}: Xiao Hu$^2$}
 \institute{$^1$: Assistant Professor, Dept. of Geodesy\\ $2$: PhD student}
 \date{\today}
@@ -78,7 +78,8 @@
 		\frametitle{Low-level features: edges}
 		 \begin{figure}
 			\centering
-			\includegraphics[width=0.4\textwidth]{figures/edge1.png}
+			%\includegraphics[width=0.4\textwidth]{figures/edge1.png}
+			\includegraphics[width=0.4\textwidth]{figures/cheesboard.png}
 			\caption{Illustration from\cite{c17}.}
 		\end{figure}	
 	}	
@@ -118,7 +119,7 @@
 		 \begin{figure}
 			\centering
 			\includegraphics[width=1\textwidth]{figures/road.png}
-			\caption{Sign detection from \cite{c14}}
+			\caption{Road detection from \cite{c14}}
 		\end{figure}	
 	}	
 
@@ -188,7 +189,7 @@
 	}
 	\frame{
 		\frametitle{Corner detector: Harris}
-		A corner in an image can be defined as the intersection of two or more edges.
+		A corner in an image can be defined as the intersection of two or more edges (lines).
 		\begin{figure}
 			\centering
 			\includegraphics[width=0.45\textwidth]{figures/corner5.png}
@@ -198,7 +199,7 @@
 
 	\frame{
 		\frametitle{Corner detector: Harris}
-		A corner in an image can be defined as the intersection of two or more edges.
+		A corner in an image can be defined as the intersection of two or more edges (lines).
 		\begin{figure}
 			\centering
 			\includegraphics[width=0.6\textwidth]{figures/corner0.png}
@@ -220,7 +221,6 @@ Squared Differences (SSD).
 			 I_xI_y &  I_y^2
 			\end{matrix}\right]\right)}_{\mathbf{M}}[x,y]^T
 			$$
-			The Harris detector analyses the eigenvalues of to verify whether currecnt point is a corner or not.
 		}
 
 	\frame{
@@ -236,19 +236,20 @@ Squared Differences (SSD).
 	\frame{
 		\frametitle{Corner detector: Harris}
 			\begin{columns}
-			\column[c]{.5\textwidth}
+			\column[c]{.5\textwidth}		
 			\begin{figure}
 				\centering
 				\includegraphics[width=1.1\textwidth]{figures/corner2.png}
-				\caption{The classification of corner and edges according to Harris and
-Stephens\cite{c6}.}
+				\caption{The Harris detector analyses the eigenvalues of $\mathbf{M}$ to verify whether currecnt point is a corner or not\cite{c6}.}	
+%				The classification of corner and edges according to Harris and
+%Stephens}
 			\end{figure}
 			\column[c]{.5\textwidth}
 			For easy computation, the following “cornerness function” is actually used:
 			$$
 			C = \lambda_1\lambda_2-k(\lambda_1+\lambda_2)^2=\text{det}(\mathbf{M})-k\cdot \text{trace}(\mathbf{M})^2
 			$$
-			Harris corner point is then found as the local maximum by using nonmaxima suppression. 
+			Harris corner point is then found as the local maximum. Nonmaxima suppression is used to remove multiple detections. 
 			
 			In conclusion, Harris keypoint is \textcolor{red}{rotation/translation invariant, but not scale invariant.}
 			\end{columns}
@@ -382,7 +383,7 @@ Stephens\cite{c6}.}
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.9\textwidth]{figures/sift3.png}
-		\caption{Gaussian circular windown and $4\times 4$ regions with histograms of gradient with $8$ bins\cite{c4}.}
+		\caption{Gaussian circular windown and $4\times 4$ regions with histograms of gradient with $8$ bins. This figure shows a $2\times2$ descriptor array computed from an $8\times 8$ set of samples, whereas SIFT will use $4\times 4$ descriptors computed from a $16\times 16$ sample array\cite{c4}.}
 	\end{figure}
 \end{columns}
 	}	
