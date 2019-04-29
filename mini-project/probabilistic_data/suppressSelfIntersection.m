@@ -29,6 +29,9 @@ function segments = InterX(curve,m,n)
         x = [curve(2,i) curve(2,i+1)];
         y = [curve(1,i) curve(1,i+1)];
         
+        x = round(x); x(x<1) = 1; x(x > n) = n;
+        y = round(y); y(y<1) = 1; y(y > m) = m;
+        
         nPoints = max(abs(diff(x)), abs(diff(y)))+1;  % Number of points in line
         rIndex = round(linspace(y(1), y(2), nPoints));  % Row indices
         cIndex = round(linspace(x(1), x(2), nPoints));  % Column indices
@@ -53,8 +56,11 @@ function segments = InterX(curve,m,n)
     % visited grid map
     bb = zeros(m,n);
     ind = round((point(:,2)-1).*m+point(:,1));
-    bb(ind) = id1;
-
+    try
+        bb(ind) = id1;
+    catch
+        error('');
+    end
     % if a grid point is more than once visited, then the id will be different
     idnew = bb(ind);
     intersects = abs(idnew - id1) > 5 & abs(idnew - id1) < 0.5*size(curve,2);

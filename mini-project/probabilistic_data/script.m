@@ -4,7 +4,7 @@ addpath ../../utils;
 
 baseDir = '../../data/probabilistic_data/';
 
-imgid = 15;
+imgid = 8;
 
 % load database
 buildingScene = imageDatastore(baseDir);
@@ -21,10 +21,10 @@ m = size(im,1);
 n = size(im,2);
     
 % parameters
-Num = 1000;
-stepSize = 5;
+Num = 500;
+stepSize = 2;
 a = 2;
-b = 0;
+b = 5;
     
 K = 256;
 
@@ -45,7 +45,7 @@ usePatchProbability = true;
 if usePatchProbability == false
     [Bt,B] = calcB(im, K);
 else
-    M = 7;
+    M = 9;
     L = 1554;
     [Bt,B] = calcPatchB(im, M, L,imgid);
 %     for i = 1:size(B,1)
@@ -77,7 +77,7 @@ end
         % reinterpolation
         curve = suppressSelfIntersection(curve,m,n);
         curve = constraintCurve(curve, m, n);
-        curve = reInterpolate(curve,Num);
+%         curve = reInterpolate(curve,Num);
         pause(0.1);
         % if write
         %F = getframe;
@@ -112,7 +112,7 @@ function varargout = calcPatchB(im, M, L, imgid)
     
     % kmeans
     if 0
-        opts = statset('MaxIter',1000);        
+        opts = statset('MaxIter',100);        
         [patchClusterID, clusterMean] = kmeans(patches, L, 'Distance', 'sqeuclidean','Options', opts);
         
         % form B
