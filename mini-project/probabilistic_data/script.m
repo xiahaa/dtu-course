@@ -4,7 +4,7 @@ addpath ../../utils;
 
 baseDir = '../../data/probabilistic_data/';
 
-imgid = 9;
+imgid = 15;
 
 % load database
 buildingScene = imageDatastore(baseDir);
@@ -21,23 +21,37 @@ m = size(im,1);
 n = size(im,2);
     
 % parameters
-Num = 500;
+Num = 1000;
 stepSize = 5;
-a = 0;
-b = 5;
+a = 2;
+b = 0;
     
 K = 256;
 
 % regularization matrix
 Bint = regularization(a, b, Num);
-[Bt,B] = calcB(im, K);
 
 % curve initialization
 alpha = linspace(0,2*pi, Num);
-r = max(m,n) / 5;
-curve(1,:) = m / 2 + r*cos(alpha);
-curve(2,:) = n / 2 + r*sin(alpha);
+r = max(m,n) / 20;
 
+imshow(im);
+[xx,yy] = ginput(1);
+
+curve(1,:) = yy + r*cos(alpha);
+curve(2,:) = xx + r*sin(alpha);
+
+usePatchProbability = true;
+if usePatchProbability == false
+    [Bt,B] = calcB(im, K);
+else
+    M = 7;
+    L = 1554;
+    [Bt,B] = calcPatchB(im, M, L,imgid);
+%     for i = 1:size(B,1)
+        Cinv = 1./(sum(B,2)+1e-15);
+%     end
+end
 
 %% start probabilistic deforming
     im = imread(buildingScene.Files{imgid});
@@ -45,11 +59,13 @@ curve(2,:) = n / 2 + r*sin(alpha);
     
     for i = 1:200
         % show
-        imshow(im);hold on;
+        figure(1);imshow(im);hold on;
         % draw
         plot(curve(2,[1:end,1]),curve(1,[1:end,1]),'r-','LineWidth',2);
+        hold off;
         % compute probability map
-        [Pin,maskin,maskout] = calcProbabilityMap(im, curve, [], B, Bt);  
+        [Pin,maskin,maskout] = calcProbabilityMap(im, curve, [], B, Bt, Cinv);  
+        figure(2);imshow(Pin,[]);
         % compute the displacement along the normal direction
         displacement = computeDisplacement(curve, Pin, maskin, maskout);
         % find final
@@ -67,7 +83,67 @@ curve(2,:) = n / 2 + r*sin(alpha);
         %F = getframe;
         %imwrite(F.cdata,strcat('../data/Ex_4_data/output_2/',num2str(i,'%d'),'.png'));
     end
+    
+function varargout = calcPatchB(im, M, L, imgid)
+    W = size(im,2);
+    H = size(im,1);
+    % form pathches
+    numPatches = ((W - M) + 1) * ((H-M) + 1);
+    patches = zeros(numPatches, M*M);
+    patchesMap = zeros(numPatches, M*M);
+    hsize = floor(M*0.5);
+    
+    [lx,ly] = meshgrid(-hsize:1:hsize,-hsize:1:hsize);
+    lx = vec(lx'); ly = vec(ly');
+    k = 1;
+    for i = hsize+1:1:H-hsize
+        for j = hsize+1:1:W-hsize
+            % local coordinate
+            llx = i + lx;
+            lly = j + ly;
+            % to index
+            index = (lly-1).*H + llx;
+            patches(k,:) = im(index)';
+            % form map
+            patchesMap(k,:) = index';
+            k = k + 1;
+        end
+    end
+    
+    % kmeans
+    if 0
+        opts = statset('MaxIter',1000);        
+        [patchClusterID, clusterMean] = kmeans(patches, L, 'Distance', 'sqeuclidean','Options', opts);
+        
+        % form B
+        M2 = M*M;
+        is = zeros(size(patchClusterID,1)*M2,1);
+        js = zeros(size(patchClusterID,1)*M2,1);
+        ss = ones(size(patchClusterID,1)*M2,1);
+        k = 1;
+        for i = 1:size(patchClusterID,1)
+            % which cluster
+            ii = (patchClusterID(i)-1)*M2;
+            for j = 1:M2
+                % which entry
+                jj = patchesMap(i,j);
+                is(k) = ii + j;
+                js(k) = jj;
+                k = k + 1;
+            end
+        end
+        Bt = sparse(is,js,ss);
+        
+        save(strcat('res',num2str(imgid),'.mat'),'patchClusterID','clusterMean','Bt');
+    else
+        load(strcat('res',num2str(imgid),'.mat'));
+    end
+    
+    varargout{1} = Bt;
+    varargout{2} = Bt';
+end
 
+    
 function varargout = calcB(im, K)
 % compute linear mapping matrix
     M = size(im,1);
@@ -84,7 +160,7 @@ function varargout = calcB(im, K)
     varargout{2} = B;
 end
 
-function [Pin, maskin, maskout] = calcProbabilityMap(im, curve, boundary, B, Bt)
+function [Pin, maskin, maskout] = calcProbabilityMap(im, curve, boundary, B, Bt, Cinv)
 %Compute mean intensity for deformable models.
     polygon = curve;
     polygon(:,end+1) = curve(:,1);
@@ -107,8 +183,8 @@ function [Pin, maskin, maskout] = calcProbabilityMap(im, curve, boundary, B, Bt)
     fin = Bt*maskin(:) ./ sum(maskin(:));
     fout = Bt*maskout(:)./ sum(maskout(:));
     
-    pin = fin ./ (fin + fout);
-    Pin = B * pin;
+    pin = fin ./ (fin + fout + 1e-12);
+    Pin = Cinv.*(B * pin);
     Pin = reshape(Pin,size(im,1),size(im,2));
 end
 
@@ -139,9 +215,23 @@ function Icurve = biInterIntensity(im, curve)
              im(index4).*s4;
 end
 
+function Icurve = nearestInterIntensity(im, curve)
+    point1 = round(curve);
+    id1 = point1(1,:) < 0;
+    id2 = point1(1,:) > size(im,1);
+    id3 = point1(2,:) < 0;
+    id4 = point1(2,:) > size(im,2);
+    point1(1,id1) = 1;
+    point1(1,id2) = size(im,1);
+    point1(2,id3) = 1;
+    point1(2,id4) = size(im,2);
+    Icurve = im((point1(2,:)-1).*size(im,1)+point1(1,:));
+end
+
 function displacement = computeDisplacement(curve, Pin, maskin, maskout)
 %Compute displacements for curves.
-    pins = biInterIntensity(Pin, curve);
+    pins = nearestInterIntensity(Pin, curve);
+    
 %     Pout = biInterIntensity(pout, curve);
 %     pins = mean(Pin(maskin));
 %     pouts = 1-mean(Pin(maskout));
