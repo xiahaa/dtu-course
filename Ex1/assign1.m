@@ -61,7 +61,7 @@ A = [cos(a)*s    s*sin(a)         t(1); ...
       0 0      1.0000];
 pt1 = A*pt;
 pt1 = pt1./pt1(3,:);
-plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
+% plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
 plot(pt1(1,:), pt1(2,:),'g--','LineWidth', 2);hold on;axis equal;grid on;
     
   
@@ -72,7 +72,7 @@ A = [0.5 0.3 2; ...
      0 0 1];  
 pt1 = A*pt;
 pt1 = pt1./pt1(3,:);
-plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
+% plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
 plot(pt1(1,:), pt1(2,:),'b--','LineWidth', 2);hold on;
 legend({'Raw','Euclidean','Similarity','Affine'})
 %% Q9:
