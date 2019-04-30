@@ -51,10 +51,10 @@ A = [cos(a)    sin(a)         t(1); ...
       0 0      1.0000];
 pt1 = A*pt;
 pt1 = pt1./pt1(3,:);
-plot(pt1(1,:), pt1(2,:),'r--');hold on;axis equal;grid on;
+plot(pt1(1,:), pt1(2,:),'r--','LineWidth', 2);hold on;axis equal;grid on;
 
 %% Q7: similarity transformation, angle, orthogonal, parallel, ratio of length are preserved
-close all;
+% close all;
 s = 0.2;
 A = [cos(a)*s    s*sin(a)         t(1); ...
     -sin(a)*s    s*cos(a)         t(2); ...
@@ -62,19 +62,19 @@ A = [cos(a)*s    s*sin(a)         t(1); ...
 pt1 = A*pt;
 pt1 = pt1./pt1(3,:);
 plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
-plot(pt1(1,:), pt1(2,:),'r--');hold on;axis equal;grid on;
+plot(pt1(1,:), pt1(2,:),'g--','LineWidth', 2);hold on;axis equal;grid on;
     
   
 %% Q8: affine 2D, parallel, ratio of area, see shearing effect
-close all;
+% close all;
 A = [0.5 0.3 2; ...
      0.1 1.2 -2; ...
      0 0 1];  
 pt1 = A*pt;
 pt1 = pt1./pt1(3,:);
 plot(pt(1,:), pt(2,:), 'LineWidth', 2);hold on;
-plot(pt1(1,:), pt1(2,:),'r--');hold on;
-
+plot(pt1(1,:), pt1(2,:),'b--','LineWidth', 2);hold on;
+legend({'Raw','Euclidean','Similarity','Affine'})
 %% Q9:
 clc;clear all;close all;
 Q=Box3D;
