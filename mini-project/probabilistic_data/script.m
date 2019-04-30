@@ -184,7 +184,11 @@ function [Pin, maskin, maskout] = calcProbabilityMap(im, curve, boundary, B, Bt,
     fout = Bt*maskout(:)./ sum(maskout(:));
     
     pin = fin ./ (fin + fout + 1e-12);
-    Pin = Cinv.*(B * pin);
+    if ~isempty(Cinv)
+        Pin = Cinv.*(B * pin);
+    else
+        Pin = B * pin;
+    end
     Pin = reshape(Pin,size(im,1),size(im,2));
 end
 
