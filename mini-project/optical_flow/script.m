@@ -23,8 +23,8 @@ width = size(im1,2);
 [flow_u, flow_v] = denseflowLK(im1, im2, hsize);
 figure;imshow(im1, 'InitialMagnification',3000);hold on;
 
-opflow = opticalFlow(flow_u,flow_v);
-plot(opflow,'DecimationFactor',[1 1],'ScaleFactor',1);
+% opflow = opticalFlow(flow_u,flow_v);
+% plot(opflow,'DecimationFactor',[1 1],'ScaleFactor',1);
 
 [yy,xx] = meshgrid(1:height,1:width);
 xx = vec(xx');
@@ -49,6 +49,7 @@ function [Ix, Iy] = grad2(im1, hsize, sigma)
     cons1 = sigma*sigma;
     hg = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1));
     hgx = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)).*(-x./cons1);
+    hgx = fliplr(hgx);% convolution kernel is the flip version.
     Ix = imfilter(im1,hgx,'replicate','same');
     Ix = imfilter(Ix,hg','replicate','same');
     Iy = imfilter(im1,hgx','replicate','same');
@@ -92,17 +93,17 @@ function g = gaussian_kernel_calculator(D, t, sigma)
 % Author: xiahaa@space.dtu.dk
     if D == 1
         x = round(-sigma*t):round(sigma*t);
-        f = @(x) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2)));
+        f = @(x) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2)));
         g = f(x);
     elseif D == 2
         u = round(-sigma*t):round(sigma*t);
         [x,y] = meshgrid(u,u);
-        f = @(x,y) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2+y.^2)));
+        f = @(x,y) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2)));
         g = f(x,y);
     elseif D == 3
         u = round(-sigma*t):round(sigma*t);
         [x,y,z] = meshgrid(u,u,u);
-        f = @(x,y,z) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2+y.^2+z.^2)));
+        f = @(x,y,z) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2+z.^2)));
         g = f(x,y,z);
     end
 end
@@ -164,8 +165,8 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, hsize)
 
         % analytical inversion
         s = 1./(sIx2.*sIy2 - sIxy2);
-        dflow_u = ( sIy2.*sIxt - sIxy.*sIyt).*s;
-        dflow_v = (-sIxy.*sIxt + sIx2.*sIyt).*s;
+        dflow_u = -( sIy2.*sIxt - sIxy.*sIyt).*s;
+        dflow_v = -(-sIxy.*sIxt + sIx2.*sIyt).*s;
         
         dflow_u(invalid) = 0;
         dflow_v(invalid) = 0;
@@ -186,7 +187,7 @@ function im = imPreprocessing(im)
     if size(im,3) == 3
         im = rgb2gray(im);
     end
-    im = single(im);
+    im = im2double(im);
 %     ker = fspecial('gaussian',3,1);
 %     im = imfilter(im,ker,'replicate','same');
 end
