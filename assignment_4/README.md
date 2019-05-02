@@ -42,3 +42,4 @@ Accuracy: 98.85, winner of 2019 MNIST competition for course Advanced Image Anal
 
 1. zzutk;
 2. sunshine;
+3. https://github.com/jakejhansen/Advanced_Image_Analysis_02503
