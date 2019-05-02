@@ -2,7 +2,7 @@ clc;close all;clear all;
 
 addpath ../../utils;
 
-baseDir = '../../data/optical_flow_data';
+baseDir = '../../data/optical_flow_data/Basketball';
 
 % load database
 buildingScene = imageDatastore(baseDir);
@@ -15,7 +15,7 @@ im1 = imPreprocessing(im1);
 im2 = imread(buildingScene.Files{2});
 im2 = imPreprocessing(im2);
 
-hsize = 1;
+hsize = 10;
 height = size(im1,1);
 width = size(im1,2);
 
@@ -92,16 +92,16 @@ function g = gaussian_kernel_calculator(D, t, sigma)
 % 1/((2pi)^D*t^(2D))^(1/2) exp(-0.5*1/(t^2).*(x).^2)
 % Author: xiahaa@space.dtu.dk
     if D == 1
-        x = round(-sigma*t):round(sigma*t);
+        x = round(-t*sigma):round(t*sigma);
         f = @(x) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2)));
         g = f(x);
     elseif D == 2
-        u = round(-sigma*t):round(sigma*t);
+        u = round(-t*sigma):round(t*sigma);
         [x,y] = meshgrid(u,u);
         f = @(x,y) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2)));
         g = f(x,y);
     elseif D == 3
-        u = round(-sigma*t):round(sigma*t);
+        u = round(-t*sigma):round(t*sigma);
         [x,y,z] = meshgrid(u,u,u);
         f = @(x,y,z) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2+z.^2)));
         g = f(x,y,z);
@@ -157,7 +157,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, hsize)
         eig_smallest = 0.5.*(sIx2 + sIy2 - sqrt((sIx2-sIy2).^2+4.*sIxy2));
         eig_largest = 0.5.*(sIx2 + sIy2 + sqrt((sIx2-sIy2).^2+4.*sIxy2));
         ratio = eig_smallest ./ eig_largest;
-        invalid = ratio < 0.08;
+        invalid = ratio < 0.01 | (eig_smallest < 1e-6);
     
         % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;
