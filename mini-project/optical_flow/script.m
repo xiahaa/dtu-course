@@ -57,12 +57,25 @@ function [flow_u, flow_v] = flowLK(im1, im2, hsize)
     sIyt = imfilter(Iyt,ker,'replicate','same');
     % LK-flow    
     % opt1: vectorization, faster
+    % conditioning: check if the smallest eigenvalue is very close to zero.
+    % since it is a 2x2 positive semidefinite matrix, its eigen value has 
+    % a analytical solution and must be a real value greater or equal to 0.
+    eig_smallest = 0.5.*(sIx2 + sIy2 - sqrt((sIx2-sIy2).^2+4.*sIxy.^2));
+    eig_largest = 0.5.*(sIx2 + sIy2 + sqrt((sIx2-sIy2).^2+4.*sIxy.^2));
+    ratio = eig_smallest ./ eig_largest;
+    invalid = ratio < 0.05;
     
+    % add a smaller value to the diagonal elements of those invalid pixels.
+%     sIx2(invalid) = sIx2(invalid) + 0.1;
+%     sIy2(invalid) = sIy2(invalid) + 0.1;
     
-    
+    % analytical inversion
     s = 1./(sIx2.*sIy2 - sIxy.^2 + 1e-15);
     flow_u = ( sIy2.*sIxt - sIxy.*sIyt).*s;
     flow_v = (-sIxy.*sIxt + sIx2.*sIyt).*s;
+    
+    flow_u(invalid) = 0;
+    flow_v(invalid) = 0;
     
     % opt2: use loop, 3-4 times lower than vectorization
 %     flow_u = zeros(size(im1));
