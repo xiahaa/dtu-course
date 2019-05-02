@@ -1,3 +1,23 @@
+## simple FNN on 2D point set
+![two layer fully connected neural network](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/nn1.png)
+
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex2_1.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex2_2.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex2_4.png)
+
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex1_1.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex1_2.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex1_4.png)
+
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex3_1.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex3_2.png)
+![initialization](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex3_4.png)
+
+## CNN 
+![KNN+VGG-16s features](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex5_1.png)
+![retrained VGG-16](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/ex5_3.png)
+
+
 ## FNN on MNIST
 
 1. 初始化有影响；
@@ -9,6 +29,10 @@
 7. data augmentation：有显著提升，0.5%；
 8. minibatches: 获取的gradient更稳定；
 9. early stopping: 有用，防止overfitting;
+
+## Result:
+Accuracy: 98.85, winner of 2019 MNIST competition for course Advanced Image Analysis
+![misclassified images](https://github.com/xiahaa/cn/blob/master/report/ex4/figures/mnist1.png)
 
 ## TODO
 
