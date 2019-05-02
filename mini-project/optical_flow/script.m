@@ -56,16 +56,15 @@ function [flow_u, flow_v] = flowLK(im1, im2, hsize)
     sIxt = imfilter(Ixt,ker,'replicate','same');
     sIyt = imfilter(Iyt,ker,'replicate','same');
     % LK-flow    
+    % opt1: vectorization, faster
     
-    AtA1 = sIx2.^2+sIxy.^2;
-    AtA2 = sIx2.*sIxy + sIy2.*sIxy;
-    AtA3 = sIy2.^2+sIxy.^2;
-    Atb1 = sIx2.*sIxt + sIxy.*sIyt;
-    Atb2 = sIxy.*sIxt + sIy2.*sIyt;
-    s = 1./(AtA1.*AtA3 - AtA2.^2 + 1e-15);
-    flow_u = ( AtA3.*Atb1 - AtA2.*Atb2).*s;
-    flow_v = (-AtA2.*Atb1 + AtA1.*Atb2).*s;
     
+    
+    s = 1./(sIx2.*sIy2 - sIxy.^2 + 1e-15);
+    flow_u = ( sIy2.*sIxt - sIxy.*sIyt).*s;
+    flow_v = (-sIxy.*sIxt + sIx2.*sIyt).*s;
+    
+    % opt2: use loop, 3-4 times lower than vectorization
 %     flow_u = zeros(size(im1));
 %     flow_v = zeros(size(im1));
 %     tic
