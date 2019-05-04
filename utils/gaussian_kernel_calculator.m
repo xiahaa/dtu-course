@@ -11,18 +11,18 @@ function g = gaussian_kernel_calculator(D, t, sigma)
 % 1/((2pi)^D*t^(2D))^(1/2) exp(-0.5*1/(t^2).*(x).^2)
 % Author: xiahaa@space.dtu.dk
     if D == 1
-        x = round(-sigma*t):round(sigma*t);
-        f = @(x) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2)));
+        x = round(-t):round(t);
+        f = @(x) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2)));
         g = f(x);
     elseif D == 2
-        u = round(-sigma*t):round(sigma*t);
+        u = round(-t):round(t);
         [x,y] = meshgrid(u,u);
-        f = @(x,y) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2+y.^2)));
+        f = @(x,y) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2)));
         g = f(x,y);
     elseif D == 3
-        u = round(-sigma*t):round(sigma*t);
+        u = round(-t):round(t);
         [x,y,z] = meshgrid(u,u,u);
-        f = @(x,y,z) (1/(((2*pi)^D*t^(2*D))^(0.5)).*exp((-0.5/(t^2)).*(x.^2+y.^2+z.^2)));
+        f = @(x,y,z) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2+z.^2)));
         g = f(x,y,z);
     end
 end

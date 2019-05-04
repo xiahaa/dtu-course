@@ -38,10 +38,10 @@ end
 
 function [Ix, Iy] = grad2(im1, hsize, sigma)
 % perform gradient operation with first order gaussian kernel
-    x = -hsize*sigma:1:hsize*sigma;
+    x = -hsize:1:hsize;
     cons1 = sigma*sigma;
-    hg = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1));
-    hgx = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)).*(-x./cons1);
+    hg = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)); hg = hg ./ sum(abs(hg(:)));
+    hgx = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)).*(-x./cons1); hgx = hgx ./ sum(abs(hgx(:)));
     hgx = fliplr(hgx);% convolution kernel is the flip version.
     Ix = imfilter(im1,hgx,'replicate','same');
     Ix = imfilter(Ix,hg','replicate','same');
@@ -85,8 +85,7 @@ function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
         pu = pu.*2;
         pv = pv.*2;
         u = imresize(pu,size(pyr1{i}),'bilinear');
-        v = imresize(pv,size(pyr1{i}),'bilinear');
-        hsize = hsize + 1;
+        v = imresize(pv,size(pyr2{i}),'bilinear');
         [pu, pv] = denseflowLK(pyr1{i}, pyr2{i}, u, v, hsize);
     end
     flow_u = pu;
@@ -101,15 +100,15 @@ end
 
 function ker = gauker(hsize)
     % gaussian filter
-    sigma = 1;
+    sigma = 0.5;
     ker = gaussian_kernel_calculator(2, hsize, sigma);
-    ker = ker./sum(ker(:));
+    ker = ker./sum(abs(ker(:)));
 end
 
 function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
 % compute optical flow using Lucas-Kanade
     % grad    
-    [Ix, Iy] = grad2(im1,3,1);
+    [Ix, Iy] = grad2(im1,1,0.5);
     
     % dense flow
     width = size(im1,2);
@@ -135,7 +134,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     Iy2 = Iy.*Iy;
     Ixy = Ix.*Iy;
     % filtering
-    ker = gauker(hsize);
+    ker = gauker(1);
     
     sIx2 = imfilter(Ix2,ker,'replicate','same');
     sIy2 = imfilter(Iy2,ker,'replicate','same');
@@ -143,8 +142,9 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     sIxy2 = sIxy.*sIxy;
 
     % interpolation
-    It = gradIntensity(xx,yy,vec(flow_u),vec(flow_v),im1,im2);
-    It = reshape(It, height, width);
+%     It = gradIntensity(xx,yy,vec(flow_u),vec(flow_v),im1,im2);
+%     It = reshape(It, height, width);
+    It = im2 - im1;
     
     Ixt = Ix.*It;
     Iyt = Iy.*It;
@@ -167,7 +167,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);
-    invalid = score < 0.05*max(score(:));
+    invalid = score < 0.03*max(score(:));
     
     % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;
@@ -188,47 +188,30 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     showFlowQuiver(im1, flow_u, flow_v);
 end
 
-function [flow_u, flow_v] = denseflowHS(im1, im2, hsize)
-% compute optical flow using Horn-Shunck method
-   [flow_u, flow_v] = denseflowPyrLK(im1, im2);
-
-    hsize = 3;
-    sigma = 1;
-    %-------- this ends the initialization, then start HS iteration --------%
-    
+function [flow_u, flow_v] = denseflowHS(im1, im2)
+% compute optical flow using Horn-Shunck method    
     % grad    
     [Ix, Iy] = grad2(im1,3,1);
-    
-    % dense flow
-    width = size(im1,2);
-    height = size(im1,1);
-    [yy,xx] = meshgrid(1:height,1:width);
-    xx = vec(xx');
-    yy = vec(yy');
-    
-    if isempty(iu) 
-        flow_u = zeros(height, width);
-    else
-        flow_u = iu;
-    end
-    
-    if isempty(iv) 
-    	flow_v = zeros(height, width);
-    else
-        flow_v = iv;
-    end
+    It = im2 - im1;
     
     % precomputing
     Ix2 = Ix.*Ix;
     Iy2 = Iy.*Iy;
     Ixy = Ix.*Iy;    
+    Ixt = Ix.*It;
+    Iyt = Iy.*It;
+    
+    flow_u = zeros(size(im1));
+    flow_v = zeros(size(im1));
     
     % kernel 1, hard code 3x3 averaging
 %     ker_avg = [1/12 1/6 1/12;1/6 0 1/6;1/12 1/6 1/12];
+    sigma = 0.5;
+    hsize = 5;
     ker_avg = gaussian_kernel_calculator(2, hsize, sigma);
     
-    max_iter = 50;
-    alpha = 0.5;
+    max_iter = 100;
+    alpha = 1;
     for iter = 1:max_iter
         % arveraging
         ubar = imfilter(flow_u,ker_avg,'replicate','same');
