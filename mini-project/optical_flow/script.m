@@ -1,6 +1,6 @@
 clc;close all;clear all;
 
-addpath ../../utils;
+addpath utils;
 
 baseDir = '../../data/optical_flow_data/Basketball';
 
@@ -16,7 +16,7 @@ im2 = imread(buildingScene.Files{2});
 im2 = imPreprocessing(im2);
 
 % image size
-[flow_u, flow_v] = denseflowHS(im1, im2);
+[flow_u, flow_v] = denseflowPyrLK(im1, im2);
 
 
 % display dense flow as an image
@@ -45,66 +45,18 @@ function showFlowQuiver(im, flow_u, flow_v)
     quiver(xx,yy,flow_u(:),flow_v(:),'LineWidth',1.5, 'Color','r','MaxHeadSize',1);axis image
 end
 
-function [Ix, Iy] = grad2(im1)
-% perform gradient operation with first order gaussian kernel
-    hsize = 2;% or 1,3
-    sigma = 0.5;% or 1
-    x = -hsize:1:hsize;
-    cons1 = sigma*sigma;
-    hg = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)); hg = hg ./ sum(abs(hg(:)));
-    hgx = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)).*(-x./cons1); hgx = hgx ./ sum(abs(hgx(:)));
-    hgx = fliplr(hgx);% convolution kernel is the flip version.
-    Ix = imfilter(im1,hgx,'replicate','same');
-    Ix = imfilter(Ix,hg','replicate','same');
-    Iy = imfilter(im1,hgx','replicate','same');
-    Iy = imfilter(Iy,hg,'replicate','same');
-end
-
-function [Ix, Iy] = grad3(im1)
-% third way of computing the gradient.
-    h = [-1 9 -45 0 45 -9 1]/60;
-    Ix = imfilter(im1,h,'symmetric','same');
-    Iy = imfilter(im1,h','symmetric','same');
-end
-
 function It = gradIntensity(x,y,flowu,flowv,im1,im2)
 % perform intensity gradient for LK optical flow.
     shiftx = x + flowu;
     shifty = y + flowv;
-
-    im_warp = interp2(x,y,im2,shiftx,shifty,'linear',NaN);
+    
+    [xx,yy] = meshgrid(1:size(im1,2),1:size(im1,1));
+    
+    im_warp = interp2(xx,yy,im2,shiftx,shifty,'linear',NaN);
     mask = isnan(im_warp);
     im_warp(mask) = im1(mask);
 
-    It = im_warp - im1;
-end
-
-function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
-    layers = 4;
-    pyr1 = GaussianPyramid(im1, layers, 1);
-    pyr2 = GaussianPyramid(im2, layers, 1);
-   
-    hsize = 1;
-    
-    % last layer
-    [pu, pv] = denseflowLK(pyr1{end}, pyr2{end}, [], [], hsize);
-    for i = layers-1:-1:1
-        pu = pu.*2;
-        pv = pv.*2;
-        u = imresize(pu,size(pyr1{i}),'bilinear');
-        v = imresize(pv,size(pyr2{i}),'bilinear');
-        [pu, pv] = denseflowLK(pyr1{i}, pyr2{i}, u, v, hsize);
-    end
-    flow_u = pu;
-    flow_v = pv;
-end
-
-function [flow_u, flow_v] = resampleFlow(u, v, sz)
-% instead of using hard scale, here I do the flow updating using bilinear
-% interpolation and actual ratio between cascaded layers.
-    ratio = sz(1) / size(u,1);
-    flow_u = imresize(u,sz,'binlinear').*ratio;
-    flow_v = imresize(v,sz,'binlinear').*ratio;
+    It = im_warp - im1((x-1)*size(im1,1)+y);
 end
 
 function im_warp = warpImage(im1, u, v, im2)
@@ -117,25 +69,27 @@ function im_warp = warpImage(im1, u, v, im2)
     im_warp(mask) = im1(mask);
 end
 
-
-
-function ker = boxker(hsize)
-    % box filter
-    M = 2*hsize+1;
-    ker = ones(M,M);
+function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
+    layers = 3;
+    ker = gaussian_kernel_calculator(2, 2, 1);
+    
+    pyr1 = GaussianPyramid(im1, layers, ker, 1);
+    pyr2 = GaussianPyramid(im2, layers, ker, 1);
+       
+    % last layer
+    [pu, pv] = denseflowLK(pyr1{end}, pyr2{end}, [], []);
+    for i = layers-1:-1:1
+        [u,v]=resampleFlow(pu,pv,size(pyr1{i}));
+        [pu, pv] = denseflowLK(pyr1{i}, pyr2{i}, u, v);
+    end
+    flow_u = pu;
+    flow_v = pv;
 end
 
-function ker = gauker(hsize)
-    % gaussian filter
-    sigma = 0.5;
-    ker = gaussian_kernel_calculator(2, hsize, sigma);
-    ker = ker./sum(abs(ker(:)));
-end
-
-function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
+function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
 % compute optical flow using Lucas-Kanade
     % grad    
-    [Ix, Iy] = grad2(im1,2,0.5);
+    [Ix, Iy] = grad3(im1);
     
     % dense flow
     width = size(im1,2);
@@ -161,11 +115,11 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     Iy2 = Iy.*Iy;
     Ixy = Ix.*Iy;
     % filtering
-    ker = gauker(1);
+    ker = gauker(2, 1);% hsize + sigma
     
-    sIx2 = imfilter(Ix2,ker,'replicate','same');
-    sIy2 = imfilter(Iy2,ker,'replicate','same');
-    sIxy = imfilter(Ixy,ker,'replicate','same');
+    sIx2 = imfilter(Ix2,ker,'symmetric','same');
+    sIy2 = imfilter(Iy2,ker,'symmetric','same');
+    sIxy = imfilter(Ixy,ker,'symmetric','same');
     sIxy2 = sIxy.*sIxy;
 
     % interpolation
@@ -176,8 +130,8 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     Ixt = Ix.*It;
     Iyt = Iy.*It;
         
-    sIxt = imfilter(Ixt,ker,'replicate','same');
-    sIyt = imfilter(Iyt,ker,'replicate','same');
+    sIxt = imfilter(Ixt,ker,'symmetric','same');
+    sIyt = imfilter(Iyt,ker,'symmetric','same');
     
     % LK-flow    
     % opt1: vectorization, faster
@@ -195,7 +149,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);
     det1 = sIx2.*sIy2 - sIxy2;
-    invalid = score < 0.03*max(score(:)) | abs(det1) < 1e-6;
+    invalid = score < 0.05*max(score(:)) | abs(det1) < 1e-6;
     
     % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;

@@ -25,4 +25,5 @@ function g = gaussian_kernel_calculator(D, t, sigma)
         f = @(x,y,z) (1/(((2*pi)^D*sigma^(2*D))^(0.5)).*exp((-0.5/(sigma^2)).*(x.^2+y.^2+z.^2)));
         g = f(x,y,z);
     end
+    g = g./sum(vec(g));
 end
