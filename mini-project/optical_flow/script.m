@@ -22,10 +22,19 @@ im2 = imPreprocessing(im2);
 % display dense flow as an image
 img = computeColor(flow_u,flow_v);
 figure
-imshow(img, 'InitialMagnification',1000);hold on;
+if size(img,1)*size(img,2) < 1000
+    imshow(img, 'InitialMagnification',1000);hold on;
+else
+    imshow(img);
+end
 
 function showFlowQuiver(im, flow_u, flow_v)
-    figure;imshow(im, 'InitialMagnification',1000);hold on;
+    figure;
+    if size(im,1)*size(im,2) < 1000
+        imshow(im, 'InitialMagnification',1000);hold on;
+    else
+        imshow(im);hold on;
+    end
     height = size(im,1);
     width = size(im,2);
     % opflow = opticalFlow(flow_u,flow_v);
@@ -36,8 +45,10 @@ function showFlowQuiver(im, flow_u, flow_v)
     quiver(xx,yy,flow_u(:),flow_v(:),'LineWidth',1.5, 'Color','r','MaxHeadSize',1);axis image
 end
 
-function [Ix, Iy] = grad2(im1, hsize, sigma)
+function [Ix, Iy] = grad2(im1)
 % perform gradient operation with first order gaussian kernel
+    hsize = 2;% or 1,3
+    sigma = 0.5;% or 1
     x = -hsize:1:hsize;
     cons1 = sigma*sigma;
     hg = 1/sqrt(2*pi*cons1).*exp(-x.^2./(2*cons1)); hg = hg ./ sum(abs(hg(:)));
@@ -49,31 +60,27 @@ function [Ix, Iy] = grad2(im1, hsize, sigma)
     Iy = imfilter(Iy,hg,'replicate','same');
 end
 
-function It = gradIntensity(u,v,flowu,flowv,im1,im2)
+function [Ix, Iy] = grad3(im1)
+% third way of computing the gradient.
+    h = [-1 9 -45 0 45 -9 1]/60;
+    Ix = imfilter(im1,h,'symmetric','same');
+    Iy = imfilter(im1,h','symmetric','same');
+end
+
+function It = gradIntensity(x,y,flowu,flowv,im1,im2)
 % perform intensity gradient for LK optical flow.
-    % new coorinate 
-    xxnew = u + flowu;
-    yynew = v + flowv;
-    
-    width = size(im2,2); height = size(im2,1);
-    
-    % nearest interpolation
-    xx1 = round(xxnew); yy1 = round(yynew);% nearest neighbors
-    
-    xx1(xx1 < 1) = 1;
-    xx1(xx1 > width) = width;
-    yy1(yy1 < 1) = 1;
-    yy1(yy1 > height) = height;
-    
-    % to index
-    index0 = (u - 1).*size(im1,1) + v;
-    index1 = (xx1 - 1).*height + yy1;
-    
-    It = im2(index1) - im1(index0);
+    shiftx = x + flowu;
+    shifty = y + flowv;
+
+    im_warp = interp2(x,y,im2,shiftx,shifty,'linear',NaN);
+    mask = isnan(im_warp);
+    im_warp(mask) = im1(mask);
+
+    It = im_warp - im1;
 end
 
 function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
-    layers = 5;
+    layers = 4;
     pyr1 = GaussianPyramid(im1, layers, 1);
     pyr2 = GaussianPyramid(im2, layers, 1);
    
@@ -92,6 +99,26 @@ function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
     flow_v = pv;
 end
 
+function [flow_u, flow_v] = resampleFlow(u, v, sz)
+% instead of using hard scale, here I do the flow updating using bilinear
+% interpolation and actual ratio between cascaded layers.
+    ratio = sz(1) / size(u,1);
+    flow_u = imresize(u,sz,'binlinear').*ratio;
+    flow_v = imresize(v,sz,'binlinear').*ratio;
+end
+
+function im_warp = warpImage(im1, u, v, im2)
+    [x,y] = meshgrid(1:size(im1,2),1:size(im1,1));
+    shiftx = x + u;
+    shifty = y + v;
+    % perform warping, fill in nan for missing pixels
+    im_warp = interp2(x,y,im2,shiftx,shifty,'linear',NaN);
+    mask = isnan(im_warp);
+    im_warp(mask) = im1(mask);
+end
+
+
+
 function ker = boxker(hsize)
     % box filter
     M = 2*hsize+1;
@@ -108,7 +135,7 @@ end
 function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
 % compute optical flow using Lucas-Kanade
     % grad    
-    [Ix, Iy] = grad2(im1,1,0.5);
+    [Ix, Iy] = grad2(im1,2,0.5);
     
     % dense flow
     width = size(im1,2);
@@ -142,9 +169,9 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     sIxy2 = sIxy.*sIxy;
 
     % interpolation
-%     It = gradIntensity(xx,yy,vec(flow_u),vec(flow_v),im1,im2);
-%     It = reshape(It, height, width);
-    It = im2 - im1;
+    It = gradIntensity(xx,yy,vec(flow_u),vec(flow_v),im1,im2);
+    It = reshape(It, height, width);
+%     It = im2 - im1;
     
     Ixt = Ix.*It;
     Iyt = Iy.*It;
@@ -167,7 +194,8 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, hsize)
     
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);
-    invalid = score < 0.03*max(score(:));
+    det1 = sIx2.*sIy2 - sIxy2;
+    invalid = score < 0.03*max(score(:)) | abs(det1) < 1e-6;
     
     % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;

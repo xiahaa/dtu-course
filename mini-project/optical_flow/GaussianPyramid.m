@@ -1,10 +1,14 @@
-function pyr = GaussianPyramid(im, layers, verbose)
+function pyr = GaussianPyramid(im, layers, ker, verbose)
     pyr = cell(layers,1);
     pyr{1} = im;
-    sigma = 1;
     for i = 2:layers
         % gaussian filter
-        img = imgaussfilt(pyr{i-1}, sigma);
+        if isempty(ker)
+            sigma = 1;
+            img = imgaussfilt(pyr{i-1}, sigma);
+        else
+            img = imfilter(pyr{i-1},ker,'symmetric','same');
+        end
         % subsampling
         pyr{i} = imresize(img,0.5,'nearest');
     end
