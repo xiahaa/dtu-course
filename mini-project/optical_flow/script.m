@@ -30,7 +30,7 @@ end
 
 function showFlowQuiver(im, flow_u, flow_v)
     figure;
-    if size(im,1)*size(im,2) < 1000
+    if size(im,1)*size(im,2) < 10000
         imshow(im, 'InitialMagnification',1000);hold on;
     else
         imshow(im);hold on;
@@ -42,7 +42,7 @@ function showFlowQuiver(im, flow_u, flow_v)
     [yy,xx] = meshgrid(1:height,1:width);
     xx = vec(xx');
     yy = vec(yy');
-    quiver(xx,yy,flow_u(:),flow_v(:),'LineWidth',1.5, 'Color','r','MaxHeadSize',1);axis image
+    quiver(xx,yy,flow_u(:),flow_v(:),'LineWidth',1.5, 'Color','r','MaxHeadSize',5);axis image
 end
 
 function It = gradIntensity(x,y,flowu,flowv,im1,im2)
@@ -70,7 +70,7 @@ function im_warp = warpImage(im1, u, v, im2)
 end
 
 function [flow_u, flow_v] = denseflowPyrLK(im1,im2)
-    layers = 3;
+    layers = 4;
     ker = gaussian_kernel_calculator(2, 2, 1);
     
     pyr1 = GaussianPyramid(im1, layers, ker, 1);
@@ -88,16 +88,9 @@ end
 
 function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
 % compute optical flow using Lucas-Kanade
-    % grad    
-    [Ix, Iy] = grad3(im1);
-    
     % dense flow
     width = size(im1,2);
     height = size(im1,1);
-    [yy,xx] = meshgrid(1:height,1:width);
-    xx = vec(xx');
-    yy = vec(yy');
-    
     if isempty(iu) 
         flow_u = zeros(height, width);
     else
@@ -110,6 +103,11 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
         flow_v = iv;
     end
     
+    im2_warp = warpImage(im1, flow_u, flow_v, im2);
+    % grad 
+    [Ix, Iy] = grad3(im2_warp);
+    It = im2_warp - im1;
+    
     % precomputing
     Ix2 = Ix.*Ix;
     Iy2 = Iy.*Iy;
@@ -121,15 +119,10 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     sIy2 = imfilter(Iy2,ker,'symmetric','same');
     sIxy = imfilter(Ixy,ker,'symmetric','same');
     sIxy2 = sIxy.*sIxy;
-
-    % interpolation
-    It = gradIntensity(xx,yy,vec(flow_u),vec(flow_v),im1,im2);
-    It = reshape(It, height, width);
-%     It = im2 - im1;
     
     Ixt = Ix.*It;
     Iyt = Iy.*It;
-        
+
     sIxt = imfilter(Ixt,ker,'symmetric','same');
     sIyt = imfilter(Iyt,ker,'symmetric','same');
     
@@ -149,8 +142,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);
     det1 = sIx2.*sIy2 - sIxy2;
-    invalid = score < 0.05*max(score(:)) | abs(det1) < 1e-6;
-    
+    invalid =  score < 0.01*max(score(:)) | abs(det1) < 1e-6;%
     % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;
     %     sIy2(invalid) = sIy2(invalid) + 0.1;
@@ -167,7 +159,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     flow_v = flow_v + dflow_v;
     
     % debug only
-    showFlowQuiver(im1, flow_u, flow_v);
+    showFlowQuiver(im2_warp, flow_u, flow_v);
 end
 
 function [flow_u, flow_v] = denseflowHS(im1, im2)
