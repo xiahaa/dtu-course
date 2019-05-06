@@ -19,7 +19,7 @@ function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv, verbose)
     for iter = 1:maxiter
         im2_warp = warpImage(im1, flow_u, flow_v, im2);
         % grad    
-        [Ix, Iy] = grad3(im2_warp);
+        [Ix, Iy] = grad2(im2_warp);
         It = im2_warp - im1;
     
         % precomputing
@@ -34,7 +34,7 @@ function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv, verbose)
         sigma = 1;
         hsize = 2;
         ker_avg = gauker(2, 1);% hsize + sigma
-    
+        
         max_iter = 3;
         alpha = 1;
         
