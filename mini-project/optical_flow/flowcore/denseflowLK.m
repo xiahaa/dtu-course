@@ -49,7 +49,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv, verbose)
 %     invalid = ratio < 0.01 | (eig_smallest < 1e-6);
     
     % second option is to use Harris 
-%     score = sIx2.*sIy2 - sIxy2 - 0.01.*(sIx2+sIy2).^2;
+%     score = sIx2.*sIy2 - sIxy2 - 0.05.*(sIx2+sIy2).^2;
     
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);

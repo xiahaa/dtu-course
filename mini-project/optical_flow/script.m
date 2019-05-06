@@ -8,7 +8,7 @@ baseDir = '../../data/optical_flow_data/';
 filename = {'Army','Backyard','Basketball','Dumptruck','Evergreen','Grove','Mequon', ...
             'Schefflera','Teddy','Urban','Wooden','Yosemite'};
 
-fileid = 12;
+fileid = 1;
 
 dir = strcat(baseDir, filename{fileid});
 % load database
@@ -26,7 +26,7 @@ save = 1;
 
 % flow
 tic
-[flow_u, flow_v] = denseflowPyrLK(im1, im2,0);
+[flow_u, flow_v] = denseflowPyrLK(im1, im2,1);
 time1 = toc;
 
 showFlowQuiver(im1, flow_u, flow_v);
@@ -35,6 +35,8 @@ set(gca,'FontName','Arial','FontSize',20);
 if save == true
     fig=gcf;                                     % your figure
     fig.PaperPositionMode='auto';
+%     fig.PaperSize = [50 50];
+%     fig.PaperUnits = 'centimeters';
     print(strcat('./output/',filename{fileid},'_LK_quiver.pdf'),'-dpdf','-fillpage');
 end
 
@@ -74,59 +76,35 @@ fprintf(fid, 'LK: %10.6f\n', time1);
 fprintf(fid, 'LK: %10.6f\n', time2);
 fclose(fid);
 
-function showFlowImage(flow_u, flow_v)
-    % display dense flow as an image
-    img = computeColor(flow_u,flow_v);
-    figure
-    if size(img,1)*size(img,2) < 10000
-        imshow(img, 'InitialMagnification',10000);hold on;
-    else
-        imshow(img);
-    end
-end
-
-function showFlowQuiver(im, flow_u, flow_v)
-    figure;
-    if size(im,1)*size(im,2) < 10000
-        imshow(im, 'InitialMagnification',1000);hold on;
-    else
-        imshow(im);hold on;
-    end
-    height = size(im,1);
-    width = size(im,2);
-    
-    [xx1,yy1] = meshgrid(1:width,1:height);
-    
-    display_grid_height = round(height*0.01);
-    display_grid_width = round(width*0.01);
-    
-    [xx2,yy2] = meshgrid(1:display_grid_width:width, 1:display_grid_height:height);
-    uu = interp2(xx1,yy1,flow_u, xx2, yy2);
-    vv = interp2(xx1,yy1,flow_v, xx2, yy2);
-    
-%     opflow = opticalFlow(uu,vv);
-%     plot(opflow,'DecimationFactor',[1 1],'ScaleFactor',1);
-%     [yy,xx] = meshgrid(1:height,1:width);
-%     xx = vec(xx');
-%     yy = vec(yy');
-    quiver(xx2(:),yy2(:),uu(:),vv(:),4,'LineWidth',1, 'Color','r','MarkerSize',50);axis image
-end
-
 function [flow_u, flow_v] = denseflowPyrLK(im1,im2, verbose)
     layers = 4;
     ker = gaussian_kernel_calculator(2, 2, 1);
     
     pyr1 = GaussianPyramid(im1, layers, ker, verbose);
     pyr2 = GaussianPyramid(im2, layers, ker, verbose);
+    
+    if verbose == 1
+        pyrflowu = cell(layers,1);
+        pyrflowv = cell(layers,1);
+    end
        
     % last layer
     [pu, pv] = denseflowLK(pyr1{end}, pyr2{end}, [], [], verbose);
+    if verbose == 1
+        pyrflowu{end} = pu;
+        pyrflowv{end} = pu;
+    end
+    
     for i = layers-1:-1:1
         [u,v]=resampleFlow(pu,pv,size(pyr1{i}));
         [pu, pv] = denseflowLK(pyr1{i}, pyr2{i}, u, v, verbose);
+        if verbose == 1
+            pyrflowu{i} = pu;
+            pyrflowv{i} = pu;
+        end
     end
     flow_u = pu;
-    flow_v = pv;
+    flow_v = pv;   
 end
 
 function [flow_u, flow_v] = denseflowPyrHS(im1,im2,verbose)
