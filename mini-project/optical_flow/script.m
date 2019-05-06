@@ -16,7 +16,7 @@ im2 = imread(buildingScene.Files{2});
 im2 = imPreprocessing(im2);
 
 % image size
-[flow_u, flow_v] = denseflowPyrLK(im1, im2);
+[flow_u, flow_v] = denseflowHS(im1, im2);
 
 
 % display dense flow as an image
@@ -37,12 +37,22 @@ function showFlowQuiver(im, flow_u, flow_v)
     end
     height = size(im,1);
     width = size(im,2);
-    % opflow = opticalFlow(flow_u,flow_v);
-    % plot(opflow,'DecimationFactor',[1 1],'ScaleFactor',1);
-    [yy,xx] = meshgrid(1:height,1:width);
-    xx = vec(xx');
-    yy = vec(yy');
-    quiver(xx,yy,flow_u(:),flow_v(:),'LineWidth',1.5, 'Color','r','MaxHeadSize',5);axis image
+    
+    [xx1,yy1] = meshgrid(1:width,1:height);
+    
+    display_grid_height = round(height*0.01);
+    display_grid_width = round(width*0.01);
+    
+    [xx2,yy2] = meshgrid(1:display_grid_width:width, 1:display_grid_height:height);
+    uu = interp2(xx1,yy1,flow_u, xx2, yy2);
+    vv = interp2(xx1,yy1,flow_v, xx2, yy2);
+    
+%     opflow = opticalFlow(uu,vv);
+%     plot(opflow,'DecimationFactor',[1 1],'ScaleFactor',1);
+%     [yy,xx] = meshgrid(1:height,1:width);
+%     xx = vec(xx');
+%     yy = vec(yy');
+    quiver(xx2(:),yy2(:),uu(:),vv(:),'LineWidth',1.5, 'Color','r','MarkerSize',20);axis image
 end
 
 function It = gradIntensity(x,y,flowu,flowv,im1,im2)
@@ -162,10 +172,41 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     showFlowQuiver(im2_warp, flow_u, flow_v);
 end
 
-function [flow_u, flow_v] = denseflowHS(im1, im2)
+function [flow_u, flow_v] = denseflowPyrHS(im1,im2)
+    layers = 4;
+    ker = gaussian_kernel_calculator(2, 2, 1);% hsize x sigma
+    
+    pyr1 = GaussianPyramid(im1, layers, ker, 1);
+    pyr2 = GaussianPyramid(im2, layers, ker, 1);
+   
+    % last layer
+    [pu, pv] = denseflowHS(pyr1{end}, pyr2{end}, [], []);
+    for i = layers-1:-1:1
+        [u,v]=resampleFlow(pu,pv,size(pyr1{i}));
+        [pu, pv] = denseflowHS(pyr1{i}, pyr2{i}, u, v);
+    end
+    flow_u = pu;
+    flow_v = pv;
+end
+
+function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv)
 % compute optical flow using Horn-Shunck method    
+    if isempty(iu) 
+        flow_u = zeros(height, width);
+    else
+        flow_u = iu;
+    end
+    
+    if isempty(iv) 
+    	flow_v = zeros(height, width);
+    else
+        flow_v = iv;
+    end
+
+    im2_warp = warpImage(im1, flow_u, flow_v, im2);
+
     % grad    
-    [Ix, Iy] = grad2(im1,3,1);
+    [Ix, Iy] = grad2(im2);
     It = im2 - im1;
     
     % precomputing
@@ -184,7 +225,7 @@ function [flow_u, flow_v] = denseflowHS(im1, im2)
     hsize = 5;
     ker_avg = gaussian_kernel_calculator(2, hsize, sigma);
     
-    max_iter = 100;
+    max_iter = 500;
     alpha = 1;
     for iter = 1:max_iter
         % arveraging
@@ -195,6 +236,6 @@ function [flow_u, flow_v] = denseflowHS(im1, im2)
         flow_u = ubar - (Ix2.*ubar + Ixy.*vbar + Ixt)./den;
         flow_v = vbar - (Ixy.*ubar + Iy2.*vbar + Iyt)./den;
     end
-    
+    showFlowQuiver(im1, flow_u, flow_v);
 end
 
