@@ -16,7 +16,7 @@ im2 = imread(buildingScene.Files{2});
 im2 = imPreprocessing(im2);
 
 % image size
-[flow_u, flow_v] = denseflowHS(im1, im2);
+[flow_u, flow_v] = denseflowPyrHS(im1, im2);
 
 
 % display dense flow as an image
@@ -52,7 +52,7 @@ function showFlowQuiver(im, flow_u, flow_v)
 %     [yy,xx] = meshgrid(1:height,1:width);
 %     xx = vec(xx');
 %     yy = vec(yy');
-    quiver(xx2(:),yy2(:),uu(:),vv(:),'LineWidth',1.5, 'Color','r','MarkerSize',20);axis image
+    quiver(xx2(:),yy2(:),uu(:),vv(:),4,'LineWidth',1, 'Color','r','MarkerSize',50);axis image
 end
 
 function It = gradIntensity(x,y,flowu,flowv,im1,im2)
@@ -184,13 +184,17 @@ function [flow_u, flow_v] = denseflowPyrHS(im1,im2)
     for i = layers-1:-1:1
         [u,v]=resampleFlow(pu,pv,size(pyr1{i}));
         [pu, pv] = denseflowHS(pyr1{i}, pyr2{i}, u, v);
+        pu = medfilt2(pu,[5,5]);
+        pv = medfilt2(pv,[5,5]);
     end
     flow_u = pu;
     flow_v = pv;
 end
 
 function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv)
-% compute optical flow using Horn-Shunck method    
+% compute optical flow using Horn-Shunck method  
+    height = size(im2,1);
+    width = size(im2,2);
     if isempty(iu) 
         flow_u = zeros(height, width);
     else
@@ -203,38 +207,56 @@ function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv)
         flow_v = iv;
     end
 
-    im2_warp = warpImage(im1, flow_u, flow_v, im2);
-
-    % grad    
-    [Ix, Iy] = grad2(im2);
-    It = im2 - im1;
+    maxiter = 3;
+    for iter = 1:maxiter
+        im2_warp = warpImage(im1, flow_u, flow_v, im2);
+        % grad    
+        [Ix, Iy] = grad2(im2_warp);
+        It = im2_warp - im1;
     
-    % precomputing
-    Ix2 = Ix.*Ix;
-    Iy2 = Iy.*Iy;
-    Ixy = Ix.*Iy;    
-    Ixt = Ix.*It;
-    Iyt = Iy.*It;
+        % precomputing
+        Ix2 = Ix.*Ix;
+        Iy2 = Iy.*Iy;
+        Ixy = Ix.*Iy;    
+        Ixt = Ix.*It;
+        Iyt = Iy.*It;
     
-    flow_u = zeros(size(im1));
-    flow_v = zeros(size(im1));
+        % kernel 1, hard code 3x3 averaging
+    %     ker_avg = [1/12 1/6 1/12;1/6 0 1/6;1/12 1/6 1/12];
+        sigma = 1;
+        hsize = 2;
+        ker_avg = gaussian_kernel_calculator(2, hsize, sigma);
     
-    % kernel 1, hard code 3x3 averaging
-%     ker_avg = [1/12 1/6 1/12;1/6 0 1/6;1/12 1/6 1/12];
-    sigma = 0.5;
-    hsize = 5;
-    ker_avg = gaussian_kernel_calculator(2, hsize, sigma);
-    
-    max_iter = 500;
-    alpha = 1;
-    for iter = 1:max_iter
-        % arveraging
-        ubar = imfilter(flow_u,ker_avg,'replicate','same');
-        vbar = imfilter(flow_v,ker_avg,'replicate','same');
-        % update
-        den = alpha*alpha + Ix2 + Iy2;
-        flow_u = ubar - (Ix2.*ubar + Ixy.*vbar + Ixt)./den;
-        flow_v = vbar - (Ixy.*ubar + Iy2.*vbar + Iyt)./den;
+        max_iter = 3;
+        alpha = 1;
+        
+        uu = zeros(size(im2));
+        vv = zeros(size(im2));
+        
+        for iter = 1:max_iter
+            % arveraging
+            ubar = imfilter(uu,ker_avg,'replicate','same');
+            vbar = imfilter(vv,ker_avg,'replicate','same');
+            % update
+            den = alpha*alpha + Ix2 + Iy2;
+            
+            du = (Ix2.*ubar + Ixy.*vbar + Ixt)./den;
+            dv = (Ixy.*ubar + Iy2.*vbar + Iyt)./den;
+            
+            uu = ubar - du;
+            vv = vbar - dv;
+            
+            if max(abs(du(:))) < 1e-3 && max(abs(dv(:))) < 1e-3
+                disp('Exit 1~~~~~~');
+                break;
+            end
+        end
+        flow_u = flow_u + uu;
+        flow_v = flow_v + vv;
+        if max(abs(uu(:))) < 1e-3 && max(abs(vv(:))) < 1e-3
+            disp('Exit 2~~~~~~');
+            break;
+        end
     end
     showFlowQuiver(im1, flow_u, flow_v);
 end
