@@ -16,8 +16,7 @@ im2 = imread(buildingScene.Files{2});
 im2 = imPreprocessing(im2);
 
 % image size
-[flow_u, flow_v] = denseflowPyrHS(im1, im2);
-
+[flow_u, flow_v] = denseflowPyrLK(im1, im2);
 
 % display dense flow as an image
 img = computeColor(flow_u,flow_v);
@@ -99,8 +98,8 @@ end
 function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
 % compute optical flow using Lucas-Kanade
     % dense flow
-    width = size(im1,2);
-    height = size(im1,1);
+    width = size(im2,2);
+    height = size(im2,1);
     if isempty(iu) 
         flow_u = zeros(height, width);
     else
@@ -115,7 +114,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     
     im2_warp = warpImage(im1, flow_u, flow_v, im2);
     % grad 
-    [Ix, Iy] = grad3(im2_warp);
+    [Ix, Iy] = grad2(im2_warp);
     It = im2_warp - im1;
     
     % precomputing
@@ -152,7 +151,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     % third option is to use the hormonic mean
     score = (sIx2.*sIy2 - sIxy2)./(sIx2+sIy2);
     det1 = sIx2.*sIy2 - sIxy2;
-    invalid =  score < 0.01*max(score(:)) | abs(det1) < 1e-6;%
+    invalid =  score < 0.05*max(score(:)) | abs(det1) < 1e-6;%
     % add a smaller value to the diagonal elements of those invalid pixels.
     %     sIx2(invalid) = sIx2(invalid) + 0.1;
     %     sIy2(invalid) = sIy2(invalid) + 0.1;
@@ -169,7 +168,7 @@ function [flow_u, flow_v] = denseflowLK(im1, im2, iu, iv)
     flow_v = flow_v + dflow_v;
     
     % debug only
-    showFlowQuiver(im2_warp, flow_u, flow_v);
+    showFlowQuiver(im1, flow_u, flow_v);
 end
 
 function [flow_u, flow_v] = denseflowPyrHS(im1,im2)
@@ -211,7 +210,7 @@ function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv)
     for iter = 1:maxiter
         im2_warp = warpImage(im1, flow_u, flow_v, im2);
         % grad    
-        [Ix, Iy] = grad2(im2_warp);
+        [Ix, Iy] = grad3(im2_warp);
         It = im2_warp - im1;
     
         % precomputing
@@ -225,7 +224,7 @@ function [flow_u, flow_v] = denseflowHS(im1, im2, iu, iv)
     %     ker_avg = [1/12 1/6 1/12;1/6 0 1/6;1/12 1/6 1/12];
         sigma = 1;
         hsize = 2;
-        ker_avg = gaussian_kernel_calculator(2, hsize, sigma);
+        ker_avg = gauker(2, 1);% hsize + sigma
     
         max_iter = 3;
         alpha = 1;
