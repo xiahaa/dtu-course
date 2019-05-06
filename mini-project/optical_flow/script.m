@@ -8,7 +8,7 @@ baseDir = '../../data/optical_flow_data/';
 filename = {'Army','Backyard','Basketball','Dumptruck','Evergreen','Grove','Mequon', ...
             'Schefflera','Teddy','Urban','Wooden','Yosemite'};
 
-fileid = 1;
+fileid = 12;
 
 dir = strcat(baseDir, filename{fileid});
 % load database
@@ -26,7 +26,7 @@ save = 1;
 
 % flow
 tic
-[flow_u, flow_v] = denseflowPyrLK(im1, im2,1);
+[flow_u, flow_v] = denseflowPyrLK(im1, im2, 0);
 time1 = toc;
 
 showFlowQuiver(im1, flow_u, flow_v);
@@ -37,7 +37,9 @@ if save == true
     fig.PaperPositionMode='auto';
 %     fig.PaperSize = [50 50];
 %     fig.PaperUnits = 'centimeters';
-    print(strcat('./output/',filename{fileid},'_LK_quiver.pdf'),'-dpdf','-fillpage');
+    fig.PaperUnits = 'centimeters';
+    fig.PaperPosition = [0 0 20 20];
+    print(strcat('./output/',filename{fileid},'_LK_quiver.png'),'-dpng','-r300');
 end
 
 showFlowImage(flow_u, flow_v);
@@ -45,8 +47,10 @@ title('Optical Flow LK: Image plot');
 set(gca,'FontName','Arial','FontSize',20);
 if save == true
     fig=gcf;                                     % your figure
-    fig.PaperPositionMode='auto';
-    print(strcat('./output/',filename{fileid},'_LK_rgb.pdf'),'-dpdf','-fillpage');
+%     fig.PaperPositionMode='auto';
+    fig.PaperUnits = 'centimeters';
+    fig.PaperPosition = [0 0 20 20];
+    print(strcat('./output/',filename{fileid},'_LK_rgb.png'),'-dpng','-r300');
 end
 
 tic
@@ -58,8 +62,10 @@ title('Optical Flow HS: Quiver plot');
 set(gca,'FontName','Arial','FontSize',20);
 if save == true
     fig=gcf;                                     % your figure
-    fig.PaperPositionMode='auto';
-    print(strcat('./output/',filename{fileid},'_HS_quiver.pdf'),'-dpdf','-fillpage');
+%     fig.PaperPositionMode='auto';
+    fig.PaperUnits = 'centimeters';
+    fig.PaperPosition = [0 0 20 20];
+    print(strcat('./output/',filename{fileid},'_HS_quiver.png'),'-dpng','-r300');
 end
 
 showFlowImage(flow_u, flow_v);
@@ -67,8 +73,10 @@ title('Optical Flow HS: Image plot');
 set(gca,'FontName','Arial','FontSize',20);
 if save == true
     fig=gcf;                                     % your figure
-    fig.PaperPositionMode='auto';
-    print(strcat('./output/',filename{fileid},'_HS_rgb.pdf'),'-dpdf','-fillpage');
+%     fig.PaperPositionMode='auto';
+    fig.PaperUnits = 'centimeters';
+    fig.PaperPosition = [0 0 20 20];
+    print(strcat('./output/',filename{fileid},'_HS_rgb.png'),'-dpng','-r300');
 end
 
 fid = fopen(strcat(dir,'/time.txt'),'w');

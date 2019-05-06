@@ -10,8 +10,8 @@ function showFlowQuiver(im, flow_u, flow_v)
     
     [xx1,yy1] = meshgrid(1:width,1:height);
     
-    xxs = linspace(1,width, 50);
-    yys = linspace(1,height, 50);
+    xxs = linspace(1,width, 40);
+    yys = linspace(1,height, 40);
     
     [xx2,yy2] = meshgrid(xxs, yys);
     uu = interp2(xx1,yy1,flow_u, xx2, yy2);
@@ -22,5 +22,5 @@ function showFlowQuiver(im, flow_u, flow_v)
 %     [yy,xx] = meshgrid(1:height,1:width);
 %     xx = vec(xx');
 %     yy = vec(yy');
-    quiver(xx2(:),yy2(:),uu(:),vv(:),4,'LineWidth',1, 'Color','r','MarkerSize',10);axis image
+    quiver(xx2(:),yy2(:),uu(:),vv(:),5,'LineWidth',2, 'Color','g','MarkerSize',10);axis image
 end
