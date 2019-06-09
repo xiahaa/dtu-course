@@ -4,6 +4,8 @@ Special course at DTU summer 19 - deep learning in computer vision
 ## Pre-reading
 ~~numpy: https://morvanzhou.github.io/tutorials/data-manipulation/np-pd/~~
 
+~~matplotlib: https://matplotlib.org/tutorials/index.html~~
+
 torch
 
 https://zhuanlan.zhihu.com/p/25572330
