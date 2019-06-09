@@ -6,6 +6,8 @@ Special course at DTU summer 19 - deep learning in computer vision
 
 ~~matplotlib: https://matplotlib.org/tutorials/index.html~~
 
+~~PIL or PILLOW: https://pillow.readthedocs.io/en/stable/handbook/tutorial.html~~ 貌似已经停止更新了，只支持很简单的一些图像操作，IO，基本几何变换，滤波。
+
 torch
 
 https://zhuanlan.zhihu.com/p/25572330
