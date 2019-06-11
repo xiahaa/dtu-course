@@ -8,7 +8,7 @@ baseDir = '../../data/optical_flow_data/';
 filename = {'Army','Backyard','Basketball','Dumptruck','Evergreen','Grove','Mequon', ...
             'Schefflera','Teddy','Urban','Wooden','Yosemite'};
 
-fileid = 12;
+fileid = 11;
 
 dir = strcat(baseDir, filename{fileid});
 % load database
@@ -25,33 +25,33 @@ im2 = imPreprocessing(im2);
 save = 1;
 
 % flow
-tic
-[flow_u, flow_v] = denseflowPyrLK(im1, im2, 0);
-time1 = toc;
+% tic
+% [flow_u, flow_v] = denseflowPyrLK(im1, im2, 0);
+% time1 = toc;
 
-showFlowQuiver(im1, flow_u, flow_v);
-title('Optical Flow LK: Quiver plot');
-set(gca,'FontName','Arial','FontSize',20);
-if save == true
-    fig=gcf;                                     % your figure
-    fig.PaperPositionMode='auto';
-%     fig.PaperSize = [50 50];
-%     fig.PaperUnits = 'centimeters';
-    fig.PaperUnits = 'centimeters';
-    fig.PaperPosition = [0 0 20 20];
-    print(strcat('./output/',filename{fileid},'_LK_quiver.png'),'-dpng','-r300');
-end
-
-showFlowImage(flow_u, flow_v);
-title('Optical Flow LK: Image plot');
-set(gca,'FontName','Arial','FontSize',20);
-if save == true
-    fig=gcf;                                     % your figure
+% showFlowQuiver(im1, flow_u, flow_v);
+% title('Optical Flow LK: Quiver plot');
+% set(gca,'FontName','Arial','FontSize',20);
+% if save == true
+%     fig=gcf;                                     % your figure
 %     fig.PaperPositionMode='auto';
-    fig.PaperUnits = 'centimeters';
-    fig.PaperPosition = [0 0 20 20];
-    print(strcat('./output/',filename{fileid},'_LK_rgb.png'),'-dpng','-r300');
-end
+% %     fig.PaperSize = [50 50];
+% %     fig.PaperUnits = 'centimeters';
+%     fig.PaperUnits = 'centimeters';
+%     fig.PaperPosition = [0 0 20 20];
+%     print(strcat('./output/',filename{fileid},'_LK_quiver.png'),'-dpng','-r300');
+% end
+% 
+% showFlowImage(flow_u, flow_v);
+% title('Optical Flow LK: Image plot');
+% set(gca,'FontName','Arial','FontSize',20);
+% if save == true
+%     fig=gcf;                                     % your figure
+% %     fig.PaperPositionMode='auto';
+%     fig.PaperUnits = 'centimeters';
+%     fig.PaperPosition = [0 0 20 20];
+%     print(strcat('./output/',filename{fileid},'_LK_rgb.png'),'-dpng','-r300');
+% end
 
 tic
 [flow_u, flow_v] = denseflowPyrHS(im1, im2,0);
