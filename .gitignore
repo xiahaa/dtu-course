@@ -246,3 +246,4 @@ notebooks/.ipynb_checkpoints/
 ./model/
 model/
 notebooks/data/
+3rdparty/*
