@@ -7,3 +7,4 @@
 
 ## Assignment - 2
 1. mask是separate的images，最好把它们加起来做一个mask再用。
+2. 注意阈值化。
