@@ -247,3 +247,6 @@ notebooks/.ipynb_checkpoints/
 model/
 notebooks/data/
 3rdparty/*
+*.log
+*.bbl
+*.aux
