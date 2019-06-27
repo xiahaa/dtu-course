@@ -5,3 +5,7 @@
 traj_gen_simula-20180703T131059Z-001/traj_gen_simula/trajdata.mat
 traj_gen_simula-20180703T131059Z-001/traj_gen_simula/perlin.gif
 traj_gen_simula-20180703T131059Z-001/traj_gen_simula/perlin.gif
+
+*.m~
+
+traj_gen_simula-20180703T131059Z-001/traj_gen_simula/mexMapGen.mexmaci64
