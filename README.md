@@ -35,7 +35,7 @@ https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lin
 
 ## useful toolbox for optimization
 1. Bayesian optimization: no need for gradient, hessian, jacobian. but treat f as a blackbox. 
-GPyOpt: The tool for Bayesian Optimization.
+GPyOpt: The tool for Bayesian Optimization: [example](https://github.com/ibalmeida/02901_Report) of using GPyOpt for automatically tune the neural network hyperparameters.
 
 
 
