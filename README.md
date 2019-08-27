@@ -31,3 +31,11 @@ https://github.com/utkuozbulak/pytorch-cnn-visualizations/tree/master/src
 https://discuss.pytorch.org/t/visualize-feature-map/29597/13
 
 https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lines-of-code-70b7d87b0030
+
+
+## useful toolbox for optimization
+1. Bayesian optimization: no need for gradient, hessian, jacobian. but treat f as a blackbox. 
+GPyOpt: The tool for Bayesian Optimization.
+
+
+
