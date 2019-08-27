@@ -37,5 +37,6 @@ https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lin
 1. Bayesian optimization: no need for gradient, hessian, jacobian. but treat f as a blackbox. 
 GPyOpt: The tool for Bayesian Optimization: [example](https://github.com/ibalmeida/02901_Report) of using GPyOpt for automatically tune the neural network hyperparameters.
 
+2. bayesian estimation needs to compute use the prior and likelihood to compute the maximum posterior estimation. if the likelihood is unknown or computationally intractable. can we approximate it? Via Learning Summary Statistic for Approximate Bayesian Computation via Deep Neural Network, an easy [example](https://github.com/SamuelWiqvist/project_02901_adv_ml/blob/master/project.ipynb).
 
 
