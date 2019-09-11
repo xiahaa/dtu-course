@@ -1,0 +1,2 @@
+https://github.com/saravrajavelu/Adult-Income-Analysis/blob/master/Adult_Income_Analysis.ipynb
+https://www.valentinmihov.com/2015/04/17/adult-income-data-set/
