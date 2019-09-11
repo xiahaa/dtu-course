@@ -250,3 +250,4 @@ notebooks/data/
 *.log
 *.bbl
 *.aux
+*.zip
