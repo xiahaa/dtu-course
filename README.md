@@ -39,11 +39,33 @@ page 41: **data driven prior.**
 page 45-51: how to draw from probability distribution. actually draw from cumulative probability density. the problem is how you inverse from a probability to a variable.
 page 55: Tikhonov regularized solution.
 
+exercise: random draw
+1D
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig1.png)
+
+2D
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig3.png)
+
+adding structure
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig4.png)
+
+hypermodel
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig5.png)
+
+
+
 ## day3: conditional 
 page 19-22: schur complement and its relationship to conditional gaussion.
 page 28-29: apply schur complement to linear inverse problem and show the posterior is always more informative than the prior.
 page 27, 33 are equivelent thanks to the Sherman-Morrison-Woodbury identity (aka matrix inverse lemma). proof is given 34-35.
 exercise: **Kriging** interpolation, is actually a Maximum A Posterior estimation.
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig6.png)
+
 
 ## day 4: solver of Ax=b
 page 6: conjugate gradient method;
@@ -52,7 +74,13 @@ page 14: MAP via CGLS solver;
 page 12: early stopping using Morozov Discrepancy Principle (MDP).
 page 17: prior conditioner.
 ex1: gaussian process simulation, note that there is a analytical solution.
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig7.png)
+
 ex2: deconvolution using bayesian MAP estimation. how to use IAS solver.
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig8.png)
+
 
 ## day 5: dynamic inverse problem
 page 3-4: definition of dynamic inverse problem.
