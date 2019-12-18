@@ -112,5 +112,5 @@ page 62: EnKF + Add parameters.
 
 ![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS1.png)
 ![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS2.png)
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS3.png)
 
