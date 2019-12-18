@@ -42,19 +42,19 @@ page 55: Tikhonov regularized solution.
 exercise: random draw
 1D
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig1.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig1.png)
 
 2D
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig3.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig3.png)
 
 adding structure
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig4.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig4.png)
 
 hypermodel
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig5.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig5.png)
 
 
 
@@ -64,7 +64,7 @@ page 28-29: apply schur complement to linear inverse problem and show the poster
 page 27, 33 are equivelent thanks to the Sherman-Morrison-Woodbury identity (aka matrix inverse lemma). proof is given 34-35.
 exercise: **Kriging** interpolation, is actually a Maximum A Posterior estimation.
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig6.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig6.png)
 
 
 ## day 4: solver of Ax=b
@@ -75,11 +75,11 @@ page 12: early stopping using Morozov Discrepancy Principle (MDP).
 page 17: prior conditioner.
 ex1: gaussian process simulation, note that there is a analytical solution.
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig7.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig7.png)
 
 ex2: deconvolution using bayesian MAP estimation. how to use IAS solver.
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/fig8.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/fig8.png)
 
 
 ## day 5: dynamic inverse problem
@@ -110,7 +110,7 @@ EnKF的名字的来源在于，如果观测模型是线性，则MAP等同于一�
 
 page 62: EnKF + Add parameters.
 
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS1.png)
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS2.png)
-![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS3.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/SOS1.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/SOS2.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/figures/SOS3.png)
 
