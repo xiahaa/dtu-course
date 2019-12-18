@@ -109,3 +109,8 @@ page 58-60:
 EnKF的名字的来源在于，如果观测模型是线性，则MAP等同于一个KF的update的过程，那么EnKF相当于对每一个粒子做一个KF，再综合。
 
 page 62: EnKF + Add parameters.
+
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS1.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/SOS2.png)
+![img](https://github.com/xiahaa/bayesian-scientifical-computing/blob/master/docs/.png)
+
