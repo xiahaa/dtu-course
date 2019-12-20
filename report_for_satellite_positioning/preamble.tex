@@ -1,0 +1,285 @@
+%%%%% PACKAGES %%%%%%
+\usepackage[utf8]{inputenc}
+\usepackage{nomencl}
+\usepackage{fixltx2e}						% Suscript i text
+\usepackage{lastpage}						% Giver mulighed for "side x af y"
+\usepackage{url}							% Giver mulighed for links i fodnote
+\usepackage{array}
+\usepackage{calc}
+\usepackage{pgf}
+\usepackage{mwe}	
+\usepackage[nomessages]{fp}
+\usepackage{cite}
+%\usepackage{booktabs} 						% Punktopstilling til mufs bachelor
+\usepackage{appendix}
+\usepackage{lmodern}
+%\usepackage[colorlinks=true,citecolor=green]{hyperref}
+
+%%%%% TIKZ %%%%%
+\usepackage{tikz}
+\usetikzlibrary{circuits.ee.IEC,shapes,arrows,spy,positioning,snakes,plotmarks,backgrounds}
+\usepackage[american voltages, american currents,siunitx,smartlabels]{circuitikz}
+\usepackage{pgfplots}
+
+%%%%% OVERSAETTELSE OG TEGNSAETNING %%%%%
+%\usepackage[danish]{babel}					% Dokumentets sprog
+\usepackage[T1]{fontenc}					% Output-indkodning af tegnsaet (T1)
+\usepackage{ragged2e,anyfontsize}			% Justering af elementer
+\usepackage{fixltx2e}						% Retter forskellige fejl i LaTeX-kernen
+%\usepackage{animate}		
+%%%%% FIGURES AND TABLES %%%%%
+\usepackage{pbox}							% Tvungne linjeskift i tabeller
+\usepackage{tabularx}						% Tvungne linjeskift i tabeller
+\usepackage{graphicx} 						% Haandtering af eksterne billeder (JPG, PNG, EPS, PDF)
+\usepackage{graphics} % for pdf, bitmapped graphics files
+\usepackage{eso-pic}						% Tilfoej billedekommandoer paa hver side
+\usepackage{multirow}                		% Fletning af raekker og kolonner (\multicolumn og \multirow)
+\usepackage{multicol}         	        	% Muliggoer output i spalter
+\usepackage{rotating}						% Rotation af tekst med \begin{sideways}...\end{sideways}
+\usepackage{colortbl} 						% Farver i tabeller (fx \columncolor og \rowcolor)
+\usepackage{xcolor}							% Definer farver med \definecolor
+\usepackage{flafter}						% Soerger for at floats ikke optraeder i teksten foer deres reference
+\let\newfloat\relax 						% Justering mellem float-pakken og memoir
+\usepackage{float}							% Muliggoer eksakt placering af floats, f.eks. \begin{figure}[H]
+\graphicspath{{./figures/}}					% Saetter default grafik-sti
+\usepackage{placeins}						% \FloatBarrier
+\usepackage{wrapfig}
+
+
+%%%%% MATEMATIK MED MERE %%%%%
+\usepackage{amsmath,amssymb,stmaryrd} 		% Avancerede matematik-udvidelser
+\usepackage{mathtools}						% Andre matematik- og tegnudvidelser
+\usepackage{textcomp}                 		% Symbol-udvidelser
+\usepackage{rsphrase}						% Kemi-pakke til RS-saetninger,
+\usepackage[version=3]{mhchem} 				% Kemi-pakke til flot og let notation af formler
+\usepackage{siunitx}						% Flot og konsistent praesentation af tal og enheder med \si{enhed} og \SI{tal}{enhed}
+%\sisetup{locale=DE}						% Opsaetning af \SI (DE for komma som decimalseparator) 
+\sisetup{output-decimal-marker = {.}}		% Bruges ved engelske rapporter
+
+%%%%% REFERENCES AND SOURCES %%%%%
+\usepackage[danish]{varioref}				% Muliggoer bl.a. krydshenvisninger med sidetal (\vref)
+\usepackage[numbers]{natbib}				% Udvidelse med naturvidenskabelige citationsmodeller
+\usepackage{xr}								% Referencer til eksternt dokument med \externaldocument{<NAVN>}
+\usepackage{glossaries}						% Terminologi- eller symbolliste (se mere i Daleifs Latex-bog)
+
+%%%%% MISC. %%%%%%
+\usepackage{titlesec}
+\usepackage{epigraph}
+\usepackage{lipsum}							% Dummy text \lipsum[..]
+\usepackage[shortlabels]{enumitem}			% Muliggoer enkelt konfiguration af lister
+\usepackage{pdfpages}						% Goer det muligt at inkludere pdf-dokumenter med kommandoen \includepdf[pages={x-y}]{fil.pdf}	
+\pdfoptionpdfminorversion=6					% Muliggoer inkludering af pdf dokumenter, af version 1.6 og hoejere
+\pretolerance=2500 							% Justering af afstand mellem ord (hoejt tal, mindre orddeling og mere luft mellem ord)
+\usepackage[footnote,draft,english,silent,nomargin]{fixme}		
+
+%%%%% MARGINS %%%%%%
+\setlrmarginsandblock{3.5cm}{2.5cm}{*}		% \setlrmarginsandblock{Indbinding}{Kant}{Ratio}
+\setulmarginsandblock{2.5cm}{3.0cm}{*}		% \setulmarginsandblock{Top}{Bund}{Ratio}
+\checkandfixthelayout 						% Oversaetter vaerdier til brug for andre pakker
+
+%%%%% AFSNITSFORMATERING %%%%%
+\setlength{\parindent}{0mm}           		% Stoerrelse af indryk
+\setlength{\parskip}{3mm}          			% Afstand mellem afsnit ved brug af double Enter
+\linespread{1,1}							% Linie afstand
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+%%%%% BIBLIOGRAPHY %%%%%
+%\bibpunct[,]{[}{]}{;}{a}{,}{,} 			% Definerer de 6 parametre ved Harvard henvisning
+%\bibliographystyle{bibtex/harvard}			% Udseende af litteraturlisten.
+\bibliographystyle{unsrtnat}
+
+
+
+%%%%% TABLE OF CONTENTS %%%%%
+\setsecnumdepth{subsection}		 			% Dybden af nummerede overkrifter 
+\maxsecnumdepth{subsection}					% Dokumentklassens graense for nummereringsdybde
+\settocdepth{section} 						% Dybden af indholdsfortegnelsen
+
+%%%%% LISTS (ENUMERATE, ITEMIZE) %%%%%
+\setlist{
+  topsep=0pt,								% Vertikal afstand mellem tekst og listen
+  itemsep=-1ex}								% Vertikal afstand mellem items
+ 
+%%%%% HYPHENATION %%%%%
+\usepackage{microtype}
+%\renewcommand{\danishhyphenmins}{22} 		% bedre orddeling 
+ 
+%%%%% "FIGUR" COMMAND %%%%%
+\newcommand{\figur}[3]{
+	\begin{figure}[htbp] \centering
+		\includegraphics[width=#1\textwidth]{#2}
+		\caption{#3}\label{fig:#2}
+	\end{figure}} 
+ 
+%%%%% "FIGURCROP" COMMAND %%%%%
+\newcommand{\figurcrop}[8]{
+	\begin{figure}[htbp] \centering
+		\includegraphics[width=#1\textwidth, clip=true ,trim= #8cm #7cm #6cm #5cm]{#2}
+		\caption{#3}\label{#4} % LEFT , BOTTOM , RIGHT , TOP
+	\end{figure}} 
+
+%%%%% VISUAL REFERENCES %%%%%
+\usepackage[colorlinks]{hyperref}			% Danner klikbare referencer (hyperlinks) i dokumentet.
+\hypersetup{colorlinks = true,				% Opsaetning af farvede hyperlinks (interne links, citeringer og URL)
+   linkcolor = black,
+   citecolor = black,
+   urlcolor = blue}
+\usepackage{bookmark}
+\bookmarksetup{
+  numbered,
+  open,
+  openlevel=0}								% Sætter dybden på ToC når pdf åbnes
+
+%%%%% CAPTION SETTINGS %%%%%
+\captionnamefont{\small\bfseries\itshape}	% Opsaetning af tekstdelen ('Figur' eller 'Tabel')
+\captiontitlefont{\small}					% Opsaetning af nummerering
+\captiondelim{. }							% Seperator mellem nummerering og figurtekst
+\hangcaption								% Venstrejusterer flere-liniers figurtekst under hinanden
+\captionwidth{\linewidth}					% Bredden af figurteksten
+\setlength{\belowcaptionskip}{10pt}			% Afstand under figurteksten
+
+%%%%% NAMING %%%%%
+%\addto\captionsdanish{
+%	\renewcommand\appendixname{Appendix}
+	\renewcommand\contentsname{\scshape{Table of Contents}}
+	\renewcommand\bibname{\scshape{References}}		
+%	\renewcommand\appendixpagename{Appendix}
+%	\renewcommand\appendixtocname{Appendix}
+%	\renewcommand\cftchaptername{\chaptername~}		% Skriver "Kapitel" foran kapitlerne i ToC
+%	\renewcommand\cftappendixname{\appendixname~}	% Skriver "Appendiks" foran appendiks i ToC
+%}
+
+%%%%% BEGIN CHAPTERSTYLE DESIGN %%%%%
+\definecolor{numbercolor}{RGB}{0,0,0}		% Definerer en farve til brug til kapiteludseende
+\newif\ifchapternonum
+
+\makechapterstyle{OZTOPRAK-CHAPTER}{
+  \renewcommand\beforechapskip{0pt}
+  \renewcommand\printchaptername{}
+  \renewcommand\printchapternum{}
+  \renewcommand\printchapternonum{\chapternonumtrue}
+  \renewcommand\chaptitlefont{\fontfamily{pbk}\fontseries{db}\fontshape{n}\fontsize{20}{35}\selectfont\raggedright}
+  \renewcommand\chapnumfont{\fontfamily{pbk}\fontseries{m}\fontshape{n}\fontsize{0.5in}{0in}\selectfont\color{numbercolor}}  
+  \renewcommand\printchaptertitle[1]{%
+    \noindent
+    \ifchapternonum
+    \begin{tabularx}{\textwidth}{X}
+    	{\let\\\newline\chaptitlefont \scshape{##1}\par} 
+    \end{tabularx}
+    \par\vskip-2.5mm\hrule
+    \else
+    \begin{tabularx}{\textwidth}{Xl}
+    	\raisebox{-0pt}{\chapnumfont \thechapter} & {\hspace{0.5cm} \parbox[b]{\linewidth}{\chaptitlefont \scshape{##1}}}
+    \end{tabularx}
+    \par\vskip2mm\hrule
+    \fi
+  }
+}
+%%%%% END CHAPTERSTYLE DESIGN %%%%%
+
+%%%%% BEGIN PAGESTYLE DESIGN %%%%%
+\makepagestyle{OZTOPRAK-PAGE}
+\makepsmarks{OZTOPRAK-PAGE}{%
+	\createmark{chapter}{left}{shownumber}{}{. \ }
+	\createmark{section}{right}{shownumber}{}{. \ }
+	\createplainmark{toc}{both}{\contentsname}
+	\createplainmark{lof}{both}{\listfigurename}
+	\createplainmark{lot}{both}{\listtablename}
+	\createplainmark{bib}{both}{\bibname}
+	\createplainmark{index}{both}{\indexname}
+	%\createplainmark{glossary}{both}{\glossaryname}
+}
+\nouppercaseheads												% Ingen Caps oenskes
+
+%\makeevenhead{OZTOPRAK-PAGE}{\leftmark}{}{}				% {Name}{L}{C}{R}
+%\makeoddhead{OZTOPRAK-PAGE}{}{}{ {\leftmark}  }	% {Name}{L}{C}{R}
+
+\makeevenhead{OZTOPRAK-PAGE}{\leftmark}{}{}        % {Name}{L}{C}{R}
+\makeoddhead{OZTOPRAK-PAGE}{\leftmark}{}{}    % {Name}{L}{C}{R}
+
+\makeevenfoot{OZTOPRAK-PAGE}{}{\thepage\ }{}								% {Name}{L}{C}{R}
+\makeoddfoot{OZTOPRAK-PAGE}{}{ \thepage\ }{}								% {Name}{L}{C}{R}
+
+\makeheadrule{OZTOPRAK-PAGE}{\textwidth}{0.5pt}						% Tilfoejer en streg under sidehovedets indhold
+%\makefootrule{OZTOPRAK-PAGE}{\textwidth}{0.5pt}{1mm}					% Tilfoejer en streg under sidefodens indhold
+
+\copypagestyle{AAUchap}{OZTOPRAK-PAGE}								% Sidehoved for kapitelsider defineres som standardsider, men med blank sidehoved
+\makeoddhead{AAUchap}{}{}{}
+\makeevenhead{AAUchap}{}{}{}
+\makeheadrule{AAUchap}{\textwidth}{0pt}
+\aliaspagestyle{chapter}{AAUchap}				% Den ny style vaelges til at gaelde for chapters
+%%%%% END PAGESTYLE DESIGN %%%%%						
+													
+%%%%% VALG AF CHAPTER OG PAGESTYLE %%%%%									
+\chapterstyle{OZTOPRAK-CHAPTER}						% Valg af kapiteludseende				
+\pagestyle{OZTOPRAK-PAGE}								% Valg af sidehoved og sidefod
+
+%%%%% PART SETTINGS %%%%%
+\aliaspagestyle{part}{empty}					% Fjerner sidetal på part sider
+\renewcommand{\afterpartskip}{\vfil}
+
+%%%%% INFO DECLARATIONS %%%%%%
+\newcommand*{\supervisor}[1]{\def\supname{#1}}
+\newcommand*{\thesistitle}[1]{\def\ttitle{#1}}
+\newcommand*{\subtitle}[1]{\def\stitle{#1}}
+\newcommand*{\examiner}[1]{\def\examname{#1}}
+\newcommand*{\degree}[1]{\def\degreename{#1}}
+\renewcommand*{\author}[1]{\def\authorname{#1}}
+\newcommand*{\addresses}[1]{\def\addressname{#1}}
+\newcommand*{\university}[1]{\def\univname{#1}}
+\newcommand*{\department}[1]{\def\deptname{#1}}
+\newcommand*{\group}[1]{\def\groupname{#1}}
+\newcommand*{\faculty}[1]{\def\facname{#1}}
+\newcommand*{\subject}[1]{\def\subjectname{#1}}
+\newcommand*{\keywords}[1]{\def\keywordnames{#1}}
+
+%--------------------------------
+% code in latex
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+%\usepackage[utf8]{inputenc}
+\usepackage{listingsutf8}
+\lstset{language=Matlab,%
+    %basicstyle=\color{red},
+    breaklines=true,
+    extendedchars=true,
+    morekeywords={matlab2tikz},
+    keywordstyle=\color{blue},%
+    morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+    identifierstyle=\color{black},%
+    stringstyle=\color{mylilas},
+    commentstyle=\color{mygreen},%
+    showstringspaces=false,%without this there will be a symbol in the places where there is a space
+    numbers=left,%
+    numberstyle={\tiny \color{black}},% size of the numbers
+    numbersep=9pt, % this defines how far the numbers are from the text
+    emph=[1]{for,end,break},emphstyle=[1]\color{blue}, %some words to emphasise
+    %emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
