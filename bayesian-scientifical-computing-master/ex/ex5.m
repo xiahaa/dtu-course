@@ -9,7 +9,7 @@ t = deltat.*j;
 x = x';
 q = [1 0 0]';
 
-sigma = 100;
+sigma = 500;
 colormap = 'jet';
 
 b = q'*x;
@@ -53,13 +53,16 @@ for i = 1:1:length(t)
     lh = exp(-0.5/sigma^2.*(xp(1,:)-bn(i)).^2);
     wpn = wp.*lh;
     wp = wpn / sum(wpn);
-    cumwp = cumsum(wp);
+    
+    [wp_sort,I_sort] = sort(wp,'descend');
+    cumwp = cumsum(wp_sort);
     %% random draw with replacement, one way
     pdraw = rand(1,N);
     indices = arrayfun(@(pd) (func_min(pd,cumwp)), pdraw);
-    plot(sort(indices));pause(0.1);
-    xp = xp(:,indices);
+    %plot(sort(indices));pause(0.1);
+    xp = xp(:,I_sort(indices));
     xpnew = xp + D*randn(3,N);
+    
     %% update weights
     wp = exp(-0.5/sigma^2.*((xpnew(1,:)-bn(i)).^2 - (xp(1,:)-bn(i)).^2));
     wp = wp ./ sum(wp);
